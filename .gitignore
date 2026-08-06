@@ -8,3 +8,9 @@ build/
 
 # XcodeGen output: project.yml is the source of truth.
 Salat.xcodeproj/
+
+# fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/
+build/

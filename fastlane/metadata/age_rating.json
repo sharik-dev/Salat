@@ -1,0 +1,28 @@
+{
+  "gamblingSimulated": "NONE",
+  "contests": "NONE",
+  "violenceCartoonOrFantasy": "NONE",
+  "violenceRealistic": "NONE",
+  "violenceRealisticProlongedGraphicOrSadistic": "NONE",
+  "gunsOrOtherWeapons": "NONE",
+  "horrorOrFearThemes": "NONE",
+  "profanityOrCrudeHumor": "NONE",
+  "matureOrSuggestiveThemes": "NONE",
+  "alcoholTobaccoOrDrugUseOrReferences": "NONE",
+  "medicalOrTreatmentInformation": "NONE",
+  "sexualContentOrNudity": "NONE",
+  "sexualContentGraphicAndNudity": "NONE",
+
+  "gambling": false,
+  "lootBox": false,
+  "advertising": false,
+  "healthOrWellnessTopics": false,
+  "messagingAndChat": false,
+  "userGeneratedContent": false,
+  "parentalControls": false,
+  "unrestrictedWebAccess": false,
+  "ageAssurance": false,
+
+  "ageRatingOverrideV2": "NONE",
+  "koreaAgeRatingOverride": "NONE"
+}
