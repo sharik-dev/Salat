@@ -53,12 +53,30 @@ targets:
   SalatTests:
     type: bundle.unit-test
     platform: iOS
+    # Hosted by the app rather than compiling SalatKit a second time: that way
+    # `@testable import Salat` links, and the tests read the very same resource
+    # bundle the app ships.
     sources:
       - path: SalatTests
-      - path: SalatKit
+    dependencies:
+      - target: Salat
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.salat.tests
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/Salat.app/Salat"
+        BUNDLE_LOADER: "$(TEST_HOST)"
+
+  SalatUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: SalatUITests
+    dependencies:
+      - target: Salat
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.salat.uitests
+        TEST_TARGET_NAME: Salat
 
 schemes:
   Salat:
@@ -66,8 +84,9 @@ schemes:
       targets:
         Salat: all
         SalatTests: [test]
+        SalatUITests: [test]
     run:
       config: Debug
     test:
       config: Debug
-      targets: [SalatTests]
+      targets: [SalatTests, SalatUITests]

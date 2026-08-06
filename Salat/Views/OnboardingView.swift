@@ -5,7 +5,8 @@ struct OnboardingStep: Identifiable {
     let titleKey: String
     let bodyKey: String
     let icon: String
-    let posture: Posture?
+    /// Name of the illustration to show, or nil for the SF Symbol in `icon`.
+    let image: String?
 }
 
 struct OnboardingView: View {
@@ -13,12 +14,15 @@ struct OnboardingView: View {
     @Environment(\.loc) private var loc
     @State private var index = 0
 
+    /// The real illustrations, not the drawn fallback — this is the first
+    /// thing anyone sees, and it walks through the prayer in order: standing,
+    /// bowing, prostrating, sitting.
     private let steps: [OnboardingStep] = [
-        .init(titleKey: "onboarding.1.title", bodyKey: "onboarding.1.body", icon: "book.closed.fill", posture: nil),
-        .init(titleKey: "onboarding.2.title", bodyKey: "onboarding.2.body", icon: "list.number", posture: .handsRaised),
-        .init(titleKey: "onboarding.3.title", bodyKey: "onboarding.3.body", icon: "arrow.triangle.2.circlepath", posture: .bowing),
-        .init(titleKey: "onboarding.4.title", bodyKey: "onboarding.4.body", icon: "square.grid.2x2", posture: .prostrating),
-        .init(titleKey: "onboarding.5.title", bodyKey: "onboarding.5.body", icon: "checkmark.seal.fill", posture: .sitting)
+        .init(titleKey: "onboarding.1.title", bodyKey: "onboarding.1.body", icon: "book.closed.fill", image: "pos_qiyam"),
+        .init(titleKey: "onboarding.2.title", bodyKey: "onboarding.2.body", icon: "list.number", image: "pos_takbir"),
+        .init(titleKey: "onboarding.3.title", bodyKey: "onboarding.3.body", icon: "arrow.triangle.2.circlepath", image: "pos_ruku"),
+        .init(titleKey: "onboarding.4.title", bodyKey: "onboarding.4.body", icon: "square.grid.2x2", image: "pos_sujud"),
+        .init(titleKey: "onboarding.5.title", bodyKey: "onboarding.5.body", icon: "checkmark.seal.fill", image: "pos_tashahhud")
     ]
 
     private var isLast: Bool { index == steps.count - 1 }
@@ -37,6 +41,7 @@ struct OnboardingView: View {
                         Button(loc.t("onboarding.skip")) { finish() }
                             .font(Theme.label(13))
                             .foregroundStyle(Theme.inkSoft)
+                            .accessibilityIdentifier("onboarding.skip")
                     }
                 }
                 .padding(.horizontal, 20)
@@ -78,16 +83,22 @@ struct OnboardingView: View {
             Spacer(minLength: 0)
 
             ZStack {
-                Circle().fill(Theme.sand).frame(width: 190, height: 190)
-                Circle().strokeBorder(Theme.goldSoft, lineWidth: 1.5).frame(width: 190, height: 190)
-                if let posture = step.posture {
-                    PostureFigure(posture: posture).frame(width: 130, height: 130)
+                Circle().fill(Theme.sand)
+                Circle().strokeBorder(Theme.goldSoft, lineWidth: 1.5)
+                StarLattice(spacing: 74, opacity: 0.10).clipShape(Circle())
+
+                if let name = step.image, let illustration = PositionAsset.image(named: name) {
+                    Image(uiImage: illustration)
+                        .resizable()
+                        .scaledToFit()
+                        .padding(26)
                 } else {
                     Image(systemName: step.icon)
                         .font(.system(size: 58, weight: .light))
                         .foregroundStyle(Theme.gold)
                 }
             }
+            .frame(width: 200, height: 200)
 
             VStack(spacing: 12) {
                 Text(loc.t(step.titleKey))

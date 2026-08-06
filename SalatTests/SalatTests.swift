@@ -101,3 +101,40 @@ final class CarouselClockTests: XCTestCase {
         XCTAssertEqual(CarouselClock.index(tick: 7, count: 0), 0)
     }
 }
+
+/// The onboarding trapped the user: `shouldShowOnboarding` read UserDefaults
+/// through a computed property, which `@Observable` does not track, so
+/// finishing changed the defaults without ever re-rendering the sheet.
+final class OnboardingManagerTests: XCTestCase {
+
+    override func setUp() {
+        super.setUp()
+        UserDefaults.standard.removeObject(forKey: "hasSeenOnboarding")
+        UserDefaults.standard.removeObject(forKey: "alwaysShowOnboarding")
+    }
+
+    func testFinishingLetsYouIntoTheApp() {
+        let onboarding = OnboardingManager()
+        XCTAssertTrue(onboarding.shouldShowOnboarding, "a fresh install should onboard")
+        onboarding.markSeen()
+        XCTAssertFalse(onboarding.shouldShowOnboarding, "finishing must open the app")
+    }
+
+    func testFinishingSurvivesRelaunch() {
+        OnboardingManager().markSeen()
+        XCTAssertFalse(OnboardingManager().shouldShowOnboarding,
+                       "the app must not onboard again on the next launch")
+    }
+
+    #if DEBUG
+    /// With the dev toggle on, finishing must still get you in — otherwise the
+    /// sheet re-presents itself immediately and there is no way out.
+    func testDevToggleCannotTrapYouInTheOnboarding() {
+        let onboarding = OnboardingManager()
+        onboarding.alwaysShowOnboarding = true
+        XCTAssertTrue(onboarding.shouldShowOnboarding)
+        onboarding.markSeen()
+        XCTAssertFalse(onboarding.shouldShowOnboarding)
+    }
+    #endif
+}

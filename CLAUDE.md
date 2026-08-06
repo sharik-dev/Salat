@@ -85,6 +85,22 @@ Le `FloatingTabBar` reprend la structure de la convention maison mais **recolor�
 clair** : encre sur crème, pastille dorée derrière l'onglet actif, pas de glow néon (invisible
 sur du papier).
 
+## Tests : ce qu'ils gardent
+
+`SalatTests` est **hébergé par l'app** (`TEST_HOST`), pas une seconde compilation de `SalatKit` —
+sinon `@testable import Salat` ne linke pas. `SalatUITests` traverse l'onboarding en tapant :
+c'est la régression qui compte, l'app a déjà été livrée une fois avec un onboarding dont on ne
+pouvait pas sortir.
+
+Cette panne mérite d'être retenue : `@Observable` **ne suit que les propriétés stockées**. Un
+`var x: Bool { get { UserDefaults… } }` change la valeur sans jamais prévenir SwiftUI, donc la
+vue ne se redessine pas. Toute préférence exposée à l'UI se stocke et se persiste dans `didSet`.
+Et une `sheet(isPresented: .constant(…))` ne peut rien écrire en retour — elle ne se ferme jamais.
+
+`-resetOnboarding 1` (DEBUG) force l'onboarding, `-startTab practice|settings|widgetPreview` et
+`-openStep <id>` ouvrent un écran directement : Sharik pilote depuis son téléphone et ne peut pas
+taper dans le simulateur, donc chaque écran doit être atteignable au lancement.
+
 ## À faire avant publication
 
 - App Group `group.com.salat` à créer sur le portail Apple + `DEVELOPMENT_TEAM` à renseigner

@@ -31,4 +31,8 @@ enum LaunchOptions {
 
     /// `-startTab widgetPreview` shows the widget layouts instead of a tab.
     static var showsWidgetPreview: Bool { value("-startTab") == "widgetPreview" }
+
+    /// `-resetOnboarding 1` forces the onboarding to appear, so a UI test can
+    /// walk it from the start on a device that has already seen it.
+    static var resetsOnboarding: Bool { value("-resetOnboarding") == "1" }
 }
