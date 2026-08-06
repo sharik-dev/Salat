@@ -154,19 +154,12 @@ public enum PrayerContent {
 
 // MARK: - Progress
 
-/// Which steps the user has marked as known. Lives in the shared suite so the
-/// widget could show progress too.
+/// Where progress lives now: `StudyLog` in `StudyLog.swift`, which keeps three
+/// states and the dates they were reached, instead of a flat list of ticks.
+/// This shim is what is left of the two-state version — kept so nothing outside
+/// has to know the shape changed.
 public enum Progress {
-    public static var learned: Set<String> {
-        get { Set(SharedStore.defaults.stringArray(forKey: SharedStore.Key.learned) ?? []) }
-        set { SharedStore.defaults.set(Array(newValue), forKey: SharedStore.Key.learned) }
-    }
+    public static var learned: Set<String> { StudyLog.load().known }
 
-    public static func toggle(_ id: String) {
-        var set = learned
-        if set.contains(id) { set.remove(id) } else { set.insert(id) }
-        learned = set
-    }
-
-    public static func reset() { learned = [] }
+    public static func reset() { StudyLog.clear() }
 }

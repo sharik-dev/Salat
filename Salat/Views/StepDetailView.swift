@@ -41,7 +41,7 @@ struct StepDetailView: View {
                     }
 
                     noteBlock
-                    learnedButton
+                    statusButtons
                     Color.clear.frame(height: 20)
                 }
                 .padding(.horizontal, 18)
@@ -49,6 +49,10 @@ struct StepDetailView: View {
             }
             .scrollIndicators(.hidden)
         }
+        // Opening the step *is* the study session — that is what the calendar
+        // on the analytics page counts and what the reminders measure staleness
+        // against. Ticking a box afterwards is an opinion; being here is a fact.
+        .task { settings.noteStudied(step) }
         .overlay(alignment: .topTrailing) {
             Button { dismiss() } label: {
                 Image(systemName: "xmark")
@@ -170,26 +174,62 @@ struct StepDetailView: View {
         }
     }
 
-    // MARK: Learned
+    // MARK: Where the step stands
 
-    private var learnedButton: some View {
-        let isLearned = settings.isLearned(step)
-        return Button {
-            withAnimation(Theme.spring) { settings.toggleLearned(step) }
-        } label: {
-            HStack(spacing: 8) {
-                Image(systemName: isLearned ? "checkmark.seal.fill" : "seal")
-                Text(isLearned ? loc.t("detail.unmark") : loc.t("detail.mark"))
+    /// Two answers, not one. "I'm learning it" is the state most steps are
+    /// actually in, and saying so out loud is what lets the app come back with
+    /// the right one later — a step nobody ever claimed is indistinguishable
+    /// from a step nobody wants.
+    private var statusButtons: some View {
+        let status = settings.status(of: step)
+        return VStack(spacing: 10) {
+            Button {
+                withAnimation(Theme.spring) { settings.setStatus(.learning, for: step) }
+            } label: {
+                statusLabel(icon: status == .learning ? "book.fill" : "book",
+                            text: status == .learning ? loc.t("detail.learning.on")
+                                                      : loc.t("detail.learning"),
+                            filled: status == .learning)
             }
-            .font(Theme.label(14))
-            .foregroundStyle(isLearned ? Theme.paper : Theme.ink)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 14)
+            // No fanfare here: starting is not finishing. The gold burst is kept
+            // for the one moment that deserves it.
+            .chunky(status == .learning ? Theme.gold : Theme.sand,
+                    radius: 16, haptic: .select, sparks: false)
+
+            Button {
+                let wasKnown = status == .known
+                withAnimation(Theme.spring) { settings.setStatus(.known, for: step) }
+                // Marking a step acquired is an answer, not a setting: the screen
+                // has nothing left to say, so it steps aside and the list shows
+                // the seal and the progress bar moving. The delay is the burst's
+                // own duration (0.6 s in `Plate`) — leaving before it plays would
+                // swallow the one fanfare the app has. Un-marking is a correction,
+                // not an answer: it stays, otherwise a mis-tap throws the reader
+                // out of the step.
+                if !wasKnown {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.55) { dismiss() }
+                }
+            } label: {
+                statusLabel(icon: status == .known ? "checkmark.seal.fill" : "seal",
+                            text: status == .known ? loc.t("detail.unmark") : loc.t("detail.mark"),
+                            filled: status == .known)
+            }
+            // Learning a step is the one thing in the app worth a fanfare.
+            .chunky(status == .known ? Theme.green : Theme.goldSoft,
+                    radius: 16,
+                    haptic: status == .known ? .tap : .win)
         }
-        // Learning a step is the one thing in the app worth a fanfare.
-        .chunky(isLearned ? Theme.green : Theme.goldSoft,
-                radius: 16,
-                haptic: isLearned ? .tap : .win)
+    }
+
+    private func statusLabel(icon: String, text: String, filled: Bool) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: icon)
+            Text(text)
+        }
+        .font(Theme.label(14))
+        .foregroundStyle(filled ? Theme.paper : Theme.ink)
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 14)
     }
 
     private func section<Content: View>(_ title: String, icon: String,

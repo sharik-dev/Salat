@@ -18,12 +18,21 @@ final class AppSettings {
         }
     }
 
-    var learned: Set<String> {
+    /// Statuses, dates and journal in one stored value. Stored and not computed
+    /// on read: `@Observable` only tracks stored properties, and progress that
+    /// changes without redrawing the list is the bug this app already shipped
+    /// once.
+    var log: StudyLogState {
         didSet {
-            Progress.learned = learned
+            StudyLog.save(log)
             WidgetCenter.shared.reloadAllTimelines()
         }
     }
+
+    /// Kept for the header and the progress bar. Derived, never a second source
+    /// of truth.
+    var learned: Set<String> { log.known }
+    var learningNow: Set<String> { log.learning }
 
     var stepSeconds: Double {
         didSet { SharedStore.defaults.set(stepSeconds, forKey: SharedStore.Key.stepSeconds) }
@@ -36,15 +45,6 @@ final class AppSettings {
         didSet { SharedStore.defaults.set(reciterID, forKey: SharedStore.Key.reciter) }
     }
 
-    init() {
-        let preference = SharedStore.storedLanguagePreference
-        let resolved = preference == .system ? AppLanguage.resolvedFromSystem() : preference
-        languagePreference = preference
-        localizer = Localizer(language: resolved)
-        steps = PrayerContent.steps(for: resolved)
-        learned = Progress.learned
-        let stored = SharedStore.defaults.double(forKey: SharedStore.Key.stepSeconds)
-        stepSeconds = stored > 0 ? stored : 7
     /// The daily reminder. No `reloadAllTimelines` here, unlike every other
     /// setting: nothing on the home screen reads these three.
     var remindersOn: Bool {
@@ -74,17 +74,63 @@ final class AppSettings {
         }
     }
 
+    init() {
+        let preference = SharedStore.storedLanguagePreference
+        let resolved = preference == .system ? AppLanguage.resolvedFromSystem() : preference
+        languagePreference = preference
+        localizer = Localizer(language: resolved)
+        steps = PrayerContent.steps(for: resolved)
+        log = StudyLog.load()
+        let stored = SharedStore.defaults.double(forKey: SharedStore.Key.stepSeconds)
+        stepSeconds = stored > 0 ? stored : 7
         reciterID = SharedStore.defaults.string(forKey: SharedStore.Key.reciter)
+        remindersOn = SharedStore.defaults.bool(forKey: SharedStore.Key.remindersOn)
+            || LaunchOptions.forcesRemindersOn
+        // 19:30 by default: after work, before the evening goes. Zero would be
+        // midnight, so an unset value has to fall back explicitly.
+        let hour = SharedStore.defaults.object(forKey: SharedStore.Key.reminderHour) as? Int
+        let minute = SharedStore.defaults.object(forKey: SharedStore.Key.reminderMinute) as? Int
+        reminderHour = hour ?? 19
+        reminderMinute = minute ?? 30
+        // Screenshot fixture: the drill has nothing to ask on a phone where
+        // nothing has been read. Debug builds only — `LaunchOptions` returns
+        // nil everywhere else.
+        if LaunchOptions.marksEverythingKnown {
+            for step in steps where log.status(of: step.id) != .known {
+                log.set(.known, for: step.id)
+            }
+        }
+        if LaunchOptions.seedsDemoProgress { seedDemoProgress() }
     }
 
     var resolvedLanguage: AppLanguage {
         languagePreference == .system ? .resolvedFromSystem() : languagePreference
     }
 
-    func isLearned(_ step: PrayerStep) -> Bool { learned.contains(step.id) }
+    // MARK: - Progress
 
-    func toggleLearned(_ step: PrayerStep) {
-        if learned.contains(step.id) { learned.remove(step.id) } else { learned.insert(step.id) }
+    func status(of step: PrayerStep) -> StepStatus { log.status(of: step.id) }
+
+    func isLearned(_ step: PrayerStep) -> Bool { status(of: step) == .known }
+
+    /// Each button toggles its own state off, back to "not started". Tapping
+    /// "I know it" on a step already known is how a mistake is undone, and it
+    /// should not drop the reader back into "learning" they never asked for.
+    func setStatus(_ status: StepStatus, for step: PrayerStep, at date: Date = Date()) {
+        let target: StepStatus = log.status(of: step.id) == status ? .untouched : status
+        log.set(target, for: step.id, at: date)
+    }
+
+    /// Called when a step's page opens. This is the only thing that feeds the
+    /// calendar and the staleness the reminders read: what counts as studying
+    /// is having the step in front of you, not ticking a box afterwards.
+    func noteStudied(_ step: PrayerStep, at date: Date = Date()) {
+        log.study(step.id, at: date)
+    }
+
+    /// What to come back to, in the order the reminders will name it.
+    func dueQueue(now: Date = Date()) -> [StudyPlanner.Due] {
+        StudyPlanner.queue(steps: steps, log: log, now: now)
     }
 
     func resetProgress() { learned = [] }
