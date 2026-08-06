@@ -19,6 +19,12 @@ public enum Theme {
     public static let inkSoft    = Color(hex: 0x7A6E5B) // secondary text
     public static let green      = Color(hex: 0x5C7A5A) // "learned" marker
 
+    /// The spark. Light, not paint: it only ever appears for a third of a
+    /// second on release, so it is allowed to be hotter than the page — an
+    /// ember orange between the gold and white, and a near-white core.
+    public static let ember      = Color(hex: 0xF2870F)
+    public static let emberCore  = Color(hex: 0xFFF3D2)
+
     // MARK: Radii
 
     public enum Radius {

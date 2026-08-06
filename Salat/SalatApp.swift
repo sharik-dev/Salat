@@ -4,6 +4,10 @@ import SwiftUI
 struct SalatApp: App {
     @State private var settings = AppSettings()
     @State private var onboarding = OnboardingManager()
+    // One player and one recorder for the whole app: two screens each holding
+    // their own would let a reciter and a playback of the user run at once.
+    @State private var player = RecitationPlayer()
+    @State private var recorder = VoiceRecorder()
 
     init() {
         // The Taptic engine and the two sounds are woken here: a cold
@@ -18,6 +22,8 @@ struct SalatApp: App {
             ContentView()
                 .environment(settings)
                 .environment(onboarding)
+                .environment(player)
+                .environment(recorder)
                 .tint(Theme.gold)
                 // A two-way binding, so dismissing the sheet — by the button or
                 // by any route iOS offers — actually records that it was seen.

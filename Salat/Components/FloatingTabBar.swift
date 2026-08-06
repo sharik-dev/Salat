@@ -128,7 +128,7 @@ private struct TabButtonBody: View {
             .overlay(
                 ZStack {
                     ForEach(bursts, id: \.self) { _ in
-                        StarBurst(color: Theme.gold, count: 7, spread: 22...50)
+                        StarBurst(color: Theme.ember, count: 7, spread: 22...50)
                     }
                 }
                 .allowsHitTesting(false)

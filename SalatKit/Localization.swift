@@ -62,6 +62,7 @@ public enum SharedStore {
         public static let language = "app.language"
         public static let learned  = "progress.learned"
         public static let stepSeconds = "practice.stepSeconds"
+        public static let reciter = "audio.reciter"
     }
 
     public static var language: AppLanguage {

@@ -24,6 +24,7 @@ struct StepDetailView: View {
 
                     if step.spoken {
                         recitation
+                        RecitationPanel(step: step)
                     } else {
                         section(loc.t("detail.translation"), icon: "heart.text.square") {
                             Text(step.translation)

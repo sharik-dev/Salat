@@ -1,11 +1,9 @@
 {
   "app.name": "صلاة",
   "app.tagline": "تعلّم الصلاة كلمة كلمة",
-
   "tab.learn": "تعلّم",
   "tab.practice": "مراجعة",
   "tab.settings": "الإعدادات",
-
   "learn.title": "الصلاة خطوة بخطوة",
   "learn.subtitle": "%d خطوة — بلغتك أولًا، ثم بالعربية",
   "learn.section.standing": "القيام",
@@ -14,7 +12,6 @@
   "learn.section.sitting": "الجلوس",
   "learn.learned": "متقنة",
   "learn.progress": "أتقنت %d من %d",
-
   "detail.posture": "ما تفعله",
   "detail.arabic": "بالعربية",
   "detail.phonetic": "طريقة النطق",
@@ -24,14 +21,12 @@
   "detail.silent": "لا يُنطق بشيء",
   "detail.mark": "أتقنتها",
   "detail.unmark": "متقنة",
-
   "practice.title": "مراجعة تلقائية",
   "practice.hint": "اتركها تعمل. كل خطوة تبقى مدة كافية لترسخ.",
   "practice.play": "تشغيل",
   "practice.pause": "إيقاف",
   "practice.speed": "ثوانٍ لكل خطوة",
   "practice.loop": "تكرار دائم",
-
   "settings.language": "اللغة",
   "settings.language.system": "لغة الجهاز",
   "settings.content": "المحتوى",
@@ -43,7 +38,6 @@
   "settings.devmode": "وضع التطوير",
   "settings.always_onboarding": "إظهار المقدمة دائمًا",
   "settings.reset_progress": "إعادة ضبط التقدّم",
-
   "onboarding.1.title": "أهلًا بك",
   "onboarding.1.body": "يعلّمك هذا التطبيق ما يُقال في الصلاة: بالعربية، ومكتوبًا بحروف لغتك، ومترجمًا.",
   "onboarding.2.title": "خطوة بخطوة",
@@ -57,8 +51,25 @@
   "onboarding.next": "التالي",
   "onboarding.start": "لنبدأ",
   "onboarding.skip": "تخطٍّ",
-
   "common.step": "الخطوة %d",
   "common.close": "إغلاق",
-  "common.done": "تم"
+  "common.done": "تم",
+  "audio.title": "استمع وسجّل",
+  "audio.listen": "استمع",
+  "audio.all": "الآيات كلها",
+  "audio.style.teaching": "تعليمي",
+  "audio.reciter": "القارئ",
+  "audio.none": "لا توجد تلاوة مسجّلة لهذه الخطوة — سجّل صوتك وقارنه بالنطق المكتوب أعلاه.",
+  "audio.record": "تسجيل صوتي",
+  "audio.retake": "إعادة التسجيل",
+  "audio.stop": "إيقاف",
+  "audio.mine": "صوتي",
+  "audio.both": "الواحد تلو الآخر",
+  "audio.delete": "حذف تسجيلي",
+  "audio.denied": "الميكروفون مغلق لتطبيق Salat. فعّله من إعدادات iOS لتسجيل صوتك.",
+  "audio.compare.hint": "الرسمان على المحور الزمني نفسه: ترى أين تسرع وأين تتوقف. يبيّن الشكل لا الصواب — الصواب يحتاج أذنًا تسمعك.",
+  "settings.audio": "التلاوة",
+  "settings.audio.recordings": "%d تسجيلات على هذا الهاتف",
+  "settings.audio.clear": "حذف تسجيلاتي",
+  "settings.audio.credits": "تلاوة الفاتحة والإخلاص من everyayah.com. بقية الصلاة ليست قرآنًا ولا يوجد لها تسجيل مماثل — لذلك لا قارئ لتلك الخطوات."
 }

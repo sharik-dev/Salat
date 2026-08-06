@@ -1,11 +1,9 @@
 {
   "app.name": "Salat",
   "app.tagline": "Apprendre la prière, mot à mot",
-
   "tab.learn": "Apprendre",
   "tab.practice": "Réviser",
   "tab.settings": "Réglages",
-
   "learn.title": "La prière, étape par étape",
   "learn.subtitle": "%d étapes — d'abord dans tes mots, ensuite en arabe",
   "learn.section.standing": "Debout",
@@ -14,7 +12,6 @@
   "learn.section.sitting": "Assise",
   "learn.learned": "Acquise",
   "learn.progress": "%d étapes acquises sur %d",
-
   "detail.posture": "Ce que tu fais",
   "detail.arabic": "En arabe",
   "detail.phonetic": "Comment le dire",
@@ -24,14 +21,12 @@
   "detail.silent": "Rien ne se dit à voix haute",
   "detail.mark": "Je la connais",
   "detail.unmark": "Acquise",
-
   "practice.title": "Révision passive",
   "practice.hint": "Laisse tourner. Chaque étape reste assez longtemps pour s'imprimer.",
   "practice.play": "Lancer",
   "practice.pause": "Pause",
   "practice.speed": "Secondes par étape",
   "practice.loop": "En boucle",
-
   "settings.language": "Langue",
   "settings.language.system": "Celle de mon téléphone",
   "settings.content": "Contenu",
@@ -43,7 +38,6 @@
   "settings.devmode": "Mode dev",
   "settings.always_onboarding": "Toujours afficher l'introduction",
   "settings.reset_progress": "Réinitialiser ma progression",
-
   "onboarding.1.title": "Bienvenue",
   "onboarding.1.body": "Salat t'apprend ce qu'il faut dire pendant la prière — en arabe, écrit comme tu le lis, et traduit dans ta langue.",
   "onboarding.2.title": "Étape par étape",
@@ -57,8 +51,25 @@
   "onboarding.next": "Suivant",
   "onboarding.start": "C'est parti",
   "onboarding.skip": "Passer",
-
   "common.step": "Étape %d",
   "common.close": "Fermer",
-  "common.done": "Terminé"
+  "common.done": "Terminé",
+  "audio.title": "Écouter et s'enregistrer",
+  "audio.listen": "Écouter",
+  "audio.all": "Tout enchaîner",
+  "audio.style.teaching": "enseignement",
+  "audio.reciter": "Récitateur",
+  "audio.none": "Aucune récitation enregistrée pour cette étape — enregistre-toi et vérifie sur la prononciation écrite au-dessus.",
+  "audio.record": "M'enregistrer",
+  "audio.retake": "Refaire",
+  "audio.stop": "Arrêter",
+  "audio.mine": "Ma voix",
+  "audio.both": "L'un puis l'autre",
+  "audio.delete": "Supprimer mon enregistrement",
+  "audio.denied": "Le micro est coupé pour Salat. Autorise-le dans les Réglages d'iOS pour t'enregistrer.",
+  "audio.compare.hint": "Les deux tracés partagent la même échelle de temps : tu vois où tu vas plus vite, où tu t'arrêtes. Ça montre la forme, pas si c'est juste — pour ça, il faut une oreille.",
+  "settings.audio": "Récitation",
+  "settings.audio.recordings": "%d enregistrements sur ce téléphone",
+  "settings.audio.clear": "Supprimer mes enregistrements",
+  "settings.audio.credits": "Récitations d'Al-Fatiha et d'Al-Ikhlas depuis everyayah.com. Le reste de la prière n'est pas du Coran et n'a pas d'enregistrement équivalent — ces étapes n'ont pas de récitateur."
 }

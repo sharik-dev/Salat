@@ -10,8 +10,13 @@ settings:
   base:
     SWIFT_VERSION: "5.0"
     GENERATE_INFOPLIST_FILE: YES
-    DEVELOPMENT_TEAM: ""
+    DEVELOPMENT_TEAM: "2XR666D9B2"
     CODE_SIGN_STYLE: Automatic
+    # iPhone seul. L'app est verrouillée en portrait et dessinée pour le pouce ;
+    # sur un iPad 13" la même mise en page s'étirerait sans rien gagner — et
+    # déclarer la famille 2 obligerait à livrer un jeu de captures 2048 × 2732
+    # d'écrans qui n'ont jamais été pensés pour cette taille.
+    TARGETED_DEVICE_FAMILY: "1"
     MARKETING_VERSION: "1.0"
     CURRENT_PROJECT_VERSION: "1"
 
@@ -31,6 +36,8 @@ targets:
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
         INFOPLIST_KEY_CFBundleDisplayName: Salat
+        # Asked only when the record button is first pressed, never at launch.
+        INFOPLIST_KEY_NSMicrophoneUsageDescription: "To record you reciting a step, so you can play it back against the reciter. Recordings stay on this iPhone."
         INFOPLIST_KEY_UIUserInterfaceStyle: Light
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         DEVELOPMENT_ASSET_PATHS: '"Salat/Preview Content"'

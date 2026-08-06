@@ -4,8 +4,13 @@ import SwiftUI
 /// Nothing to tap — that is the point. Passive exposure, on loop.
 struct PracticeView: View {
     @Environment(AppSettings.self) private var settings
+    @Environment(RecitationPlayer.self) private var player
+    @Environment(VoiceRecorder.self) private var recorder
     @Environment(\.loc) private var loc
 
+    /// `-startTab practice -openStep fatiha` lands on that step: the recitation
+    /// panel is only interesting on a step that has clips, and reaching it by
+    /// hand means tapping through the carousel.
     @State private var index = 0
     @State private var isPlaying = true
     @State private var elapsed: Double = 0
@@ -27,12 +32,33 @@ struct PracticeView: View {
             .animation(Theme.softSpring, value: index)
 
             controls
+
+            // Nothing to listen to or repeat on a silent step — the niyyah is
+            // formed in the heart, and offering a microphone there would teach
+            // the opposite of what the card says.
+            if let step = currentStep, step.spoken {
+                RecitationPanel(step: step)
+                    // Rebuilt from scratch when the carousel moves: keeping the
+                    // panel alive across steps would carry the selected verse
+                    // and the loaded traces over to a step they do not belong to.
+                    .id(step.id)
+            }
+
             Color.clear.frame(height: 74)
         }
         .padding(.horizontal, 18)
         .padding(.top, 8)
+        .onAppear {
+            if let wanted = LaunchOptions.openStep,
+               let position = settings.steps.firstIndex(where: { $0.id == wanted }) {
+                index = position
+                isPlaying = false
+            }
+        }
         .onReceive(tick) { _ in advanceIfNeeded() }
         .onChange(of: index) { _, _ in elapsed = 0 }
+        // Sliding away mid-word would be the app talking over itself.
+        .onChange(of: player.isPlaying) { _, playing in if playing { elapsed = 0 } }
     }
 
     private var header: some View {
@@ -103,8 +129,15 @@ struct PracticeView: View {
         }
     }
 
+    private var currentStep: PrayerStep? {
+        settings.steps.indices.contains(index) ? settings.steps[index] : nil
+    }
+
     private func advanceIfNeeded() {
-        guard isPlaying, !settings.steps.isEmpty else { return }
+        // The carousel yields to the ear: nothing slides while a recitation is
+        // sounding or while the microphone is open.
+        guard isPlaying, !player.isPlaying, !recorder.isRecording,
+              !settings.steps.isEmpty else { return }
         elapsed += 0.1
         if elapsed >= settings.stepSeconds {
             elapsed = 0

@@ -1,0 +1,254 @@
+# Publication de Salat sur l'App Store.
+#
+# Adapté du gabarit `godotGame/kit/template/fastlane/Fastfile` : la logique ASC
+# est la même (c'est le même compte, la même clé, les mêmes pièges), seule la
+# provenance des identifiants change — ici tout se lit dans `project.yml`, la
+# source de vérité XcodeGen, au lieu d'`export_presets.cfg`.
+#
+# **La fiche et le binaire sont deux chemins séparés.** Le binaire part par
+# `scripts/build_ios.sh` puis `scripts/upload_testflight.sh` ; les textes et les
+# captures par la lane `metadata`. Refaire une archive pour corriger une faute
+# de frappe dans la description coûterait vingt minutes.
+
+def project_yml
+  path = File.expand_path("../project.yml", __dir__)
+  UI.user_error!("project.yml introuvable — lancé depuis la racine du projet ?") unless File.exist?(path)
+  File.read(path)
+end
+
+# La première occurrence : la cible `Salat` ouvre le fichier, le widget vient
+# ensuite avec `com.salat.widget`, qu'on ne veut surtout pas attraper.
+def app_id
+  project_yml[/PRODUCT_BUNDLE_IDENTIFIER:\s*(\S+)/, 1] or
+    UI.user_error!("PRODUCT_BUNDLE_IDENTIFIER absent de project.yml")
+end
+
+# Le nom de la fiche App Store. Il diffère du nom affiché sur l'écran d'accueil
+# (« Salat ») : celui du Store est limité à 30 caractères et doit être unique
+# sur tout l'App Store, deux contraintes qui n'existent pas pour l'icône.
+# `metadata/en-US/name.txt` fait donc foi.
+def app_name
+  File.read(File.expand_path("../fastlane/metadata/en-US/name.txt", __dir__)).strip
+end
+
+# Le numéro de build vient de `project.yml` (`CURRENT_PROJECT_VERSION`), le seul
+# endroit où il est écrit — c'est lui que XcodeGen grave dans l'IPA. Deux
+# sources divergentes feraient attacher silencieusement le build précédent, et
+# la revue examinerait une version que personne n'a relue.
+def build_number
+  project_yml[/CURRENT_PROJECT_VERSION:\s*"?(\d+)"?/, 1] or
+    UI.user_error!("CURRENT_PROJECT_VERSION absent de project.yml")
+end
+
+# Les coordonnées que la revue Apple appelle si elle bloque. Obligatoires, et
+# leur absence ne se voit pas comme un champ vide : `deliver` **lit** la fiche
+# de revue avant de l'écrire, et sur une app jamais soumise cette fiche n'existe
+# pas — l'erreur est un « No data » de spaceship au milieu d'une trace de trente
+# lignes qui ne parle jamais de contact.
+#
+# Le téléphone vit dans `~/.config/ios-testflight-cicd/config.env`, jamais ici :
+# ce dépôt est public.
+def review_contact
+  {
+    first_name: "Sharik",
+    last_name: "Mohamed",
+    email_address: "sharikmohamed8@gmail.com",
+    phone_number: ENV.fetch("ASC_REVIEW_PHONE"),
+    # Un examinateur qui cherche un écran de connexion inexistant refuse : on
+    # lui dit d'emblée qu'il n'y en a pas, et où est le cœur de l'app.
+    notes: "No account, no sign-in, no network — the app works fully offline. " \
+           "Onboarding: tap through the three cards, then Start. " \
+           "Learn tab: tap any of the 14 steps to see the Arabic text, its " \
+           "phonetic transcription and its translation. Practice tab: tap Play " \
+           "to let the positions cycle on their own. A Home Screen widget shows " \
+           "the same positions. Content language follows the device (English, " \
+           "French, Arabic) and can be forced in Settings.",
+    demo_account_required: false
+  }
+end
+
+def asc_api_key
+  app_store_connect_api_key(
+    key_id: ENV.fetch("ASC_KEY_ID"),
+    issuer_id: ENV.fetch("ASC_ISSUER_ID"),
+    key_filepath: ENV.fetch("ASC_KEY_P8_PATH"),
+    in_house: false
+  )
+end
+
+# ── La confidentialité : automatisable, mais pas avec la clé API
+#
+# Les déclarations ne vivent pas sur l'API publique
+# (`api.appstoreconnect.apple.com`) mais sur l'API interne du site
+# (`appstoreconnect.apple.com/iris/`), celle que le navigateur utilise. D'où les
+# deux échecs qui n'expliquent rien :
+#
+#   - `upload_app_privacy_details_to_app_store(api_key: …)` → « Could not find
+#     option 'api_key' » : l'action n'en veut pas parce qu'elle ne peut pas s'en
+#     servir.
+#   - `Spaceship::ConnectAPI::AppDataUsage` avec le jeton de la clé → « The
+#     relationship 'dataUsages' does not exist » : la ressource existe, elle
+#     n'est simplement pas sur cet hôte.
+#
+# La porte est une session web capturée une fois — `fastlane spaceauth -u <apple-id>`,
+# qui réclame mot de passe **et** code 2FA au terminal (un agent ne peut pas la
+# lancer ; un passkey ne remplace pas ce couple, il le supprime). La chaîne
+# obtenue se colle dans `config.env` sous `FASTLANE_SESSION`, et vaut ~30 jours.
+#
+# Comme la tarification, c'est **par app et non par version** : ça se corrige à
+# tout moment sans nouveau build. D'où le fait que ça n'échoue pas la lane.
+def declare_privacy
+  if ENV["FASTLANE_SESSION"].to_s.strip.empty?
+    UI.important("Confidentialité non automatisée : pas de FASTLANE_SESSION.")
+    UI.important("  soit : fastlane spaceauth -u sharikmohamed8@gmail.com, puis la coller dans config.env")
+    UI.important("  soit : App Store Connect → Salat → Confidentialité de l'app → Commencer")
+    return
+  end
+
+  upload_app_privacy_details_to_app_store(
+    username: ENV.fetch("FASTLANE_USER", "sharikmohamed8@gmail.com"),
+    app_identifier: app_id,
+    json_path: "./fastlane/metadata/app_privacy.json",
+    skip_json_file_saving: true
+  )
+rescue StandardError => e
+  UI.important("Confidentialité non envoyée (#{e.message.lines.first.to_s.strip}).")
+  UI.important("Session expirée ? `fastlane spaceauth -u sharikmohamed8@gmail.com` la renouvelle.")
+end
+
+platform :ios do
+  # Ouvre la fiche : l'App ID sur le portail développeur **et** la fiche sur App
+  # Store Connect, qui sont deux services distincts. Idempotente — relancée sur
+  # une fiche existante, `produce` la retrouve et rend son identifiant.
+  #
+  # Le SKU n'est vu que par la comptabilité Apple, et il est définitif : le
+  # bundle en fait un identifiant stable qu'on n'a pas à choisir.
+  desc "Créer l'App ID et la fiche App Store Connect"
+  lane :bootstrap do
+    UI.message("Fiche à ouvrir : #{app_name} (#{app_id})")
+
+    # **`produce` ne prend pas `api_key`** — c'est le seul endroit de ce fichier
+    # dans ce cas, et l'erreur (« Could not find option 'api_key' » suivie de la
+    # liste des options acceptées) ne dit jamais pourquoi. La création d'un App
+    # ID touche au portail développeur et pas seulement à App Store Connect, et
+    # cette moitié-là passe par la session web. D'où `username`.
+    #
+    # On appelle quand même `asc_api_key` juste avant : il pose
+    # `Spaceship::ConnectAPI.token` globalement, ce dont la moitié App Store
+    # Connect de `produce` se sert.
+    asc_api_key
+    produce(
+      username: ENV.fetch("FASTLANE_USER", "sharikmohamed8@gmail.com"),
+      app_identifier: app_id,
+      app_name: app_name,
+      sku: app_id,
+      # Le **code** de locale, pas le nom : « English (U.S.) » est refusé depuis
+      # que `produce` a déprécié les noms de langue.
+      language: "en-US",
+      platforms: ["ios"],
+      skip_itc: false,
+      skip_devcenter: false
+    )
+
+    UI.success("Fiche ouverte. Suite : `ruby scripts/asc_price_free.rb`, puis `fastlane ios metadata`.")
+  end
+
+  desc "Screenshots et metadata vers App Store Connect"
+  lane :metadata do |options|
+    deliver(
+      api_key: asc_api_key,
+      app_identifier: app_id,
+      skip_binary_upload: true,
+      skip_metadata: options[:only_screenshots] == true,
+      skip_screenshots: options[:only_metadata] == true,
+      # Sans ça, `deliver` tente de créer la version et échoue sur une version
+      # déjà ouverte — « version number has been previously used », qui ne dit
+      # pas du tout ce qu'elle veut dire.
+      skip_app_version_update: true,
+      app_review_information: review_contact,
+      overwrite_screenshots: true,
+      metadata_path: "./fastlane/metadata",
+      screenshots_path: "./fastlane/screenshots",
+      languages: ["en-US", "fr-FR", "ar-SA"],
+      submit_for_review: false,
+      automatic_release: false,
+      run_precheck_before_submit: false,
+      force: true
+    )
+  end
+
+  # Soumission pour examen. Ne monte pas le binaire (c'est
+  # `scripts/upload_testflight.sh`) : cette lane pose les déclarations
+  # qu'App Store Connect exige avant d'accepter une soumission, puis appuie sur
+  # le bouton.
+  #
+  # Les déclarations sont celles de Sharik, confirmées le 06/08/2026 :
+  #   - 4+ — rien de répréhensible ; l'app enseigne un texte religieux.
+  #   - `export_compliance_uses_encryption: false` — l'app ne chiffre rien et ne
+  #     fait aucune requête réseau.
+  #   - `content_rights_contains_third_party_content: false` — illustrations
+  #     générées ici, textes coraniques du domaine public.
+  desc "Déclarations puis soumission pour examen"
+  lane :release do
+    # La clé d'abord, et gardée : l'appeler pose aussi
+    # `Spaceship::ConnectAPI.token` globalement, et c'est ce jeton que
+    # `declare_privacy` utilise juste après.
+    key = asc_api_key
+
+    # Relancée sur une version déjà soumise, cette lane échouerait sur « The
+    # specified pre-release build could not be added » — elle réessaie
+    # d'attacher le binaire à une version qui n'est plus modifiable. Le message
+    # ne dit nulle part que le travail est **déjà fait**.
+    #
+    # On teste l'**état**, et surtout pas `get_edit_app_store_version` :
+    # spaceship range `WAITING_FOR_REVIEW` parmi les états « modifiables » (avec
+    # les rejets, qu'on veut effectivement pouvoir resoumettre), donc il rend
+    # une version même quand il n'y a plus rien à faire.
+    require "spaceship"
+    version = Spaceship::ConnectAPI::App.find(app_id)&.get_edit_app_store_version
+    state = version && (version.app_version_state || version.app_store_state)
+    resubmittable = %w[PREPARE_FOR_SUBMISSION DEVELOPER_REJECTED REJECTED
+                       METADATA_REJECTED INVALID_BINARY]
+    unless state.nil? || resubmittable.include?(state)
+      UI.success("Déjà soumis (#{state}). `ruby scripts/asc_state.rb` pour le détail.")
+      next
+    end
+
+    # Avant `deliver` : sans confidentialité publiée, la soumission est refusée
+    # sur « you must have published answers to your app's data usages ».
+    declare_privacy
+
+    deliver(
+      api_key: key,
+      app_identifier: app_id,
+      skip_binary_upload: true,
+      # `skip_metadata: true` serait le réflexe — cette lane ne veut pas
+      # retoucher aux textes. Mais `deliver` applique le classement d'âge
+      # **dans** l'étape metadata (`upload_metadata.rb`, tout à la fin), et la
+      # sauter le saute avec : la soumission part sans classement, et App Store
+      # Connect renvoie « missing a required attribute » pour les vingt-trois
+      # clés d'un coup — y compris celles que le JSON contient.
+      skip_metadata: false,
+      skip_screenshots: true,
+      skip_app_version_update: true,
+      build_number: build_number,
+      app_review_information: review_contact,
+      app_rating_config_path: "./fastlane/metadata/age_rating.json",
+      submission_information: {
+        export_compliance_uses_encryption: false,
+        content_rights_contains_third_party_content: false,
+        add_id_info_uses_idfa: false
+      },
+      submit_for_review: true,
+      # Le jour de la sortie se décide après l'acceptation, pas trois jours
+      # avant à l'aveugle.
+      automatic_release: false,
+      # `precheck` relit les textes chez Apple avant de soumettre — marques
+      # citées, mots interdits, URL mortes. Vingt secondes contre un
+      # aller-retour de plusieurs jours avec la revue.
+      run_precheck_before_submit: true,
+      precheck_include_in_app_purchases: false,
+      force: true
+    )
+  end
+end

@@ -29,6 +29,13 @@ final class AppSettings {
         didSet { SharedStore.defaults.set(stepSeconds, forKey: SharedStore.Key.stepSeconds) }
     }
 
+    /// Which voice the recitation panel plays. Stored, never computed from
+    /// UserDefaults on read: `@Observable` only tracks stored properties, so a
+    /// computed accessor would change the voice without redrawing anything.
+    var reciterID: String? {
+        didSet { SharedStore.defaults.set(reciterID, forKey: SharedStore.Key.reciter) }
+    }
+
     init() {
         let preference = SharedStore.storedLanguagePreference
         let resolved = preference == .system ? AppLanguage.resolvedFromSystem() : preference
@@ -38,6 +45,7 @@ final class AppSettings {
         learned = Progress.learned
         let stored = SharedStore.defaults.double(forKey: SharedStore.Key.stepSeconds)
         stepSeconds = stored > 0 ? stored : 7
+        reciterID = SharedStore.defaults.string(forKey: SharedStore.Key.reciter)
     }
 
     var resolvedLanguage: AppLanguage {

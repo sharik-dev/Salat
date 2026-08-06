@@ -1,0 +1,9 @@
+# Le bundle vient de `project.yml` — la source de vérité du projet (voir le
+# CLAUDE.md : `Salat.xcodeproj` est généré, on ne l'édite jamais). Le retaper
+# ici en donnerait une deuxième version, et le jour où les deux divergent on
+# publie la fiche d'une app sous le binaire d'une autre.
+_yml = File.read(File.expand_path("../project.yml", __dir__))
+
+app_identifier _yml[/PRODUCT_BUNDLE_IDENTIFIER:\s*(\S+)/, 1]
+team_id        _yml[/DEVELOPMENT_TEAM:\s*"([^"]+)"/, 1]
+apple_id       ENV.fetch("FASTLANE_USER", "sharikmohamed8@gmail.com")

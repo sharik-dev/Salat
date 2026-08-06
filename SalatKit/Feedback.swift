@@ -135,17 +135,21 @@ public final class Sound {
 
 private final class SoundBundleToken {}
 
-// MARK: - The gold star burst
+// MARK: - The spark burst
 
-/// A spray of small **eight-pointed stars** thrown out of the button, falling
-/// and fading.
+/// A spray of small **four-pointed sparkles** thrown out of the button,
+/// falling and fading.
 ///
-/// The eight-pointed star (khatam) is the app's own motif — it is what the
-/// background lattice is drawn from — so the burst is made of the same
-/// material as the page rather than of generic sparkles. Flat gold, hard
-/// edges, no blur: these are chips off the button, not light.
+/// These are light, not matter: a white-hot core, four thin tapered rays that
+/// narrow to a point, and a warm halo bleeding around them. Flat gold chips
+/// read as confetti on cream — the eye needs the glow to see them leave the
+/// button at all.
+///
+/// Deliberately **not** the eight-pointed khatam: that motif belongs to the
+/// page (the background lattice, the onboarding), where it is drawn large and
+/// still. At 10 pt, thrown and spinning, its eight points blur into a blob.
 public struct StarBurst: View {
-    public var color: Color = Theme.gold
+    public var color: Color = Theme.ember
     public var count: Int = 10
     /// Far enough to **leave the face**: a spray that stays on the button
     /// reads as a shimmer, not as something thrown.
@@ -155,7 +159,7 @@ public struct StarBurst: View {
     @State private var bits: [Bit] = []
     @State private var t: CGFloat = 0
 
-    public init(color: Color = Theme.gold, count: Int = 10,
+    public init(color: Color = Theme.ember, count: Int = 10,
                 spread: ClosedRange<CGFloat> = 30...70) {
         self.color = color
         self.count = count
@@ -174,10 +178,13 @@ public struct StarBurst: View {
         ZStack {
             ForEach(bits) { bit in
                 let radians = bit.angle * .pi / 180
-                EightPointStar()
-                    .fill(color)
+                Spark(color: color)
                     .frame(width: bit.side, height: bit.side)
                     .rotationEffect(.degrees(bit.spin * Double(t)))
+                    // A spark burns out: it shrinks to its point as it fades,
+                    // instead of staying full size and simply going
+                    // transparent.
+                    .scaleEffect(1 - 0.45 * t)
                     .offset(
                         x: cos(radians) * bit.distance * t,
                         // Gravity: the t² term makes them fall instead of
@@ -199,16 +206,102 @@ public struct StarBurst: View {
                 let base = Double(i) / Double(count) * 360
                 return Bit(angle: base + .random(in: -18...18),
                            distance: .random(in: spread),
-                           side: .random(in: 7...13),
-                           spin: .random(in: -180...180))
+                           // Bigger than the old chips: most of a sparkle is
+                           // thin ray and halo, so a 8 pt one is invisible.
+                           side: .random(in: 12...22),
+                           // Barely turning. A four-pointed star that spins
+                           // fast stops reading as light and starts reading
+                           // as a rotating pictogram.
+                           spin: .random(in: -70...70))
             }
             withAnimation(.easeOut(duration: 0.5)) { t = 1 }
         }
     }
 }
 
+/// One sparkle: halo, bloom, core.
+///
+/// Three layers, and all three are needed. The halo is what makes it read as
+/// light on cream paper; the blurred copy is the bloom that softens the rays
+/// so they don't look like a cut-out cross; the sharp copy on top keeps a
+/// white-hot centre so the thing still has a point of origin.
+public struct Spark: View {
+    public var color: Color
+
+    public init(color: Color = Theme.ember) {
+        self.color = color
+    }
+
+    public var body: some View {
+        GeometryReader { geo in
+            let side = min(geo.size.width, geo.size.height)
+            ZStack {
+                Circle()
+                    .fill(
+                        RadialGradient(
+                            colors: [color.opacity(0.55), color.opacity(0.16), .clear],
+                            center: .center,
+                            startRadius: 0,
+                            endRadius: side * 0.42
+                        )
+                    )
+                    .frame(width: side * 0.84, height: side * 0.84)
+
+                FourPointStar()
+                    .fill(color)
+                    .blur(radius: side * 0.07)
+
+                FourPointStar()
+                    .fill(
+                        RadialGradient(
+                            colors: [Theme.emberCore, color],
+                            center: .center,
+                            startRadius: 0,
+                            endRadius: side * 0.3
+                        )
+                    )
+                    .frame(width: side * 0.86, height: side * 0.86)
+            }
+            .frame(width: geo.size.width, height: geo.size.height)
+        }
+        .allowsHitTesting(false)
+    }
+}
+
+/// A four-pointed sparkle: four tips joined by curves that pinch in towards
+/// the centre, so each ray tapers to a needle instead of being a triangle.
+/// `waist` is how far the curve's control point sits from the centre — small
+/// waist, thin rays.
+public struct FourPointStar: Shape {
+    public var waist: CGFloat
+
+    public init(waist: CGFloat = 0.085) {
+        self.waist = waist
+    }
+
+    public func path(in rect: CGRect) -> Path {
+        let c = CGPoint(x: rect.midX, y: rect.midY)
+        let rx = rect.width / 2, ry = rect.height / 2
+        let wx = rx * waist, wy = ry * waist
+        var path = Path()
+        path.move(to: CGPoint(x: c.x, y: c.y - ry))
+        path.addQuadCurve(to: CGPoint(x: c.x + rx, y: c.y),
+                          control: CGPoint(x: c.x + wx, y: c.y - wy))
+        path.addQuadCurve(to: CGPoint(x: c.x, y: c.y + ry),
+                          control: CGPoint(x: c.x + wx, y: c.y + wy))
+        path.addQuadCurve(to: CGPoint(x: c.x - rx, y: c.y),
+                          control: CGPoint(x: c.x - wx, y: c.y + wy))
+        path.addQuadCurve(to: CGPoint(x: c.x, y: c.y - ry),
+                          control: CGPoint(x: c.x - wx, y: c.y - wy))
+        path.closeSubpath()
+        return path
+    }
+}
+
 /// The khatam: two squares at 45° to each other. The same figure the page's
-/// background lattice is drawn from, filled here instead of stroked.
+/// background lattice is drawn from, filled here instead of stroked. Still
+/// used by the page itself (background lattice, onboarding) — only the burst
+/// stopped using it.
 public struct EightPointStar: Shape {
     public init() {}
 

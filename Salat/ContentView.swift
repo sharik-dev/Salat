@@ -45,4 +45,6 @@ struct ContentView: View {
     ContentView()
         .environment(AppSettings())
         .environment(OnboardingManager())
+        .environment(RecitationPlayer())
+        .environment(VoiceRecorder())
 }

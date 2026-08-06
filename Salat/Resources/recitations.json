@@ -1,0 +1,75 @@
+{
+  "reciters": [
+    {
+      "id": "husary_muallim",
+      "name": "Mahmoud Khalil Al-Husary",
+      "style": "muallim",
+      "source": "https://everyayah.com/data/Husary_Muallim_128kbps/"
+    },
+    {
+      "id": "husary",
+      "name": "Mahmoud Khalil Al-Husary",
+      "style": "murattal",
+      "source": "https://everyayah.com/data/Husary_128kbps/"
+    },
+    {
+      "id": "alafasy",
+      "name": "Mishary Rashid Alafasy",
+      "style": "murattal",
+      "source": "https://everyayah.com/data/Alafasy_128kbps/"
+    }
+  ],
+  "clips": {
+    "husary_muallim": {
+      "fatiha": [
+        "rec_husary_muallim_fatiha_0",
+        "rec_husary_muallim_fatiha_1",
+        "rec_husary_muallim_fatiha_2",
+        "rec_husary_muallim_fatiha_3",
+        "rec_husary_muallim_fatiha_4",
+        "rec_husary_muallim_fatiha_5",
+        "rec_husary_muallim_fatiha_6"
+      ],
+      "surah": [
+        "rec_husary_muallim_surah_0",
+        "rec_husary_muallim_surah_1",
+        "rec_husary_muallim_surah_2",
+        "rec_husary_muallim_surah_3"
+      ]
+    },
+    "husary": {
+      "fatiha": [
+        "rec_husary_fatiha_0",
+        "rec_husary_fatiha_1",
+        "rec_husary_fatiha_2",
+        "rec_husary_fatiha_3",
+        "rec_husary_fatiha_4",
+        "rec_husary_fatiha_5",
+        "rec_husary_fatiha_6"
+      ],
+      "surah": [
+        "rec_husary_surah_0",
+        "rec_husary_surah_1",
+        "rec_husary_surah_2",
+        "rec_husary_surah_3"
+      ]
+    },
+    "alafasy": {
+      "fatiha": [
+        "rec_alafasy_fatiha_0",
+        "rec_alafasy_fatiha_1",
+        "rec_alafasy_fatiha_2",
+        "rec_alafasy_fatiha_3",
+        "rec_alafasy_fatiha_4",
+        "rec_alafasy_fatiha_5",
+        "rec_alafasy_fatiha_6"
+      ],
+      "surah": [
+        "rec_alafasy_surah_0",
+        "rec_alafasy_surah_1",
+        "rec_alafasy_surah_2",
+        "rec_alafasy_surah_3"
+      ]
+    }
+  }
+}

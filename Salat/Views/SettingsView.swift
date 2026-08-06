@@ -3,6 +3,7 @@ import SwiftUI
 struct SettingsView: View {
     @Environment(AppSettings.self) private var settings
     @Environment(OnboardingManager.self) private var onboarding
+    @Environment(VoiceRecorder.self) private var recorder
     @Environment(\.loc) private var loc
 
     var body: some View {
@@ -17,6 +18,7 @@ struct SettingsView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
 
                 languageBlock
+                audioBlock
                 widgetBlock
                 aboutBlock
 
@@ -80,6 +82,83 @@ struct SettingsView: View {
                 .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
+    }
+
+    // MARK: Audio
+
+    private var audioBlock: some View {
+        @Bindable var settings = settings
+
+        return block(loc.t("settings.audio"), icon: "waveform") {
+            VStack(alignment: .leading, spacing: 10) {
+                ForEach(Recitations.reciters) { reciter in
+                    reciterRow(reciter)
+                }
+
+                Text(loc.t("settings.audio.credits"))
+                    .font(Theme.body(12))
+                    .foregroundStyle(Theme.inkSoft)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, 2)
+
+                // Only offered when there is something to delete: a button that
+                // does nothing still makes the user wonder what it did.
+                if recordingCount > 0 {
+                    Divider().background(Theme.border)
+                    Text(loc.t("settings.audio.recordings", recordingCount))
+                        .font(Theme.body(12))
+                        .foregroundStyle(Theme.inkSoft)
+                    Button {
+                        recorder.deleteAll()
+                    } label: {
+                        Text(loc.t("settings.audio.clear"))
+                            .font(Theme.label(13))
+                            .foregroundStyle(Theme.ink)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 11)
+                    }
+                    .chunky(Theme.sand, depth: 4)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    /// Read through `recorder.revision` so the count drops the moment the files
+    /// go — the filesystem is invisible to SwiftUI on its own.
+    private var recordingCount: Int {
+        _ = recorder.revision
+        return VoiceRecorder.count
+    }
+
+    private func reciterRow(_ reciter: Reciter) -> some View {
+        let isOn = Recitations.reciter(id: settings.reciterID)?.id == reciter.id
+        return Button {
+            withAnimation(Theme.spring) { settings.reciterID = reciter.id }
+        } label: {
+            HStack(spacing: 10) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(reciter.name)
+                        .font(Theme.body(15))
+                        .foregroundStyle(Theme.ink)
+                    if reciter.isTeaching {
+                        Text(loc.t("audio.style.teaching"))
+                            .font(Theme.label(10))
+                            .foregroundStyle(Theme.gold)
+                    }
+                }
+                Spacer()
+                if isOn {
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundStyle(Theme.gold)
+                }
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
+            .contentShape(Rectangle())
+        }
+        .chunky(isOn ? Theme.goldSoft : Theme.sand, depth: isOn ? 4 : 0, haptic: .select)
     }
 
     // MARK: About
