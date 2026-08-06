@@ -65,13 +65,9 @@ struct SettingsView: View {
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 12)
-            .background(
-                RoundedRectangle(cornerRadius: Theme.Radius.chip, style: .continuous)
-                    .fill(isOn ? Theme.goldSoft.opacity(0.45) : Theme.sand.opacity(0.35))
-            )
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .chunky(isOn ? Theme.goldSoft : Theme.sand, depth: isOn ? 4 : 0, haptic: .select)
     }
 
     // MARK: Widget
@@ -102,11 +98,10 @@ struct SettingsView: View {
                     Text(loc.t("settings.reset_progress"))
                         .font(Theme.label(13))
                         .foregroundStyle(Theme.ink)
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 10)
-                        .background(Capsule().fill(Theme.sand))
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 11)
                 }
-                .buttonStyle(.plain)
+                .chunky(Theme.sand, depth: 4)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }

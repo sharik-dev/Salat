@@ -1,4 +1,7 @@
 import SwiftUI
+import CoreText
+
+private final class ThemeBundleToken {}
 
 /// Visual identity: cream paper, warm sand, muted gold. Sober, no imagery, no
 /// hard black — the palette of an old manuscript rather than of an interface.
@@ -39,6 +42,49 @@ public enum Theme {
         .system(size: size, weight: .semibold, design: .default)
     }
 
+    // MARK: Pixel face
+
+    /// The pixel face from 5min, used **only for numbers and short uppercase
+    /// labels** — step counters, "12 / 14", the small gold captions. Never for
+    /// the prayer text, the translations or the Arabic: `04b_30` has no Arabic
+    /// at all, and a sacred text set in an arcade face would be grotesque.
+    /// This is the app's furniture, not its content.
+    public static func pixel(_ size: CGFloat) -> Font {
+        registerPixelFont()
+        guard let family = pixelFamily else {
+            // Rounded and heavy is the closest vector stand-in, and it covers
+            // the accents 04b_30 is missing.
+            return .system(size: size * 0.78, weight: .heavy, design: .rounded)
+        }
+        return .custom(family, size: snap(size))
+    }
+
+    /// The face is drawn on an 8px grid. A size that is not a multiple of 8
+    /// falls between two pixels and the stems of an `M` stop matching — the
+    /// whole point of a pixel face goes with it.
+    public static func snap(_ size: CGFloat) -> CGFloat {
+        max(8, (size / 8).rounded() * 8)
+    }
+
+    private static var pixelFamily: String?
+    private static var pixelRegistrationTried = false
+
+    /// Registering through CoreText rather than `UIAppFonts` avoids having to
+    /// hand-write an Info.plist: the project builds with
+    /// `GENERATE_INFOPLIST_FILE = YES`, and a hand-added plist would be
+    /// overwritten. It also works from the widget extension unchanged.
+    public static func registerPixelFont() {
+        guard !pixelRegistrationTried else { return }
+        pixelRegistrationTried = true
+        let bundle = Bundle(for: ThemeBundleToken.self)
+        guard let url = bundle.url(forResource: "04b30", withExtension: "ttf"),
+              let data = NSData(contentsOf: url),
+              let provider = CGDataProvider(data: data),
+              let font = CGFont(provider) else { return }
+        CTFontManagerRegisterGraphicsFont(font, nil)
+        pixelFamily = font.postScriptName as String?
+    }
+
     /// Arabic needs a face that carries the diacritics without crushing them.
     public static func arabic(_ size: CGFloat = 26) -> Font {
         .custom("Geeza Pro", size: size)
@@ -52,25 +98,11 @@ public enum Theme {
 
 // MARK: - Card surface
 
-public struct CardBackground: ViewModifier {
-    var radius: CGFloat = Theme.Radius.card
-    public func body(content: Content) -> some View {
-        content
-            .background(
-                RoundedRectangle(cornerRadius: radius, style: .continuous)
-                    .fill(Theme.surface)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: radius, style: .continuous)
-                    .stroke(Theme.border, lineWidth: 1)
-            )
-            .shadow(color: Theme.ink.opacity(0.05), radius: 12, y: 4)
-    }
-}
-
 public extension View {
+    /// Every card in the app is a `Plate` — an outlined face with a solid
+    /// bottom face under it. See `Plate.swift` for why that beats a shadow.
     func card(radius: CGFloat = Theme.Radius.card) -> some View {
-        modifier(CardBackground(radius: radius))
+        plate(Theme.surface, radius: radius)
     }
 }
 
@@ -137,5 +169,39 @@ public extension Color {
             blue:  Double(hex & 0xFF) / 255,
             opacity: 1
         )
+    }
+}
+
+// MARK: - Step numeral
+
+/// The step number as a pixel numeral on a sand chip.
+///
+/// It is a bare numeral rather than "Step 5" because `04b_30` has no `É`, and
+/// the French "ÉTAPE" fell back glyph by glyph into a visible mix of two
+/// typefaces. Digits are the one thing the pixel face renders identically in
+/// every language the app ships.
+public struct StepBadge: View {
+    public let order: Int
+    public var size: CGFloat = 12
+
+    public init(order: Int, size: CGFloat = 12) {
+        self.order = order
+        self.size = size
+    }
+
+    public var body: some View {
+        Text(String(format: "%02d", order))
+            .font(Theme.pixel(size))
+            .foregroundStyle(Theme.gold)
+            .padding(.horizontal, 7)
+            .padding(.vertical, 3)
+            .background(
+                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    .fill(Theme.sand)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 6, style: .continuous)
+                            .strokeBorder(Theme.gold.opacity(0.45), lineWidth: 1)
+                    )
+            )
     }
 }

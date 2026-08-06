@@ -81,9 +81,40 @@ Crème `#FBF6EC`, sable `#EFE3CC`, or `#C1962C`, encre brune `#2E2A22`. Titres e
 pas de couleur saturée, pas de photo. Le motif de fond est un `Canvas` (étoiles à huit branches)
 — jamais une image, pour rester net à toutes les tailles et ne rien peser dans le widget.
 
+## Les formes viennent de 5min (`~/Documents/IOS/5min`)
+
+Le langage de formes est celui de `5min/Design/Plate.swift` : rectangle arrondi, **contour d'encre
+épais**, et une **face inférieure pleine extrudée vers le bas** — jamais d'ombre portée floue.
+C'est cette face qui fait qu'un bloc se lit comme un objet posé et non comme une zone coloriée.
+Les boutons s'enfoncent dessus (`chunky`), et **c'est le déplacement de la face qui fait sentir
+l'appui**, pas un changement de couleur — que le pouce cache de toute façon.
+
+**Seules les formes sont reprises.** 5min est sur feutre sombre avec des accents saturés ; ici les
+mêmes formes sont taillées dans la crème, le sable et l'or, et le contour est l'encre brune — un
+quasi-noir sur de la crème percerait des trous au lieu de dessiner des arêtes. Contour 2 pt et non
+3 pt, pour la même raison.
+
+Le retour du geste vient aussi de 5min (`Feedback.swift`) : vibration **à la descente** (c'est le
+seul instant où elle coïncide avec ce que fait le doigt), clic sonore en même temps, gerbe d'or au
+relâchement. Les rôles ne se piochent pas pour décorer — `select` pour un cran de choix, `press`
+pour un geste plein, `win` pour la seule fanfare (marquer une étape acquise).
+
+Les éclats sont des **étoiles à huit branches** (khatam) — le motif du fond, pas un scintillement
+générique. Ce n'est pas une étoile de David : l'hexagramme est le symbole du judaïsme et n'a rien à
+faire dans une app de salat.
+
+La police pixel `04b30.ttf` vient aussi de 5min, et sert **uniquement aux nombres** : le badge
+d'étape, le compteur du widget, les secondes. Elle n'a ni arabe ni `É` — « ÉTAPE » y retombait
+glyphe par glyphe en un mélange visible de deux fontes, d'où le badge numéral. Jamais pour le texte
+de prière : un texte sacré en fonte d'arcade serait grotesque.
+
+Les illustrations sont légèrement pixellisées (`tools/pixelate.py`, grille 72) pour parler la même
+langue, sans aller jusqu'à rendre les postures illisibles en 62 pt.
+
 Le `FloatingTabBar` reprend la structure de la convention maison mais **recolorée pour un fond
-clair** : encre sur crème, pastille dorée derrière l'onglet actif, pas de glow néon (invisible
-sur du papier).
+clair** : encre sur crème, plaque dorée en relief derrière l'onglet actif, pas de glow néon
+(invisible sur du papier). Les onglets inactifs n'ont **aucun contour** — trois boîtes cerclées
+dans une boîte cerclée, et plus rien ne ressort.
 
 ## Tests : ce qu'ils gardent
 

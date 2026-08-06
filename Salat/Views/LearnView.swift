@@ -48,7 +48,7 @@ struct LearnView: View {
 
             ProgressBar(value: Double(settings.learned.count),
                         total: Double(max(settings.steps.count, 1)))
-                .frame(height: 6)
+                .frame(height: 10)
                 .padding(.top, 4)
 
             Text(loc.t("learn.progress", settings.learned.count, settings.steps.count))
@@ -73,9 +73,7 @@ private struct StepRow: View {
             PositionMedallion(step: step, size: 62)
 
             VStack(alignment: .leading, spacing: 4) {
-                Text(loc.t("common.step", step.order))
-                    .font(Theme.label(10))
-                    .foregroundStyle(Theme.gold)
+                StepBadge(order: step.order)
 
                 Text(step.name)
                     .font(Theme.title(17))
@@ -111,10 +109,14 @@ struct ProgressBar: View {
     var body: some View {
         GeometryReader { geo in
             ZStack(alignment: .leading) {
-                Capsule().fill(Theme.sand)
+                Capsule()
+                    .fill(Theme.sand)
+                    .overlay(Capsule().strokeBorder(Theme.ink, lineWidth: 1.5))
                 Capsule()
                     .fill(Theme.gold)
-                    .frame(width: geo.size.width * min(max(value / total, 0), 1))
+                    .overlay(Capsule().strokeBorder(Theme.ink, lineWidth: 1.5))
+                    .frame(width: max(geo.size.width * min(max(value / total, 0), 1),
+                                      value > 0 ? geo.size.height : 0))
             }
         }
     }

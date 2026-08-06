@@ -169,7 +169,7 @@ public struct CarouselWidgetView: View {
 
     private var counter: some View {
         Text("\(entry.position) / \(entry.total)")
-            .font(Theme.label(9).monospacedDigit())
+            .font(Theme.pixel(10))
             .foregroundStyle(Theme.gold)
     }
 }

@@ -47,11 +47,10 @@ struct StepDetailView: View {
             Button { dismiss() } label: {
                 Image(systemName: "xmark")
                     .font(.system(size: 13, weight: .bold))
-                    .foregroundStyle(Theme.inkSoft)
-                    .frame(width: 32, height: 32)
-                    .background(Circle().fill(Theme.sand))
+                    .foregroundStyle(Theme.ink)
+                    .frame(width: 34, height: 34)
             }
-            .buttonStyle(.plain)
+            .chunky(Theme.sand, radius: 12, depth: 3)
             .padding(16)
         }
     }
@@ -62,9 +61,7 @@ struct StepDetailView: View {
         VStack(spacing: 10) {
             PositionMedallion(step: step, size: 168)
 
-            Text(loc.t("common.step", step.order))
-                .font(Theme.label(11))
-                .foregroundStyle(Theme.gold)
+            StepBadge(order: step.order, size: 14)
 
             Text(step.name)
                 .font(Theme.title(26))
@@ -179,15 +176,14 @@ struct StepDetailView: View {
                 Text(isLearned ? loc.t("detail.unmark") : loc.t("detail.mark"))
             }
             .font(Theme.label(14))
-            .foregroundStyle(isLearned ? .white : Theme.ink)
+            .foregroundStyle(isLearned ? Theme.paper : Theme.ink)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14)
-            .background(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(isLearned ? Theme.green : Theme.goldSoft)
-            )
         }
-        .buttonStyle(.plain)
+        // Learning a step is the one thing in the app worth a fanfare.
+        .chunky(isLearned ? Theme.green : Theme.goldSoft,
+                radius: 16,
+                haptic: isLearned ? .tap : .win)
     }
 
     private func section<Content: View>(_ title: String, icon: String,

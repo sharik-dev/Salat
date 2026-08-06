@@ -54,7 +54,7 @@ struct PracticeView: View {
         return VStack(spacing: 12) {
             // Progress of the current step, so the loop never feels stalled.
             ProgressBar(value: elapsed, total: settings.stepSeconds)
-                .frame(height: 4)
+                .frame(height: 8)
 
             HStack(spacing: 18) {
                 circleButton("backward.fill") { step(-1) }
@@ -64,11 +64,10 @@ struct PracticeView: View {
                 } label: {
                     Image(systemName: isPlaying ? "pause.fill" : "play.fill")
                         .font(.system(size: 20, weight: .bold))
-                        .foregroundStyle(Theme.paper)
-                        .frame(width: 56, height: 56)
-                        .background(Circle().fill(Theme.ink))
+                        .foregroundStyle(Theme.ink)
+                        .frame(width: 58, height: 54)
                 }
-                .buttonStyle(.plain)
+                .chunky(Theme.gold, radius: 18, depth: 6, haptic: .press)
                 .accessibilityIdentifier("practice.playpause")
 
                 circleButton("forward.fill") { step(1) }
@@ -81,7 +80,7 @@ struct PracticeView: View {
                 Slider(value: $settings.stepSeconds, in: 3...20, step: 1)
                     .tint(Theme.gold)
                 Text("\(Int(settings.stepSeconds))s")
-                    .font(Theme.label(11).monospacedDigit())
+                    .font(Theme.pixel(11))
                     .foregroundStyle(Theme.ink)
             }
         }
@@ -92,10 +91,9 @@ struct PracticeView: View {
             Image(systemName: symbol)
                 .font(.system(size: 14, weight: .bold))
                 .foregroundStyle(Theme.ink)
-                .frame(width: 42, height: 42)
-                .background(Circle().fill(Theme.sand))
+                .frame(width: 46, height: 42)
         }
-        .buttonStyle(.plain)
+        .chunky(Theme.sand, radius: 14, depth: 4, haptic: .select)
     }
 
     private func step(_ delta: Int) {

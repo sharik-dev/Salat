@@ -62,17 +62,13 @@ struct OnboardingView: View {
                 } label: {
                     Text(isLast ? loc.t("onboarding.start") : loc.t("onboarding.next"))
                         .font(Theme.label(15))
-                        .foregroundStyle(Theme.paper)
+                        .foregroundStyle(Theme.ink)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 16)
-                        .background(
-                            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                                .fill(Theme.ink)
-                        )
                 }
-                .buttonStyle(.plain)
+                .chunky(Theme.gold, radius: 18, haptic: isLast ? .win : .press)
                 .padding(.horizontal, 26)
-                .padding(.bottom, 30)
+                .padding(.bottom, 26)
                 .accessibilityIdentifier("onboarding.primary")
             }
         }
@@ -132,28 +128,31 @@ struct OnboardingView: View {
     private func finish() { onboarding.markSeen() }
 }
 
-/// The celebration on the last page. Confetti would break the tone here, so it
-/// is gold dust drifting down — same beat, quieter.
+/// The celebration on the last page: the same eight-pointed stars the buttons
+/// throw, drifting down instead of being flung. Confetti would break the tone;
+/// this is the page's own motif, falling.
 private struct GoldDust: View {
-    @State private var phase: Double = 0
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         TimelineView(.animation) { timeline in
             Canvas { context, size in
                 let t = timeline.date.timeIntervalSinceReferenceDate
-                for i in 0..<60 {
+                for i in 0..<44 {
                     let seed = Double(i)
                     let x = (sin(seed * 12.9898) * 43758.5453).truncatingRemainder(dividingBy: 1)
-                    let speed = 14 + (seed.truncatingRemainder(dividingBy: 7)) * 6
-                    let y = ((t * speed + seed * 37).truncatingRemainder(dividingBy: size.height + 40)) - 20
-                    let drift = sin(t * 0.6 + seed) * 10
-                    let r = 1.2 + (seed.truncatingRemainder(dividingBy: 3)) * 0.7
-                    let rect = CGRect(x: abs(x) * size.width + drift, y: y, width: r * 2, height: r * 2)
-                    context.fill(Path(ellipseIn: rect),
-                                 with: .color(Theme.gold.opacity(0.30)))
+                    let speed = 12 + (seed.truncatingRemainder(dividingBy: 7)) * 5
+                    let y = ((t * speed + seed * 37).truncatingRemainder(dividingBy: size.height + 60)) - 30
+                    let drift = sin(t * 0.6 + seed) * 12
+                    let r = 3 + (seed.truncatingRemainder(dividingBy: 3)) * 2
+                    let rect = CGRect(x: abs(x) * size.width + drift - r, y: y - r,
+                                      width: r * 2, height: r * 2)
+                    context.fill(EightPointStar().path(in: rect),
+                                 with: .color(Theme.gold.opacity(0.32)))
                 }
             }
         }
+        .opacity(reduceMotion ? 0 : 1)
         .allowsHitTesting(false)
     }
 }

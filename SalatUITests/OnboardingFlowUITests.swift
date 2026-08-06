@@ -31,8 +31,10 @@ final class OnboardingFlowUITests: XCTestCase {
             primary.tap()
         }
 
-        XCTAssertTrue(app.otherElements["learn.header"].waitForExistence(timeout: 10)
-                      || app.staticTexts["Learn"].waitForExistence(timeout: 5),
+        // Anchored on the identifier, never on a label: the app runs in
+        // whatever language the device asks for, and a test that waits for the
+        // English word "Learn" fails the moment it is launched in French.
+        XCTAssertTrue(app.buttons["tab.learn"].waitForExistence(timeout: 10),
                       "finishing the onboarding did not open the app")
         XCTAssertFalse(primary.exists, "the onboarding came back after finishing")
     }
@@ -44,7 +46,7 @@ final class OnboardingFlowUITests: XCTestCase {
         XCTAssertTrue(skip.waitForExistence(timeout: 10))
         skip.tap()
 
-        XCTAssertFalse(app.buttons["onboarding.primary"].waitForExistence(timeout: 3),
-                       "skipping left the user stuck in the onboarding")
+        XCTAssertTrue(app.buttons["tab.learn"].waitForExistence(timeout: 10),
+                      "skipping left the user stuck in the onboarding")
     }
 }

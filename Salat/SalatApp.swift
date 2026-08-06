@@ -5,6 +5,14 @@ struct SalatApp: App {
     @State private var settings = AppSettings()
     @State private var onboarding = OnboardingManager()
 
+    init() {
+        // The Taptic engine and the two sounds are woken here: a cold
+        // generator answers a hundred milliseconds late, which is exactly long
+        // enough for the first buzz of the session to land after the button.
+        Theme.registerPixelFont()
+        Haptic.warmUp()
+    }
+
     var body: some Scene {
         WindowGroup {
             ContentView()
