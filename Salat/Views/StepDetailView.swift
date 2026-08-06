@@ -5,6 +5,8 @@ struct StepDetailView: View {
     @Environment(AppSettings.self) private var settings
     @Environment(\.loc) private var loc
     @Environment(\.dismiss) private var dismiss
+    /// The verse the recitation panel is working on, when the step has several.
+    @State private var recitationLine = 0
 
     var body: some View {
         ZStack {
@@ -24,7 +26,10 @@ struct StepDetailView: View {
 
                     if step.spoken {
                         recitation
-                        RecitationPanel(step: step)
+                        // The reciter, not the microphone: learning a step is
+                        // hearing how it sounds. Recording yourself is a
+                        // memorisation drill and belongs to *Revise*.
+                        ReciterPanel(step: step, line: $recitationLine)
                     } else {
                         section(loc.t("detail.translation"), icon: "heart.text.square") {
                             Text(step.translation)

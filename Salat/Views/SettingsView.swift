@@ -156,11 +156,12 @@ struct SettingsView: View {
                     Text(reciter.name)
                         .font(Theme.body(15))
                         .foregroundStyle(Theme.ink)
-                    if reciter.isTeaching {
-                        Text(loc.t("audio.style.teaching"))
-                            .font(Theme.label(10))
-                            .foregroundStyle(Theme.gold)
-                    }
+                    // The style, always: Al-Husary is here twice (his teaching
+                    // set and his murattal), and two rows carrying the same
+                    // name and nothing else make the choice unreadable.
+                    Text(loc.t(reciter.isTeaching ? "audio.style.teaching" : "audio.style.murattal"))
+                        .font(Theme.label(10))
+                        .foregroundStyle(reciter.isTeaching ? Theme.gold : Theme.inkSoft)
                 }
                 Spacer()
                 if isOn {

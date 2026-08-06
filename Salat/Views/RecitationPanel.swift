@@ -1,6 +1,9 @@
 import SwiftUI
 
-/// Hear it, say it, look at the two side by side.
+/// Say it, then look at your voice next to the model.
+///
+/// This is a **memorisation** tool, so it lives in *Revise* only: hearing the
+/// reciter belongs to learning a step and is `ReciterPanel`'s job, above.
 ///
 /// The comparison is deliberately *not* a score. Nothing here judges a
 /// pronunciation — no app can, and one that pretended to would be lying about
@@ -10,15 +13,16 @@ import SwiftUI
 struct RecitationPanel: View {
     let step: PrayerStep
 
+    /// Owned by the screen above: the page lights the verse being worked on,
+    /// and the panel is what changes it. Two copies of this number would drift
+    /// the moment either side moved.
+    @Binding var line: Int
+
     @Environment(AppSettings.self) private var settings
     @Environment(RecitationPlayer.self) private var player
     @Environment(VoiceRecorder.self) private var recorder
     @Environment(\.loc) private var loc
 
-    /// Which line of the step is being worked on. Qur'anic steps are practised
-    /// verse by verse — that is how they are taught, and a seven-verse take is
-    /// too long to compare with anything.
-    @State private var line = 0
     @State private var reciterTrace: Waveform.Trace?
     @State private var mineTrace: Waveform.Trace?
     @State private var progress: Double?
@@ -40,17 +44,6 @@ struct RecitationPanel: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             header
-            if hasClips {
-                if clipCount > 1 { lineChips }
-                listenRow
-            } else {
-                Text(loc.t("audio.none"))
-                    .font(Theme.body(13))
-                    .foregroundStyle(Theme.inkSoft)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-
-            Divider().background(Theme.border)
             recordRow
 
             if mine != nil {
@@ -58,7 +51,6 @@ struct RecitationPanel: View {
                     .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
-        .padding(14)
         .card()
         .animation(Theme.spring, value: mine)
         .animation(Theme.spring, value: recorder.isRecording)
@@ -79,116 +71,14 @@ struct RecitationPanel: View {
 
     private var header: some View {
         HStack(spacing: 8) {
-            Image(systemName: "waveform")
+            Image(systemName: "mic")
                 .font(.system(size: 11))
-            Text(loc.t("audio.title").uppercased())
+            Text(loc.t("audio.mine.title").uppercased())
                 .font(Theme.label(9))
                 .tracking(0.8)
             Spacer()
-            if hasClips, let reciter {
-                // A menu rather than a settings round-trip: switching voices is
-                // something you do while listening, not before.
-                Menu {
-                    ForEach(Recitations.reciters) { candidate in
-                        Button {
-                            settings.reciterID = candidate.id
-                            Haptic.select.play()
-                        } label: {
-                            Label(
-                                candidate.name + (candidate.isTeaching ? " · \(loc.t("audio.style.teaching"))" : ""),
-                                systemImage: candidate.id == reciter.id ? "checkmark" : "person.wave.2"
-                            )
-                        }
-                    }
-                } label: {
-                    HStack(spacing: 4) {
-                        Text(reciter.name).font(Theme.body(11))
-                        Image(systemName: "chevron.down").font(.system(size: 8, weight: .bold))
-                    }
-                    .foregroundStyle(Theme.inkSoft)
-                }
-            }
         }
         .foregroundStyle(Theme.gold)
-    }
-
-    // MARK: Verse picker
-
-    private var lineChips: some View {
-        ScrollView(.horizontal) {
-            HStack(spacing: 6) {
-                ForEach(0..<clipCount, id: \.self) { index in
-                    let isOn = index == line
-                    Button {
-                        player.stop()
-                        withAnimation(Theme.spring) { line = index }
-                    } label: {
-                        Text("\(index + 1)")
-                            .font(Theme.pixel(11))
-                            .foregroundStyle(isOn ? Theme.ink : Theme.inkSoft)
-                            .frame(width: 30, height: 26)
-                    }
-                    .chunky(isOn ? Theme.goldSoft : Theme.sand,
-                            radius: 9, depth: isOn ? 3 : 0,
-                            haptic: .select, sparks: false)
-                    // The recorded attempts, marked so the row doubles as a map
-                    // of what has already been tried.
-                    .overlay(alignment: .topTrailing) {
-                        if VoiceRecorder.recording(step: step.id, line: index) != nil {
-                            Circle().fill(Theme.green).frame(width: 5, height: 5).offset(x: 1, y: -1)
-                        }
-                    }
-                }
-            }
-            .padding(.vertical, 2)
-        }
-        .scrollIndicators(.hidden)
-    }
-
-    // MARK: Listen
-
-    private var listenRow: some View {
-        HStack(spacing: 8) {
-            transport(
-                symbol: player.voice == .reciter ? "stop.fill" : "play.fill",
-                title: loc.t("audio.listen"),
-                tint: Theme.goldSoft
-            ) {
-                if player.voice == .reciter {
-                    player.stop()
-                } else if let clip {
-                    player.play(.reciter, line: line, url: clip)
-                }
-            }
-
-            // One slow step, not a slider: below about 0.6× the pitch-corrected
-            // recitation turns into a growl and stops being a model to copy.
-            Button {
-                player.rate = player.rate == 1 ? 0.6 : 1
-                Haptic.select.play()
-            } label: {
-                Text(player.rate == 1 ? "1×" : "0.6×")
-                    .font(Theme.pixel(11))
-                    .foregroundStyle(Theme.ink)
-                    .frame(width: 44, height: 34)
-            }
-            .chunky(player.rate == 1 ? Theme.sand : Theme.goldSoft,
-                    radius: 11, depth: player.rate == 1 ? 0 : 3,
-                    haptic: .select, sparks: false)
-
-            if clipCount > 1 {
-                Button {
-                    player.playAll(.reciter, urls: Recitations.clips(step: step.id, reciter: reciter))
-                } label: {
-                    Image(systemName: "text.line.first.and.arrowtriangle.forward")
-                        .font(.system(size: 12, weight: .bold))
-                        .foregroundStyle(Theme.ink)
-                        .frame(width: 40, height: 34)
-                }
-                .chunky(Theme.sand, radius: 11, depth: 0, haptic: .tap, sparks: false)
-                .accessibilityLabel(loc.t("audio.all"))
-            }
-        }
     }
 
     // MARK: Record
@@ -391,22 +281,5 @@ struct RecitationPanel: View {
                 if mineURL == mine { mineTrace = trace }
             }
         }
-    }
-
-    // MARK: Bits
-
-    private func transport(symbol: String, title: String, tint: Color,
-                           action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            HStack(spacing: 7) {
-                Image(systemName: symbol).font(.system(size: 12, weight: .bold))
-                Text(title).font(Theme.label(13))
-            }
-            .foregroundStyle(Theme.ink)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 10)
-        }
-        .chunky(tint, radius: 12, depth: 3, haptic: .press, sparks: false)
-        .accessibilityIdentifier("audio.listen")
     }
 }

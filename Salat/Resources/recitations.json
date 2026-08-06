@@ -17,6 +17,30 @@
       "name": "Mishary Rashid Alafasy",
       "style": "murattal",
       "source": "https://everyayah.com/data/Alafasy_128kbps/"
+    },
+    {
+      "id": "sowaid",
+      "name": "Ayman Sowaid",
+      "style": "muallim",
+      "source": "https://everyayah.com/data/Ayman_Sowaid_64kbps/"
+    },
+    {
+      "id": "minshawy",
+      "name": "Muhammad Siddiq Al-Minshawi",
+      "style": "murattal",
+      "source": "https://everyayah.com/data/Minshawy_Murattal_128kbps/"
+    },
+    {
+      "id": "abdulbasit",
+      "name": "Abdul Basit Abdus-Samad",
+      "style": "murattal",
+      "source": "https://everyayah.com/data/Abdul_Basit_Murattal_64kbps/"
+    },
+    {
+      "id": "shatri",
+      "name": "Abu Bakr Ash-Shatri",
+      "style": "murattal",
+      "source": "https://everyayah.com/data/Abu_Bakr_Ash-Shaatree_64kbps/"
     }
   ],
   "clips": {
@@ -69,6 +93,74 @@
         "rec_alafasy_surah_1",
         "rec_alafasy_surah_2",
         "rec_alafasy_surah_3"
+      ]
+    },
+    "sowaid": {
+      "fatiha": [
+        "rec_sowaid_fatiha_0",
+        "rec_sowaid_fatiha_1",
+        "rec_sowaid_fatiha_2",
+        "rec_sowaid_fatiha_3",
+        "rec_sowaid_fatiha_4",
+        "rec_sowaid_fatiha_5",
+        "rec_sowaid_fatiha_6"
+      ],
+      "surah": [
+        "rec_sowaid_surah_0",
+        "rec_sowaid_surah_1",
+        "rec_sowaid_surah_2",
+        "rec_sowaid_surah_3"
+      ]
+    },
+    "minshawy": {
+      "fatiha": [
+        "rec_minshawy_fatiha_0",
+        "rec_minshawy_fatiha_1",
+        "rec_minshawy_fatiha_2",
+        "rec_minshawy_fatiha_3",
+        "rec_minshawy_fatiha_4",
+        "rec_minshawy_fatiha_5",
+        "rec_minshawy_fatiha_6"
+      ],
+      "surah": [
+        "rec_minshawy_surah_0",
+        "rec_minshawy_surah_1",
+        "rec_minshawy_surah_2",
+        "rec_minshawy_surah_3"
+      ]
+    },
+    "abdulbasit": {
+      "fatiha": [
+        "rec_abdulbasit_fatiha_0",
+        "rec_abdulbasit_fatiha_1",
+        "rec_abdulbasit_fatiha_2",
+        "rec_abdulbasit_fatiha_3",
+        "rec_abdulbasit_fatiha_4",
+        "rec_abdulbasit_fatiha_5",
+        "rec_abdulbasit_fatiha_6"
+      ],
+      "surah": [
+        "rec_abdulbasit_surah_0",
+        "rec_abdulbasit_surah_1",
+        "rec_abdulbasit_surah_2",
+        "rec_abdulbasit_surah_3"
+      ]
+    },
+    "shatri": {
+      "fatiha": [
+        "rec_shatri_fatiha_0",
+        "rec_shatri_fatiha_1",
+        "rec_shatri_fatiha_2",
+        "rec_shatri_fatiha_3",
+        "rec_shatri_fatiha_4",
+        "rec_shatri_fatiha_5",
+        "rec_shatri_fatiha_6"
+      ],
+      "surah": [
+        "rec_shatri_surah_0",
+        "rec_shatri_surah_1",
+        "rec_shatri_surah_2",
+        "rec_shatri_surah_3"
       ]
     }
   }

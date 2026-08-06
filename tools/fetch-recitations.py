@@ -60,6 +60,33 @@ RECITERS = [
         "name": "Mishary Rashid Alafasy",
         "style": "murattal",
     },
+    # Sowaid teaches tajwid: his set is articulated letter by letter, so it
+    # reads as a second teaching voice next to Husary's Muallim rather than as
+    # another performance.
+    {
+        "id": "sowaid",
+        "folder": "Ayman_Sowaid_64kbps",
+        "name": "Ayman Sowaid",
+        "style": "muallim",
+    },
+    {
+        "id": "minshawy",
+        "folder": "Minshawy_Murattal_128kbps",
+        "name": "Muhammad Siddiq Al-Minshawi",
+        "style": "murattal",
+    },
+    {
+        "id": "abdulbasit",
+        "folder": "Abdul_Basit_Murattal_64kbps",
+        "name": "Abdul Basit Abdus-Samad",
+        "style": "murattal",
+    },
+    {
+        "id": "shatri",
+        "folder": "Abu_Bakr_Ash-Shaatree_64kbps",
+        "name": "Abu Bakr Ash-Shatri",
+        "style": "murattal",
+    },
 ]
 
 # Step id -> the ayahs its lines are, in order. The lengths are asserted
