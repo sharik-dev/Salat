@@ -4,6 +4,7 @@ struct SettingsView: View {
     @Environment(AppSettings.self) private var settings
     @Environment(OnboardingManager.self) private var onboarding
     @Environment(VoiceRecorder.self) private var recorder
+    @Environment(StudyReminders.self) private var reminders
     @Environment(\.loc) private var loc
     @State private var showLanguages = false
 
@@ -19,6 +20,7 @@ struct SettingsView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
 
                 languageBlock
+                remindersBlock
                 audioBlock
                 widgetBlock
                 aboutBlock
@@ -85,6 +87,84 @@ struct SettingsView: View {
             .chunky(Theme.sand, depth: 4, haptic: .select)
             .accessibilityIdentifier("settings.language.open")
         }
+    }
+
+    // MARK: Reminders
+
+    private var remindersBlock: some View {
+        @Bindable var settings = settings
+
+        return block(loc.t("settings.reminders"), icon: "bell") {
+            VStack(alignment: .leading, spacing: 12) {
+                Toggle(isOn: $settings.remindersOn) {
+                    Text(loc.t("settings.reminders.toggle"))
+                        .font(Theme.body(15))
+                        .foregroundStyle(Theme.ink)
+                }
+                .tint(Theme.gold)
+                .accessibilityIdentifier("settings.reminders.toggle")
+                // The permission is asked here, at the moment the user says
+                // yes, and never at launch. A refusal puts the switch back
+                // rather than leaving it on over a system that will post
+                // nothing.
+                .onChange(of: settings.remindersOn) { _, on in
+                    Task {
+                        if on, reminders.authorization == .notDetermined {
+                            _ = await reminders.requestAuthorization()
+                        }
+                        if on, reminders.authorization != .authorized {
+                            settings.remindersOn = false
+                        }
+                        await reminders.sync(with: settings)
+                    }
+                }
+
+                if settings.remindersOn {
+                    HStack {
+                        Text(loc.t("settings.reminders.time"))
+                            .font(Theme.body(15))
+                            .foregroundStyle(Theme.ink)
+                        Spacer()
+                        DatePicker("", selection: $settings.reminderTime,
+                                   displayedComponents: .hourAndMinute)
+                            .labelsHidden()
+                            .tint(Theme.gold)
+                            .onChange(of: settings.reminderHour) { _, _ in resync() }
+                            .onChange(of: settings.reminderMinute) { _, _ in resync() }
+                    }
+                }
+
+                Text(loc.t("settings.reminders.hint"))
+                    .font(Theme.body(12))
+                    .foregroundStyle(Theme.inkSoft)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                if reminders.authorization == .denied {
+                    Text(loc.t("settings.reminders.denied"))
+                        .font(Theme.body(12))
+                        .foregroundStyle(Theme.ink)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    Button {
+                        if let url = URL(string: UIApplication.openSettingsURLString) {
+                            UIApplication.shared.open(url)
+                        }
+                    } label: {
+                        Text(loc.t("settings.reminders.open"))
+                            .font(Theme.label(13))
+                            .foregroundStyle(Theme.ink)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 11)
+                    }
+                    .chunky(Theme.sand, depth: 4)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    private func resync() {
+        Task { await reminders.sync(with: settings) }
     }
 
     // MARK: Widget

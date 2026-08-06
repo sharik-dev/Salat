@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ContentView: View {
     @Environment(AppSettings.self) private var settings
+    @Environment(StudyReminders.self) private var reminders
     @State private var selectedTab: AppTab = LaunchOptions.startTab
 
     var body: some View {
@@ -29,6 +30,12 @@ struct ContentView: View {
             .ignoresSafeArea(.keyboard)
         }
         .localized(settings.localizer)
+        // A tapped reminder lands on the step it named, so the notification and
+        // the screen tell the same story. `LearnView` opens the sheet and
+        // clears the flag.
+        .onChange(of: reminders.pendingStepID) { _, id in
+            if id != nil { withAnimation(Theme.spring) { selectedTab = .learn } }
+        }
     }
 
     @ViewBuilder
@@ -47,4 +54,5 @@ struct ContentView: View {
         .environment(OnboardingManager())
         .environment(RecitationPlayer())
         .environment(VoiceRecorder())
+        .environment(StudyReminders())
 }

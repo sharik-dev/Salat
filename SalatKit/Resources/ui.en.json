@@ -80,6 +80,17 @@
   "revise.tool.vocal.body": "Listen to a reciter, record yourself, put the two side by side.",
   "revise.gallery.subtitle": "Pick a step to work on.",
   "vocal.tap_hint": "Tap a line to work on it.",
+  "settings.reminders": "Reminders",
+  "settings.reminders.toggle": "Remind me to study",
+  "settings.reminders.time": "Every day at",
+  "settings.reminders.hint": "One notification a day, naming a step you have not learned yet. Nothing is sent while the app is open, and it stops on its own after two silent weeks.",
+  "settings.reminders.denied": "Notifications are switched off for Salat. Turn them on in iOS Settings to be reminded.",
+  "settings.reminders.open": "Open iOS Settings",
+  "notif.title": "Salat",
+  "notif.body.1": "%@ is still waiting for you. Two minutes is enough.",
+  "notif.body.2": "One step today: %@.",
+  "notif.body.3": "Pick up where you left off: %@.",
+  "notif.body.done": "You have learned all fourteen steps. Go through them once so they stay.",
   "onboarding.language.title": "Your language",
   "onboarding.language.body": "We took the one your phone is set to. Change it here if you would rather read another; Settings can change it again at any time."
 }

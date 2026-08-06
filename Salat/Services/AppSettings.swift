@@ -45,6 +45,35 @@ final class AppSettings {
         learned = Progress.learned
         let stored = SharedStore.defaults.double(forKey: SharedStore.Key.stepSeconds)
         stepSeconds = stored > 0 ? stored : 7
+    /// The daily reminder. No `reloadAllTimelines` here, unlike every other
+    /// setting: nothing on the home screen reads these three.
+    var remindersOn: Bool {
+        didSet { SharedStore.defaults.set(remindersOn, forKey: SharedStore.Key.remindersOn) }
+    }
+
+    var reminderHour: Int {
+        didSet { SharedStore.defaults.set(reminderHour, forKey: SharedStore.Key.reminderHour) }
+    }
+
+    var reminderMinute: Int {
+        didSet { SharedStore.defaults.set(reminderMinute, forKey: SharedStore.Key.reminderMinute) }
+    }
+
+    /// The reminder time as a `Date`, for the picker. Only the two components
+    /// are ever stored: a full date would silently pin the reminder to the day
+    /// the user set it.
+    var reminderTime: Date {
+        get {
+            Calendar.current.date(bySettingHour: reminderHour, minute: reminderMinute,
+                                  second: 0, of: Date()) ?? Date()
+        }
+        set {
+            let parts = Calendar.current.dateComponents([.hour, .minute], from: newValue)
+            reminderHour = parts.hour ?? reminderHour
+            reminderMinute = parts.minute ?? reminderMinute
+        }
+    }
+
         reciterID = SharedStore.defaults.string(forKey: SharedStore.Key.reciter)
     }
 

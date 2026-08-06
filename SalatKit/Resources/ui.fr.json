@@ -80,6 +80,17 @@
   "revise.tool.vocal.body": "Écoute un récitateur, enregistre-toi, mets les deux côte à côte.",
   "revise.gallery.subtitle": "Choisis une étape à travailler.",
   "vocal.tap_hint": "Touche une ligne pour la travailler.",
+  "settings.reminders": "Rappels",
+  "settings.reminders.toggle": "Me rappeler d'étudier",
+  "settings.reminders.time": "Chaque jour à",
+  "settings.reminders.hint": "Une notification par jour, qui nomme une étape qu'il te reste à apprendre. Rien n'est envoyé quand l'app est ouverte, et tout s'arrête de soi-même après deux semaines sans retour.",
+  "settings.reminders.denied": "Les notifications sont coupées pour Salat. Active-les dans les Réglages iOS pour recevoir le rappel.",
+  "settings.reminders.open": "Ouvrir les Réglages iOS",
+  "notif.title": "Salat",
+  "notif.body.1": "%@ t'attend toujours. Deux minutes suffisent.",
+  "notif.body.2": "Une étape aujourd'hui : %@.",
+  "notif.body.3": "Reprends où tu t'es arrêté : %@.",
+  "notif.body.done": "Tu connais les quatorze étapes. Refais-les une fois pour qu'elles restent.",
   "onboarding.language.title": "Ta langue",
   "onboarding.language.body": "On a pris celle de ton téléphone. Change-la ici si tu préfères une autre ; les réglages permettront toujours d'y revenir."
 }

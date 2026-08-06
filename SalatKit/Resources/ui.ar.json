@@ -80,6 +80,17 @@
   "revise.tool.vocal.body": "استمع إلى قارئ، سجّل صوتك، وضع الاثنين جنبًا إلى جنب.",
   "revise.gallery.subtitle": "اختر خطوة لتتدرّب عليها.",
   "vocal.tap_hint": "المس سطرًا للتدرّب عليه.",
+  "settings.reminders": "التذكيرات",
+  "settings.reminders.toggle": "ذكّرني بالمراجعة",
+  "settings.reminders.time": "كل يوم عند",
+  "settings.reminders.hint": "إشعار واحد في اليوم يذكر خطوة لم تتعلّمها بعد. لا يُرسل شيء والتطبيق مفتوح، ويتوقف من تلقاء نفسه بعد أسبوعين دون عودة.",
+  "settings.reminders.denied": "الإشعارات مغلقة لتطبيق صلاة. فعّلها من إعدادات iOS لتصلك التذكيرات.",
+  "settings.reminders.open": "فتح إعدادات iOS",
+  "notif.title": "صلاة",
+  "notif.body.1": "%@ ما زالت بانتظارك. دقيقتان تكفيان.",
+  "notif.body.2": "خطوة واحدة اليوم: %@.",
+  "notif.body.3": "تابع من حيث توقّفت: %@.",
+  "notif.body.done": "لقد تعلّمت الخطوات الأربع عشرة كلها. راجعها مرة كي تثبت.",
   "onboarding.language.title": "لغتك",
   "onboarding.language.body": "أخذنا لغة هاتفك. غيّرها هنا إن كنت تفضّل غيرها؛ ويمكنك تغييرها لاحقًا من الإعدادات في أي وقت."
 }

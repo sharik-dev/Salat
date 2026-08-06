@@ -8,6 +8,8 @@ struct SalatApp: App {
     // their own would let a reciter and a playback of the user run at once.
     @State private var player = RecitationPlayer()
     @State private var recorder = VoiceRecorder()
+    @State private var reminders = StudyReminders()
+    @Environment(\.scenePhase) private var scenePhase
 
     init() {
         // The Taptic engine and the two sounds are woken here: a cold
@@ -24,6 +26,7 @@ struct SalatApp: App {
                 .environment(onboarding)
                 .environment(player)
                 .environment(recorder)
+                .environment(reminders)
                 .tint(Theme.gold)
                 // A two-way binding, so dismissing the sheet — by the button or
                 // by any route iOS offers — actually records that it was seen.
