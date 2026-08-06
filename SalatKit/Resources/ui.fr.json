@@ -75,6 +75,11 @@
   "settings.audio.recordings": "%d enregistrements sur ce téléphone",
   "settings.audio.clear": "Supprimer mes enregistrements",
   "settings.audio.credits": "Récitations d'Al-Fatiha et d'Al-Ikhlas depuis everyayah.com. Le reste de la prière n'est pas du Coran et n'a pas d'enregistrement équivalent — ces étapes n'ont pas de récitateur.",
+  "revise.subtitle": "Choisis ta façon de travailler. D'autres outils arriveront ici.",
+  "revise.tool.vocal.title": "Pratique vocale",
+  "revise.tool.vocal.body": "Écoute un récitateur, enregistre-toi, mets les deux côte à côte.",
+  "revise.gallery.subtitle": "Choisis une étape à travailler.",
+  "vocal.tap_hint": "Touche une ligne pour la travailler.",
   "onboarding.language.title": "Ta langue",
   "onboarding.language.body": "On a pris celle de ton téléphone. Change-la ici si tu préfères une autre ; les réglages permettront toujours d'y revenir."
 }

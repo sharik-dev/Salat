@@ -75,6 +75,11 @@
   "settings.audio.recordings": "%d تسجيلات على هذا الهاتف",
   "settings.audio.clear": "حذف تسجيلاتي",
   "settings.audio.credits": "تلاوة الفاتحة والإخلاص من everyayah.com. بقية الصلاة ليست قرآنًا ولا يوجد لها تسجيل مماثل — لذلك لا قارئ لتلك الخطوات.",
+  "revise.subtitle": "اختر طريقة المراجعة. ستُضاف أدوات أخرى هنا.",
+  "revise.tool.vocal.title": "تدريب صوتي",
+  "revise.tool.vocal.body": "استمع إلى قارئ، سجّل صوتك، وضع الاثنين جنبًا إلى جنب.",
+  "revise.gallery.subtitle": "اختر خطوة لتتدرّب عليها.",
+  "vocal.tap_hint": "المس سطرًا للتدرّب عليه.",
   "onboarding.language.title": "لغتك",
   "onboarding.language.body": "أخذنا لغة هاتفك. غيّرها هنا إن كنت تفضّل غيرها؛ ويمكنك تغييرها لاحقًا من الإعدادات في أي وقت."
 }

@@ -75,6 +75,11 @@
   "settings.audio.recordings": "%d recordings on this phone",
   "settings.audio.clear": "Delete my recordings",
   "settings.audio.credits": "Recitations of Al-Fatiha and Al-Ikhlas from everyayah.com. The rest of the prayer is not Qur'an and has no such recording — those steps carry no reciter.",
+  "revise.subtitle": "Pick a way to work. More tools will land here.",
+  "revise.tool.vocal.title": "Voice practice",
+  "revise.tool.vocal.body": "Listen to a reciter, record yourself, put the two side by side.",
+  "revise.gallery.subtitle": "Pick a step to work on.",
+  "vocal.tap_hint": "Tap a line to work on it.",
   "onboarding.language.title": "Your language",
   "onboarding.language.body": "We took the one your phone is set to. Change it here if you would rather read another; Settings can change it again at any time."
 }

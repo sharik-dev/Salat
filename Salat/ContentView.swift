@@ -35,7 +35,7 @@ struct ContentView: View {
     private var tabContent: some View {
         switch selectedTab {
         case .learn:    LearnView()
-        case .practice: PracticeView()
+        case .practice: ReviseHubView()
         case .settings: SettingsView()
         }
     }
