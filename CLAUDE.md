@@ -15,7 +15,7 @@ xcodebuild -project Salat.xcodeproj -scheme Salat -sdk iphonesimulator \
   -destination 'platform=iOS Simulator,name=iPhone 17 Pro' CODE_SIGNING_ALLOWED=NO build
 ```
 
-Trois cibles : `Salat` (app), `SalatWidgetExtension` (widget), `SalatTests`.
+Quatre cibles : `Salat` (app), `SalatWidgetExtension` (widget), `SalatTests`, `SalatUITests`.
 **`SalatKit/` est compilé dans les trois** — c'est là que vit tout ce que l'app et le widget
 partagent (thème, i18n, contenu, illustrations). Un fichier posé ailleurs n'existe pas pour le
 widget.
