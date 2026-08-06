@@ -1,5 +1,6 @@
 import SwiftUI
 import UIKit
+import ImageIO
 
 /// The praying figure, drawn rather than photographed.
 ///
@@ -170,13 +171,32 @@ public enum PositionAsset {
     private static var cache: [String: UIImage?] = [:]
     private static let lock = NSLock()
 
-    public static func image(named name: String) -> UIImage? {
+    /// Decodes at the size the medallion actually draws rather than at the
+    /// file's 512 px. A widget extension is killed past 30 MB, and the carousel
+    /// holds a whole timeline of entries at once: a full-size decode is 1 MB of
+    /// pixels per posture, for a disc that is never wider than 104 pt.
+    /// `CGImageSourceCreateThumbnailAtIndex` downsamples *while* decoding, so
+    /// the full bitmap never exists in memory.
+    public static func image(named name: String, maxPixel: CGFloat = 512) -> UIImage? {
+        let side = max(64, min(512, (maxPixel / 32).rounded(.up) * 32))
+        let key = "\(name)@\(Int(side))"
+
         lock.lock(); defer { lock.unlock() }
-        if let hit = cache[name] { return hit }
+        if let hit = cache[key] { return hit }
+
         let bundle = Bundle(for: SalatKitBundleToken.self)
-        let loaded = bundle.url(forResource: name, withExtension: "png")
-            .flatMap { UIImage(contentsOfFile: $0.path) }
-        cache[name] = loaded
+        let loaded = bundle.url(forResource: name, withExtension: "png").flatMap { url -> UIImage? in
+            guard let source = CGImageSourceCreateWithURL(url as CFURL, nil) else { return nil }
+            let options: [CFString: Any] = [
+                kCGImageSourceCreateThumbnailFromImageAlways: true,
+                kCGImageSourceCreateThumbnailWithTransform: true,
+                kCGImageSourceShouldCacheImmediately: true,
+                kCGImageSourceThumbnailMaxPixelSize: side
+            ]
+            return CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary)
+                .map { UIImage(cgImage: $0) }
+        }
+        cache[key] = loaded
         return loaded
     }
 }
@@ -192,29 +212,43 @@ public struct PositionMedallion: View {
     public let step: PrayerStep
     public var size: CGFloat
 
-    public init(step: PrayerStep, size: CGFloat = 120) {
+    /// Drawn as a light silhouette instead of dark ink on sand. Used when the
+    /// home screen is tinted: there, iOS keeps only the *luminance* of what the
+    /// widget drew, and brown ink on cream comes out as an almost empty card.
+    public var monochrome: Bool
+
+    public init(step: PrayerStep, size: CGFloat = 120, monochrome: Bool = false) {
         self.step = step
         self.size = size
+        self.monochrome = monochrome
     }
 
     public var body: some View {
         ZStack {
-            Circle().fill(Theme.sand)
+            Circle().fill(monochrome ? Color.white.opacity(0.16) : Theme.sand)
 
-            StarLattice(spacing: size / 2.6, opacity: 0.10)
-                .clipShape(Circle())
+            if !monochrome {
+                StarLattice(spacing: size / 2.6, opacity: 0.10)
+                    .clipShape(Circle())
+            }
 
-            if let illustration = PositionAsset.image(named: step.image) {
+            if let illustration = PositionAsset.image(named: step.image, maxPixel: size * 3) {
+                // The cut-outs carry the figure in their alpha channel, so a
+                // template render turns the same file into a light silhouette.
                 Image(uiImage: illustration)
+                    .renderingMode(monochrome ? .template : .original)
                     .resizable()
                     .scaledToFit()
+                    .foregroundStyle(.white)
                     .padding(size * 0.13)
             } else {
-                PostureFigure(posture: step.posture)
+                PostureFigure(posture: step.posture,
+                              tint: monochrome ? .white : Theme.ink.opacity(0.82))
                     .padding(size * 0.14)
             }
 
-            Circle().strokeBorder(Theme.goldSoft, lineWidth: 1.5)
+            Circle().strokeBorder(monochrome ? Color.white.opacity(0.45) : Theme.goldSoft,
+                                  lineWidth: 1.5)
         }
         .frame(width: size, height: size)
     }

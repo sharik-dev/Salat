@@ -118,7 +118,6 @@ struct StepDetailView: View {
                         labelled(loc.t("detail.translation"), translation, italic: false, color: Theme.inkSoft)
                     }
                 }
-                .padding(16)
                 .card()
             }
         }
@@ -242,7 +241,6 @@ struct StepDetailView: View {
             .foregroundStyle(Theme.gold)
             content()
         }
-        .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
         .card()
     }

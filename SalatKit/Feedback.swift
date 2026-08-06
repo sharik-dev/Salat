@@ -140,16 +140,17 @@ private final class SoundBundleToken {}
 /// A spray of small **four-pointed sparkles** thrown out of the button,
 /// falling and fading.
 ///
-/// These are light, not matter: a white-hot core, four thin tapered rays that
-/// narrow to a point, and a warm halo bleeding around them. Flat gold chips
-/// read as confetti on cream — the eye needs the glow to see them leave the
-/// button at all.
+/// Four thin rays tapering to a point, cut in the page's own cream and closed
+/// by a beige outline. Flat gold chips read as confetti on cream, and a glowing
+/// orange one reads as a stray effect from another app; an outlined cream shape
+/// reads as a piece of the page that came loose.
 ///
 /// Deliberately **not** the eight-pointed khatam: that motif belongs to the
 /// page (the background lattice, the onboarding), where it is drawn large and
 /// still. At 10 pt, thrown and spinning, its eight points blur into a blob.
 public struct StarBurst: View {
-    public var color: Color = Theme.ember
+    public var face: Color = Theme.sparkFace
+    public var edge: Color = Theme.sparkEdge
     public var count: Int = 10
     /// Far enough to **leave the face**: a spray that stays on the button
     /// reads as a shimmer, not as something thrown.
@@ -159,9 +160,10 @@ public struct StarBurst: View {
     @State private var bits: [Bit] = []
     @State private var t: CGFloat = 0
 
-    public init(color: Color = Theme.ember, count: Int = 10,
-                spread: ClosedRange<CGFloat> = 30...70) {
-        self.color = color
+    public init(face: Color = Theme.sparkFace, edge: Color = Theme.sparkEdge,
+                count: Int = 10, spread: ClosedRange<CGFloat> = 30...70) {
+        self.face = face
+        self.edge = edge
         self.count = count
         self.spread = spread
     }
@@ -178,7 +180,7 @@ public struct StarBurst: View {
         ZStack {
             ForEach(bits) { bit in
                 let radians = bit.angle * .pi / 180
-                Spark(color: color)
+                Spark(face: face, edge: edge)
                     .frame(width: bit.side, height: bit.side)
                     .rotationEffect(.degrees(bit.spin * Double(t)))
                     // A spark burns out: it shrinks to its point as it fades,
@@ -219,50 +221,31 @@ public struct StarBurst: View {
     }
 }
 
-/// One sparkle: halo, bloom, core.
+/// One sparkle: a cream face with a beige outline. The same two-part
+/// construction as every other object in the app — a filled shape and the
+/// line that closes it — only very small.
 ///
-/// Three layers, and all three are needed. The halo is what makes it read as
-/// light on cream paper; the blurred copy is the bloom that softens the rays
-/// so they don't look like a cut-out cross; the sharp copy on top keeps a
-/// white-hot centre so the thing still has a point of origin.
+/// The outline is what does the work: cream on cream is invisible, so the
+/// spark is legible by its edge, exactly like the plates and the tab bar.
+/// The stroke width is **fixed**, not scaled with the spark: a line that
+/// thickens with the shape turns a 22 pt spark into a ring.
 public struct Spark: View {
-    public var color: Color
+    public var face: Color
+    public var edge: Color
+    public var lineWidth: CGFloat
 
-    public init(color: Color = Theme.ember) {
-        self.color = color
+    public init(face: Color = Theme.sparkFace,
+                edge: Color = Theme.sparkEdge,
+                lineWidth: CGFloat = 1.3) {
+        self.face = face
+        self.edge = edge
+        self.lineWidth = lineWidth
     }
 
     public var body: some View {
-        GeometryReader { geo in
-            let side = min(geo.size.width, geo.size.height)
-            ZStack {
-                Circle()
-                    .fill(
-                        RadialGradient(
-                            colors: [color.opacity(0.55), color.opacity(0.16), .clear],
-                            center: .center,
-                            startRadius: 0,
-                            endRadius: side * 0.42
-                        )
-                    )
-                    .frame(width: side * 0.84, height: side * 0.84)
-
-                FourPointStar()
-                    .fill(color)
-                    .blur(radius: side * 0.07)
-
-                FourPointStar()
-                    .fill(
-                        RadialGradient(
-                            colors: [Theme.emberCore, color],
-                            center: .center,
-                            startRadius: 0,
-                            endRadius: side * 0.3
-                        )
-                    )
-                    .frame(width: side * 0.86, height: side * 0.86)
-            }
-            .frame(width: geo.size.width, height: geo.size.height)
+        ZStack {
+            FourPointStar().fill(face)
+            FourPointStar().stroke(edge, lineWidth: lineWidth)
         }
         .allowsHitTesting(false)
     }

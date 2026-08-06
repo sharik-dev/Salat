@@ -18,12 +18,19 @@ public enum Theme {
     public static let ink        = Color(hex: 0x2E2A22) // primary text
     public static let inkSoft    = Color(hex: 0x7A6E5B) // secondary text
     public static let green      = Color(hex: 0x5C7A5A) // "learned" marker
+    /// The face of a right answer. Sage washed into the cream rather than a
+    /// quiz-app green: the drill marks what you remembered, it does not cheer.
+    public static let greenSoft  = Color(hex: 0xD7E2D0)
 
-    /// The spark. Light, not paint: it only ever appears for a third of a
-    /// second on release, so it is allowed to be hotter than the page — an
-    /// ember orange between the gold and white, and a near-white core.
-    public static let ember      = Color(hex: 0xF2870F)
-    public static let emberCore  = Color(hex: 0xFFF3D2)
+    /// The sparks thrown on release. Cut from the same paper as everything
+    /// else — cream face, outlined. A saturated orange or yellow would be the
+    /// only thing in the app that is not paper, and it read as a foreign
+    /// effect dropped on top of the page.
+    ///
+    /// The outline is deeper than `border` on purpose: sparks land on the
+    /// sand of a button, and a light beige on sand is not an edge.
+    public static let sparkFace  = Color(hex: 0xFFFDF7)
+    public static let sparkEdge  = Color(hex: 0xB09863)
 
     // MARK: Radii
 
@@ -32,6 +39,11 @@ public enum Theme {
         public static let chip: CGFloat = 12
         public static let bar: CGFloat  = 24
     }
+
+    /// The margin between a card's outline and whatever it holds. One value for
+    /// the whole app: cards of the same family with different rims read as
+    /// misaligned, and a thin rim lets a long word touch the edge.
+    public static let cardPadding: CGFloat = 16
 
     // MARK: Type
 
@@ -107,8 +119,15 @@ public enum Theme {
 public extension View {
     /// Every card in the app is a `Plate` — an outlined face with a solid
     /// bottom face under it. See `Plate.swift` for why that beats a shadow.
-    func card(radius: CGFloat = Theme.Radius.card) -> some View {
-        plate(Theme.surface, radius: radius)
+    ///
+    /// The inner margin belongs to the card, not to the call site: a card is an
+    /// object with a rim, and text that runs into that rim reads as a bug. Pass
+    /// `padding:` to narrow it; `0` is for the rare card whose content must
+    /// reach the edge itself (a scroll view, an image).
+    func card(radius: CGFloat = Theme.Radius.card,
+              padding: CGFloat = Theme.cardPadding) -> some View {
+        self.padding(padding)
+            .plate(Theme.surface, radius: radius)
     }
 }
 

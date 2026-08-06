@@ -164,7 +164,7 @@ private struct ChunkyButtonBody: View {
                 ZStack {
                     ForEach(bursts, id: \.self) { _ in
                         PopRing(color: Theme.gold, radius: radius)
-                        StarBurst(color: Theme.ember)
+                        StarBurst()
                     }
                 }
                 .allowsHitTesting(false)
