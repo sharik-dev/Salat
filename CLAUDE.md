@@ -63,6 +63,45 @@ Si un `pos_*.png` manque, `PositionMedallion` retombe sur `PostureFigure` — le
 dessinées en `Path`. C'est un vrai plancher, pas un placeholder : l'app reste utilisable et
 conforme sans aucune image.
 
+## Le son : deux voix, et onze versets seulement
+
+`Salat/Resources/audio/` (dans **l'app, pas dans SalatKit** — le widget ne joue rien et n'a pas à
+peser 3,7 Mo de plus) porte un mp3 par **ligne** d'étape, plus `recitations.json` qui les mappe.
+Tout est reproductible par `python3 tools/fetch-recitations.py`.
+
+Seules les deux étapes **coraniques** (`fatiha`, `surah`) ont un récitateur : everyayah.com publie
+le Coran verset par verset, exactement la granularité des cartes. Les douze autres formules ne sont
+pas du Coran et n'ont pas d'enregistrement ouvert découpé — elles n'ont donc **pas de voix**, plutôt
+qu'un clip d'amateur tenant lieu de modèle. `RecitationPanel` traite l'absence de clip comme le cas
+**normal** : ne jamais « réparer » ça en bouchant les trous avec une TTS ou un enregistrement
+Lingua Libre. Le détail (licences, ce qui reste à trancher avant publication) est dans
+`AUDIO_SOURCES.md`.
+
+Le script refuse de tourner si le nombre de versets mappés ne colle plus au nombre de lignes de
+`steps.base.json`, et un test le revérifie côté app (`RecitationTests`) : une dérive d'un verset
+ferait jouer la ligne 3 sous la ligne 4 sans que rien ne plante.
+
+## Comparer n'est pas noter
+
+Le panneau enregistre la voix de l'utilisateur (`Documents/recordings/<étape>_<ligne>.m4a`, jamais
+dans l'App Group : une voix qui prie ne se range pas dans un conteneur partagé) et pose les deux
+tracés **sur le même axe de temps**. C'est là toute la comparaison : deux formes d'onde étirées
+chacune à sa largeur donneraient exactement la même image à une récitation précipitée et au modèle.
+
+Les deux tracés passent par le **même** extracteur (`Waveform`, AVAssetReader) et sont normalisés
+chacun sur son propre pic : on compare la forme et le rythme, pas le volume d'un micro de téléphone
+contre un studio. Mesurer les deux différemment (le compteur dB du recorder d'un côté, les crêtes
+décodées de l'autre) donnerait deux dessins qu'on n'a pas le droit de superposer.
+
+**Aucun score.** Rien ici ne juge une prononciation — aucune app ne sait le faire, et prétendre le
+contraire sur un texte sacré serait un mensonge coûteux. L'écran le dit lui-même
+(`audio.compare.hint`) : ça montre la forme, pas si c'est juste.
+
+Le carrousel de *Réviser* s'efface devant l'oreille : il ne défile ni pendant une lecture ni micro
+ouvert. Et la session audio revient toujours en `.ambient` + `mixWithOthers` après coup
+(`AudioSession.release`) — une app de prière qui tue définitivement la récitation qu'on écoutait en
+fond est une app qu'on ferme.
+
 ## Le widget n'est pas un carrousel animé
 
 WidgetKit ne rend que des instantanés statiques et **c'est iOS qui décide quand les échanger**.
@@ -132,10 +171,50 @@ Et une `sheet(isPresented: .constant(…))` ne peut rien écrire en retour — e
 `-openStep <id>` ouvrent un écran directement : Sharik pilote depuis son téléphone et ne peut pas
 taper dans le simulateur, donc chaque écran doit être atteignable au lancement.
 
-## À faire avant publication
+## La publication : la fiche et le binaire, séparés
 
-- App Group `group.com.salat` à créer sur le portail Apple + `DEVELOPMENT_TEAM` à renseigner
-  dans `project.yml` (vide aujourd'hui, build simulateur seulement).
-- Icône d'app (le `AppIcon.appiconset` est vide).
+`fastlane/` et `scripts/` viennent de `godotGame/kit/template`, réécrits pour lire tous les
+identifiants dans **`project.yml`** au lieu d'`export_presets.cfg`. Rien de ce qui identifie
+l'app n'y est retapé : une deuxième copie du bundle est ce qui fait publier un jour la fiche
+d'une app sous le binaire d'une autre.
+
+```bash
+set -a; source ~/.config/ios-testflight-cicd/config.env; set +a   # `set -a` obligatoire
+fastlane ios bootstrap            # 1× — App ID + fiche (fait : 6798837070)
+ruby scripts/asc_price_free.rb    # 1× — gratuit (fait)
+fastlane ios metadata             # textes + captures
+scripts/build_ios.sh              # xcodegen → archive → IPA
+scripts/upload_testflight.sh      # monte le binaire
+fastlane ios release              # déclarations, precheck, soumission
+ruby scripts/asc_state.rb         # où en est la soumission
+```
+
+**La lane `metadata` échoue la première fois** sur « Error fetching app store review detail —
+No data », et c'est normal : `deliver` **lit** la fiche de revue avant de l'écrire, et sur une
+app jamais soumise elle n'existe pas. La relancer la crée. Ce n'est pas une erreur de contact.
+
+`TARGETED_DEVICE_FAMILY: "1"` — iPhone seul. L'app est verrouillée en portrait ; déclarer la
+famille iPad obligerait à livrer un jeu de captures 2048 × 2732 d'écrans jamais pensés pour
+cette taille.
+
+Les déclarations sont dans `fastlane/metadata/` et sont **légales, pas techniques** : 4+,
+`DATA_NOT_COLLECTED`, et `content_rights_contains_third_party_content: true` — ce dernier
+reste vrai tant qu'un mp3 d'everyayah est dans le binaire. Ne pas le rebasculer pour
+« simplifier ».
+
+Le support et la confidentialité sont deux pages GitHub Pages —
+`sharik-dev/salat-support`, EN + FR sur la même page. Elles décrivent l'absence de requête
+réseau et des enregistrements qui ne quittent pas l'appareil : changer ça dans l'app sans
+changer la page transforme la page en déclaration fausse.
+
+### Ce qui reste
+
+- **Statut des enregistrements everyayah** à trancher (embarqué vs téléchargement à la
+  demande) — voir `AUDIO_SOURCES.md`. C'est le point d'aller-retour attendu avec la revue.
+- Captures d'écran App Store (aucune envoyée) — obligatoire pour soumettre.
+- La confidentialité doit être **publiée** sur ASC : c'est le seul geste que la clé `.p8` ne
+  sait pas faire (l'API est celle du site, pas la publique). `fastlane spaceauth -u <apple-id>`
+  capture la session, mais réclame mot de passe + code 2FA au terminal — Sharik doit la lancer
+  lui-même.
 - Relecture du contenu religieux par quelqu'un de qualifié — l'app le dit elle-même dans
   ses réglages, mais ça reste à faire.
