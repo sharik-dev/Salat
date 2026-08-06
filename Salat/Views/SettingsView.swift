@@ -1,0 +1,162 @@
+import SwiftUI
+
+struct SettingsView: View {
+    @Environment(AppSettings.self) private var settings
+    @Environment(OnboardingManager.self) private var onboarding
+    @Environment(\.loc) private var loc
+
+    var body: some View {
+        @Bindable var settings = settings
+        @Bindable var onboarding = onboarding
+
+        ScrollView {
+            VStack(alignment: .leading, spacing: 22) {
+                Text(loc.t("tab.settings"))
+                    .font(Theme.title(30))
+                    .foregroundStyle(Theme.ink)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                languageBlock
+                widgetBlock
+                aboutBlock
+
+                #if DEBUG
+                developerBlock
+                #endif
+
+                Color.clear.frame(height: 92)
+            }
+            .padding(.horizontal, 18)
+            .padding(.top, 8)
+        }
+        .scrollIndicators(.hidden)
+    }
+
+    // MARK: Language
+
+    private var languageBlock: some View {
+        @Bindable var settings = settings
+
+        return block(loc.t("settings.language"), icon: "globe") {
+            VStack(spacing: 8) {
+                languageRow(.system, label: loc.t("settings.language.system"))
+                ForEach(AppLanguage.shipped) { language in
+                    languageRow(language, label: language.nativeName)
+                }
+            }
+        }
+    }
+
+    private func languageRow(_ language: AppLanguage, label: String) -> some View {
+        let isOn = settings.languagePreference == language
+        return Button {
+            withAnimation(Theme.spring) { settings.languagePreference = language }
+        } label: {
+            HStack {
+                Text(label)
+                    .font(Theme.body(15))
+                    .foregroundStyle(Theme.ink)
+                Spacer()
+                if isOn {
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundStyle(Theme.gold)
+                }
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
+            .background(
+                RoundedRectangle(cornerRadius: Theme.Radius.chip, style: .continuous)
+                    .fill(isOn ? Theme.goldSoft.opacity(0.45) : Theme.sand.opacity(0.35))
+            )
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
+    // MARK: Widget
+
+    private var widgetBlock: some View {
+        block(loc.t("settings.widget.title"), icon: "square.grid.2x2") {
+            Text(loc.t("settings.widget.hint"))
+                .font(Theme.body(14))
+                .foregroundStyle(Theme.inkSoft)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    // MARK: About
+
+    private var aboutBlock: some View {
+        block(loc.t("settings.about"), icon: "info.circle") {
+            VStack(alignment: .leading, spacing: 14) {
+                Text(loc.t("settings.disclaimer"))
+                    .font(Theme.body(13))
+                    .foregroundStyle(Theme.inkSoft)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                Button {
+                    withAnimation(Theme.spring) { settings.resetProgress() }
+                } label: {
+                    Text(loc.t("settings.reset_progress"))
+                        .font(Theme.label(13))
+                        .foregroundStyle(Theme.ink)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 10)
+                        .background(Capsule().fill(Theme.sand))
+                }
+                .buttonStyle(.plain)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    // MARK: Developer
+
+    #if DEBUG
+    private var developerBlock: some View {
+        @Bindable var onboarding = onboarding
+
+        return block(loc.t("settings.developer"), icon: "hammer.fill") {
+            VStack(spacing: 12) {
+                HStack {
+                    Text(loc.t("settings.devmode"))
+                        .font(Theme.body(15))
+                        .foregroundStyle(Theme.ink)
+                    Spacer()
+                    Text("ACTIVE")
+                        .font(Theme.label(10))
+                        .foregroundStyle(Theme.gold)
+                }
+                Toggle(isOn: $onboarding.alwaysShowOnboarding) {
+                    Text(loc.t("settings.always_onboarding"))
+                        .font(Theme.body(15))
+                        .foregroundStyle(Theme.ink)
+                }
+                .tint(Theme.gold)
+                .onChange(of: onboarding.alwaysShowOnboarding) { _, on in
+                    if on { onboarding.reset() }
+                }
+            }
+        }
+    }
+    #endif
+
+    // MARK: Block chrome
+
+    private func block<Content: View>(_ title: String, icon: String,
+                                      @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 6) {
+                Image(systemName: icon).font(.system(size: 11))
+                Text(title.uppercased()).font(Theme.label(9)).tracking(0.8)
+            }
+            .foregroundStyle(Theme.gold)
+            content()
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .card()
+    }
+}

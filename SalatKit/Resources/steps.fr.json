@@ -1,0 +1,103 @@
+{
+  "locale": "fr",
+  "steps": {
+    "niyyah": {
+      "name": "L'intention",
+      "posture": "Debout, face à la Qibla, les pieds légèrement écartés, le regard posé à l'endroit de la prosternation.",
+      "phonetic": "",
+      "translation": "Formule dans ton cœur la prière que tu vas accomplir. L'intention est silencieuse — elle ne se prononce pas.",
+      "note": "L'intention appartient au cœur. La dire à voix haute ne fait pas partie de la prière."
+    },
+    "takbir": {
+      "name": "Takbir d'entrée en prière",
+      "posture": "Lève les deux mains à hauteur des épaules ou des oreilles, puis pose la main droite sur la gauche.",
+      "phonetic": "Allâhou akbar",
+      "translation": "Allah est le plus grand.",
+      "note": "Ce Takbir ouvre la prière. À partir d'ici, on ne parle plus et on ne bouge plus librement."
+    },
+    "istiftah": {
+      "name": "Invocation d'ouverture",
+      "posture": "Debout, les mains posées sur la poitrine ou sur le ventre.",
+      "phonetic": "Soubhânaka Allâhoumma wa bi-hamdika, wa tabâraka smouka, wa ta'âlâ jaddouka, wa lâ ilâha ghayrouk",
+      "translation": "Gloire à Toi, ô Allah, et à Toi la louange. Béni soit Ton nom, élevée soit Ta majesté, et il n'est de divinité que Toi.",
+      "note": "Acte recommandé (sunnah), dit une fois, à voix basse, seulement au début de la première unité. D'autres formulations sont également rapportées."
+    },
+    "taawwudh": {
+      "name": "Demande de protection",
+      "posture": "Toujours debout, mains jointes.",
+      "phonetic": "A'oûdhou bi-llâhi mina ch-chaytâni r-rajîm",
+      "translation": "Je cherche protection auprès d'Allah contre Satan le banni.",
+      "note": "Se dit à voix basse, avant la première récitation du Coran."
+    },
+    "fatiha": {
+      "name": "Al-Fatiha",
+      "posture": "Debout, mains jointes, le regard baissé.",
+      "phonetic": "Bismi llâhi r-Rahmâni r-Rahîm\nAl-hamdou li-llâhi Rabbi l-'âlamîn\nAr-Rahmâni r-Rahîm\nMâliki yawmi d-dîn\nIyyâka na'boudou wa iyyâka nasta'în\nIhdinâ s-sirâta l-moustaqîm\nSirâta lladhîna an'amta 'alayhim ghayri l-maghdoûbi 'alayhim wa lâ d-dâllîn",
+      "translation": "Au nom d'Allah, le Tout Miséricordieux, le Très Miséricordieux.\nLouange à Allah, Seigneur des mondes,\nle Tout Miséricordieux, le Très Miséricordieux,\nMaître du Jour de la rétribution.\nC'est Toi seul que nous adorons, et c'est Toi seul dont nous implorons l'aide.\nGuide-nous vers le chemin droit,\nle chemin de ceux que Tu as comblés — non de ceux qui ont encouru Ta colère, ni des égarés.",
+      "note": "La Fatiha se récite dans chaque unité de prière. On dit « Âmîn » à la fin. C'est la seule récitation sans laquelle une unité n'est pas valable."
+    },
+    "surah": {
+      "name": "Une courte sourate",
+      "posture": "Debout, mains jointes.",
+      "phonetic": "Qoul houwa Llâhou ahad\nAllâhou s-samad\nLam yalid wa lam yoûlad\nWa lam yakoun lahou koufouwan ahad",
+      "translation": "Dis : Il est Allah, l'Unique.\nAllah, le Refuge éternel.\nIl n'engendre pas et n'a pas été engendré,\net nul ne Lui est comparable.",
+      "note": "N'importe quel passage du Coran que tu connais convient ici — Al-Ikhlas est proposée parce qu'elle est courte et facile à mémoriser. Ajoutée dans les deux premières unités seulement."
+    },
+    "ruku": {
+      "name": "Ruku — l'inclinaison",
+      "posture": "Dis « Allâhou akbar », incline-toi jusqu'à avoir le dos plat, les mains posées sur les genoux, la tête dans le prolongement du dos.",
+      "phonetic": "Soubhâna Rabbiya l-'Azhîm",
+      "translation": "Gloire à mon Seigneur, le Très Grand.",
+      "note": "Se dit trois fois. Reste immobile — ne remonte pas dans la précipitation."
+    },
+    "itidal": {
+      "name": "Redressement après l'inclinaison",
+      "posture": "Redresse-toi complètement, les bras le long du corps, et marque un arrêt avant de descendre.",
+      "phonetic": "Sami'a Llâhou liman hamidah\nRabbanâ wa laka l-hamd",
+      "translation": "Allah entend celui qui Le loue.\nNotre Seigneur, à Toi la louange.",
+      "note": "La première formule se dit en se relevant, la seconde une fois debout. Derrière un imam, on ne dit que la seconde."
+    },
+    "sujud": {
+      "name": "Sujud — la prosternation",
+      "posture": "Dis « Allâhou akbar » et descends. Sept parties touchent le sol : le front et le nez, les deux paumes, les deux genoux, la pointe des deux pieds.",
+      "phonetic": "Soubhâna Rabbiya l-A'lâ",
+      "translation": "Gloire à mon Seigneur, le Très Haut.",
+      "note": "Se dit trois fois. Garde les coudes décollés du sol et écartés des flancs."
+    },
+    "jalsa": {
+      "name": "Assise entre les deux prosternations",
+      "posture": "Dis « Allâhou akbar », assieds-toi sur le pied gauche, le pied droit dressé, les mains posées sur les cuisses.",
+      "phonetic": "Rabbi ghfir lî",
+      "translation": "Seigneur, pardonne-moi.",
+      "note": "Assieds-toi calmement. Cette courte pause fait partie de la prière, ce n'est pas une transition à expédier."
+    },
+    "sujud2": {
+      "name": "Deuxième prosternation",
+      "posture": "Dis « Allâhou akbar » et prosterne-toi une seconde fois, exactement comme la première.",
+      "phonetic": "Soubhâna Rabbiya l-A'lâ",
+      "translation": "Gloire à mon Seigneur, le Très Haut.",
+      "note": "Se dit trois fois. Cela achève une unité (rak'ah). On se relève pour la suivante."
+    },
+    "tashahhud": {
+      "name": "Tashahhud — l'attestation",
+      "posture": "Assis comme entre les prosternations, main gauche sur la cuisse gauche, main droite fermée avec l'index tendu vers l'avant.",
+      "phonetic": "At-tahiyyâtou li-llâhi wa s-salawâtou wa t-tayyibât\nAs-salâmou 'alayka ayyouha n-Nabiyyou wa rahmatou Llâhi wa barakâtouh\nAs-salâmou 'alaynâ wa 'alâ 'ibâdi Llâhi s-sâlihîn\nAch-hadou an lâ ilâha illa Llâh, wa ach-hadou anna Mouhammadan 'abdouhou wa rasoûlouh",
+      "translation": "Les salutations, les prières et les bonnes choses appartiennent à Allah.\nQue la paix soit sur toi, ô Prophète, ainsi que la miséricorde d'Allah et Ses bénédictions.\nQue la paix soit sur nous et sur les serviteurs vertueux d'Allah.\nJ'atteste qu'il n'est de divinité qu'Allah, et j'atteste que Muhammad est Son serviteur et Son messager.",
+      "note": "Se récite assis, après chaque groupe de deux unités. Les écoles rapportent des formulations légèrement différentes — toutes sont valables."
+    },
+    "salawat": {
+      "name": "Prière sur le Prophète",
+      "posture": "Toujours assis, l'index toujours tendu.",
+      "phonetic": "Allâhoumma salli 'alâ Mouhammadin wa 'alâ âli Mouhammad, kamâ sallayta 'alâ Ibrâhîma wa 'alâ âli Ibrâhîm, innaka Hamîdoun Majîd\nAllâhoumma bârik 'alâ Mouhammadin wa 'alâ âli Mouhammad, kamâ bârakta 'alâ Ibrâhîma wa 'alâ âli Ibrâhîm, innaka Hamîdoun Majîd",
+      "translation": "Ô Allah, accorde Ta grâce à Muhammad et à la famille de Muhammad, comme Tu l'as accordée à Ibrahim et à la famille d'Ibrahim. Tu es certes Digne de louange, Glorieux.\nÔ Allah, bénis Muhammad et la famille de Muhammad, comme Tu as béni Ibrahim et la famille d'Ibrahim. Tu es certes Digne de louange, Glorieux.",
+      "note": "Se dit dans l'assise finale, juste après le Tashahhud. Tu peux ensuite formuler l'invocation personnelle de ton choix avant le Salam."
+    },
+    "taslim": {
+      "name": "Taslim — la sortie de prière",
+      "posture": "Tourne la tête vers la droite, puis vers la gauche.",
+      "phonetic": "As-salâmou 'alaykoum wa rahmatou Llâh",
+      "translation": "Que la paix soit sur vous, ainsi que la miséricorde d'Allah.",
+      "note": "Se dit deux fois — une fois à droite, une fois à gauche. La prière se termine ici."
+    }
+  }
+}

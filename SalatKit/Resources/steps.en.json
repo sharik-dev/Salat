@@ -1,0 +1,103 @@
+{
+  "locale": "en",
+  "steps": {
+    "niyyah": {
+      "name": "Intention",
+      "posture": "Stand upright, facing the Qibla, feet slightly apart, eyes toward the place of prostration.",
+      "phonetic": "",
+      "translation": "Intend in your heart the prayer you are about to perform. The intention is silent — it is not pronounced aloud.",
+      "note": "The intention belongs to the heart. Saying it out loud is not part of the prayer."
+    },
+    "takbir": {
+      "name": "Opening Takbir",
+      "posture": "Raise both hands to the level of your shoulders or ears, then place your right hand over your left.",
+      "phonetic": "Allaahu akbar",
+      "translation": "Allah is the Greatest.",
+      "note": "This Takbir opens the prayer. From here on, ordinary speech and movement are no longer allowed."
+    },
+    "istiftah": {
+      "name": "Opening supplication",
+      "posture": "Standing, hands folded over the chest or the stomach.",
+      "phonetic": "Subhaanaka Allaahumma wa bihamdika, wa tabaaraka smuka, wa ta'aalaa jadduka, wa laa ilaaha ghayruk",
+      "translation": "Glory be to You, O Allah, and all praise is Yours. Blessed is Your name, exalted is Your majesty, and there is no god but You.",
+      "note": "A recommended act (sunnah), said once, quietly, at the start of the first unit only. Other wordings are also transmitted."
+    },
+    "taawwudh": {
+      "name": "Seeking refuge",
+      "posture": "Still standing, hands folded.",
+      "phonetic": "A'oodhu billaahi mina sh-shaytaani r-rajeem",
+      "translation": "I seek refuge in Allah from Satan, the rejected.",
+      "note": "Said quietly before the first recitation of the Qur'an."
+    },
+    "fatiha": {
+      "name": "Al-Fatiha",
+      "posture": "Standing, hands folded, gaze lowered.",
+      "phonetic": "Bismillaahi r-Rahmaani r-Raheem\nAl-hamdu lillaahi Rabbi l-'aalameen\nAr-Rahmaani r-Raheem\nMaaliki yawmi d-deen\nIyyaaka na'budu wa iyyaaka nasta'een\nIhdinaa s-siraata l-mustaqeem\nSiraata lladheena an'amta 'alayhim ghayri l-maghdoobi 'alayhim wa laa d-daalleen",
+      "translation": "In the name of Allah, the Most Gracious, the Most Merciful.\nAll praise is due to Allah, Lord of all the worlds,\nthe Most Gracious, the Most Merciful,\nMaster of the Day of Judgement.\nYou alone we worship, and You alone we ask for help.\nGuide us to the straight path,\nthe path of those You have blessed — not of those who earned Your anger, nor of those who went astray.",
+      "note": "The Fatiha is recited in every single unit of prayer. Say \"Aameen\" after it. It is the one recitation no unit can be valid without."
+    },
+    "surah": {
+      "name": "A short surah",
+      "posture": "Standing, hands folded.",
+      "phonetic": "Qul huwa Llaahu ahad\nAllaahu s-samad\nLam yalid wa lam yoolad\nWa lam yakun lahu kufuwan ahad",
+      "translation": "Say: He is Allah, the One.\nAllah, the Eternal Refuge.\nHe neither begets nor is born,\nand there is none comparable to Him.",
+      "note": "Any passage of the Qur'an you know may be recited here — Al-Ikhlas is shown because it is short and easy to memorise. Added in the first two units only."
+    },
+    "ruku": {
+      "name": "Ruku — bowing",
+      "posture": "Say \"Allahu akbar\", bow so that your back is level, hands gripping the knees, head in line with the back.",
+      "phonetic": "Subhaana Rabbiya l-'Adheem",
+      "translation": "Glory be to my Lord, the Most Great.",
+      "note": "Said three times. Be still — do not rush out of the position."
+    },
+    "itidal": {
+      "name": "Standing up from bowing",
+      "posture": "Rise fully upright, arms at your sides, and stand still before going down.",
+      "phonetic": "Sami'a Llaahu liman hamidah\nRabbanaa wa laka l-hamd",
+      "translation": "Allah hears the one who praises Him.\nOur Lord, all praise is Yours.",
+      "note": "The first phrase is said while rising, the second once standing. Praying behind an imam, you say only the second."
+    },
+    "sujud": {
+      "name": "Sujud — prostration",
+      "posture": "Say \"Allahu akbar\" and go down. Seven parts touch the ground: forehead and nose, both palms, both knees, the toes of both feet.",
+      "phonetic": "Subhaana Rabbiya l-A'laa",
+      "translation": "Glory be to my Lord, the Most High.",
+      "note": "Said three times. Keep the elbows off the ground and away from the sides."
+    },
+    "jalsa": {
+      "name": "Sitting between the two prostrations",
+      "posture": "Say \"Allahu akbar\", sit up on your left foot with the right foot upright, hands resting on the thighs.",
+      "phonetic": "Rabbi ghfir lee",
+      "translation": "My Lord, forgive me.",
+      "note": "Sit calmly. This short pause is part of the prayer, not a transition to rush through."
+    },
+    "sujud2": {
+      "name": "Second prostration",
+      "posture": "Say \"Allahu akbar\" and prostrate a second time, exactly as before.",
+      "phonetic": "Subhaana Rabbiya l-A'laa",
+      "translation": "Glory be to my Lord, the Most High.",
+      "note": "Said three times. This completes one unit (rak'ah). Stand up again for the next one."
+    },
+    "tashahhud": {
+      "name": "Tashahhud — the testimony",
+      "posture": "Seated as between the prostrations, left hand on the left thigh, right hand closed with the index finger pointing forward.",
+      "phonetic": "At-tahiyyaatu lillaahi wa s-salawaatu wa t-tayyibaat\nAs-salaamu 'alayka ayyuha n-Nabiyyu wa rahmatu Llaahi wa barakaatuh\nAs-salaamu 'alaynaa wa 'alaa 'ibaadi Llaahi s-saaliheen\nAsh-hadu an laa ilaaha illa Llaah, wa ash-hadu anna Muhammadan 'abduhu wa rasooluh",
+      "translation": "All greetings, prayers and good things belong to Allah.\nPeace be upon you, O Prophet, and the mercy of Allah and His blessings.\nPeace be upon us and upon the righteous servants of Allah.\nI bear witness that there is no god but Allah, and I bear witness that Muhammad is His servant and His Messenger.",
+      "note": "Recited sitting after every two units. The schools transmit slightly different wordings — all are valid."
+    },
+    "salawat": {
+      "name": "Blessings on the Prophet",
+      "posture": "Still seated, index finger still pointing.",
+      "phonetic": "Allaahumma salli 'alaa Muhammadin wa 'alaa aali Muhammad, kamaa sallayta 'alaa Ibraaheema wa 'alaa aali Ibraaheem, innaka Hameedun Majeed\nAllaahumma baarik 'alaa Muhammadin wa 'alaa aali Muhammad, kamaa baarakta 'alaa Ibraaheema wa 'alaa aali Ibraaheem, innaka Hameedun Majeed",
+      "translation": "O Allah, send Your grace upon Muhammad and the family of Muhammad, as You sent it upon Ibrahim and the family of Ibrahim. You are indeed Praiseworthy, Glorious.\nO Allah, bless Muhammad and the family of Muhammad, as You blessed Ibrahim and the family of Ibrahim. You are indeed Praiseworthy, Glorious.",
+      "note": "Said in the final sitting, right after the Tashahhud. You may then make any personal supplication before the Salam."
+    },
+    "taslim": {
+      "name": "Taslim — closing the prayer",
+      "posture": "Turn your head to the right, then to the left.",
+      "phonetic": "As-salaamu 'alaykum wa rahmatu Llaah",
+      "translation": "Peace be upon you, and the mercy of Allah.",
+      "note": "Said twice — once to the right, once to the left. The prayer ends here."
+    }
+  }
+}

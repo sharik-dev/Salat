@@ -1,19 +1,48 @@
 import SwiftUI
 
 struct ContentView: View {
+    @Environment(AppSettings.self) private var settings
+    @State private var selectedTab: AppTab = LaunchOptions.startTab
+
     var body: some View {
-        VStack {
-            Image(systemName: "swift")
-                .imageScale(.large)
-                .foregroundStyle(.orange)
-            Text("Salat")
-                .font(.largeTitle)
-                .bold()
+        ZStack(alignment: .bottom) {
+            Theme.paper.ignoresSafeArea()
+            StarLattice().ignoresSafeArea()
+
+            Group {
+                #if DEBUG
+                if LaunchOptions.showsWidgetPreview {
+                    WidgetPreviewView()
+                } else {
+                    tabContent
+                }
+                #else
+                tabContent
+                #endif
+            }
+            .transition(.opacity)
+
+            VStack(spacing: 0) {
+                Spacer()
+                FloatingTabBar(selectedTab: $selectedTab)
+            }
+            .ignoresSafeArea(.keyboard)
         }
-        .padding()
+        .localized(settings.localizer)
+    }
+
+    @ViewBuilder
+    private var tabContent: some View {
+        switch selectedTab {
+        case .learn:    LearnView()
+        case .practice: PracticeView()
+        case .settings: SettingsView()
+        }
     }
 }
 
 #Preview {
     ContentView()
+        .environment(AppSettings())
+        .environment(OnboardingManager())
 }
