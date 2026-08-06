@@ -14,3 +14,10 @@ fastlane/report.xml
 fastlane/Preview.html
 fastlane/screenshots/
 build/
+
+# Les récitations sont reproductibles : `python3 tools/fetch-recitations.py`.
+Salat/Resources/audio/*.mp3
+
+# Python
+__pycache__/
+*.pyc
