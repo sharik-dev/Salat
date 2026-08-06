@@ -9,7 +9,9 @@ enum AppTab: CaseIterable {
     var icon: String {
         switch self {
         case .learn:    return "book.closed.fill"
-        case .practice: return "sparkles.rectangle.stack.fill"
+        // A head, not a stack of cards: the tab stopped being a slideshow of
+        // the steps the day it became a place where you are asked about them.
+        case .practice: return "brain.head.profile"
         case .settings: return "gearshape.fill"
         }
     }
@@ -17,7 +19,10 @@ enum AppTab: CaseIterable {
     var titleKey: String {
         switch self {
         case .learn:    return "tab.learn"
-        case .practice: return "tab.practice"
+        // The case keeps its old name — `-startTab practice` is in every launch
+        // script and in the deep links — but what the reader sees is what the
+        // tab now does: memorise.
+        case .practice: return "tab.memorize"
         case .settings: return "tab.settings"
         }
     }
