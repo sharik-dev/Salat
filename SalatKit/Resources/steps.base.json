@@ -113,7 +113,7 @@
     {
       "id": "salawat",
       "order": 13,
-      "image": "pos_tashahhud",
+      "image": "pos_tashahhud_index",
       "posture": "sitting",
       "repetitions": 1,
       "spoken": true,

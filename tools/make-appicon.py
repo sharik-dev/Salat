@@ -1,100 +1,76 @@
 #!/usr/bin/env python3
-"""Fabrique l'icône d'app (1024×1024) à partir d'une des illustrations de position.
+"""Imprime le corps JSON de l'icône d'app, pour NanoBanana.
 
-L'icône reprend la DA de l'app : crème, sable, or, encre brune, contour épais et
-face inférieure extrudée (le langage de formes de 5min/Design/Plate.swift). La
-figure est la silhouette de `pos_sujud.png` — la posture la plus reconnaissable
-de la salat, même à 60 pt.
+    python3 tools/make-appicon.py > body.json
+    curl -s --max-time 290 -X POST localhost:4747/generate \
+         -H 'Content-Type: application/json' -d @body.json
+    python3 tools/make-appicon.py --install /tmp/AppIcon.png
 
-    python3 tools/make-appicon.py [--position sujud]
+L'icône était fabriquée ici même, en polygones : étoile khatam sable, socle doré
+extrudé, silhouette de `pos_sujud.png` posée dessus. Elle empilait trois idées
+dans un carré qui se regarde à 20 mm — Sharik l'a remplacée par un dessin, une
+seule forme : l'étoile en or, la prosternation dedans.
 
-Sortie : Salat/Assets.xcassets/AppIcon.appiconset/AppIcon.png
+Le prompt reste ici parce que c'est lui, désormais, la source de l'icône. Deux
+clauses ne sont pas décoratives : la tête sans aucun trait (pudeur, comme pour
+les positions) et l'étoile **à huit branches** — un hexagramme est le symbole du
+judaïsme et n'a rien à faire sur une app de salat, et le modèle y glisse tout
+seul si on écrit juste « star ».
+
+`--install` fait le service après-vente d'un rendu : il efface l'étincelle que
+le générateur tamponne dans un coin (une icône n'a pas de marge à recadrer, il
+faut la repeindre), force 1024×1024 sans alpha — iOS refuse une icône
+transparente — et l'écrit dans l'`AppIcon.appiconset`.
 """
 from __future__ import annotations
 
 import argparse
-import math
+import json
 from pathlib import Path
 
-from PIL import Image, ImageDraw
-
 ROOT = Path(__file__).resolve().parent.parent
-RES = ROOT / "SalatKit" / "Resources"
 OUT = ROOT / "Salat" / "Assets.xcassets" / "AppIcon.appiconset" / "AppIcon.png"
 
+PROMPT = """ONE single square image, 1:1, FULL BLEED: the flat background colour touches all four edges. This is an iOS APP ICON, so: NO rounded corners, NO frame, NO border, NO drop shadow, NO transparency, NO device mockup, NO text, NO letter, NO word, NO number, NO signature, NO watermark, NO sparkle in the corner.
+
+Subject: a single warm gold eight-pointed Islamic khatam star, centred and large, on a plain cream field, with a small brown-ink silhouette of a man prostrating in prayer (sujud, side view, forehead to the ground) resting inside the middle of the star. Only two elements: the gold star, the ink figure.
+
+ART DIRECTION — the app is a calm, printed-book-looking prayer app:
+- Palette, and nothing else: cream #FBF6EC, sand #EFE3CC, warm gold #C1962C, brown ink #2E2A22. No pure black, no white, no saturated colour, no blue, no red, no green, no purple.
+- Flat vector, thick hand-cut ink outlines like a linocut stamp. No gradient, no glow, no bevel, no gloss, no 3D, no photo, no texture, no shading, no hatching.
+- Big simple masses, readable when the icon is 20 mm wide on a phone home screen. Two or three shapes maximum. Generous empty margin all around, nothing touching the edges.
+- If a human figure appears, THE HEAD IS COMPLETELY BLANK — no eyes, no nose, no mouth, no ear, no hair, no face contour, one uninterrupted mass of ink. Non-negotiable, religious modesty.
+- Any star must be an EIGHT-POINTED ISLAMIC KHATAM star (two overlaid squares). NEVER a six-pointed star, never a hexagram, never a Star of David, never a crescent-and-star flag emblem.
+"""
+
 SIZE = 1024
-CREAM = (251, 246, 236, 255)
-SAND = (239, 227, 204, 255)
-GOLD = (193, 150, 44, 255)
-GOLD_DEEP = (154, 118, 30, 255)
-INK = (46, 42, 34, 255)
-
-# Rendu 4× puis réduit : les diagonales du khatam et le contour du socle sont
-# tracés en polygones, ils crénellent sans supersampling.
-SS = 4
 
 
-def khatam(cx: float, cy: float, r: float) -> list[tuple[float, float]]:
-    """Étoile à huit branches — le motif du fond, pas un hexagramme."""
-    inner = r * 0.62
-    pts = []
-    for i in range(16):
-        a = math.pi / 8 * i - math.pi / 2
-        rad = r if i % 2 == 0 else inner
-        pts.append((cx + rad * math.cos(a), cy + rad * math.sin(a)))
-    return pts
+def install(path: Path) -> None:
+    from PIL import Image
 
-
-def silhouette(name: str, height: int) -> Image.Image:
-    """Charge une illustration et l'aplatit en encre brune, pixels conservés."""
-    src = Image.open(RES / f"pos_{name}.png").convert("RGBA")
-    src = src.crop(src.getbbox())
-    w = round(src.width * height / src.height)
-    src = src.resize((w, height), Image.NEAREST)  # NEAREST : la pixellisation est voulue
-    flat = Image.new("RGBA", src.size, INK)
-    flat.putalpha(src.getchannel("A"))
-    return flat
-
-
-def build(position: str) -> Image.Image:
-    s = SIZE * SS
-    img = Image.new("RGBA", (s, s), CREAM)
-    d = ImageDraw.Draw(img)
-
-    # Le motif du fond : une grande étoile sable, plus deux petites en écho.
-    # Les petites restent à 17 % du bord : plus près, le masque arrondi d'iOS
-    # les rogne.
-    d.polygon(khatam(s * 0.5, s * 0.42, s * 0.36), fill=SAND)
-    for cx, cy, r in ((0.17, 0.17, 0.07), (0.83, 0.17, 0.07)):
-        d.polygon(khatam(s * cx, s * cy, s * r), fill=SAND)
-
-    # Le socle : plaque dorée, contour d'encre, face inférieure extrudée.
-    # La face du dessous se trace en premier ; la plaque du dessus recouvre
-    # ensuite son arête haute, sinon un trait d'encre barre l'or.
-    stroke = round(s * 0.011)
-    x0, x1 = s * 0.11, s * 0.89
-    top, bot = s * 0.735, s * 0.825
-    depth = s * 0.032
-    rad = s * 0.028
-    d.rounded_rectangle(
-        [x0, top + depth, x1, bot + depth], rad, fill=GOLD_DEEP, outline=INK, width=stroke
-    )
-    d.rounded_rectangle([x0, top, x1, bot], rad, fill=GOLD, outline=INK, width=stroke)
-
-    # La figure, posée sur le socle (elle mord légèrement dessus).
-    fig = silhouette(position, round(s * 0.30))
-    img.alpha_composite(fig, (round(s * 0.5 - fig.width / 2), round(top - fig.height + stroke)))
-
-    return img.resize((SIZE, SIZE), Image.LANCZOS).convert("RGB")
+    im = Image.open(path).convert("RGB")
+    bg = im.getpixel((4, 4))
+    w, h = im.size
+    px = im.load()
+    for y in range(int(h * 0.78), h):
+        for x in range(int(w * 0.78), w):
+            r, g, b = px[x, y]
+            if abs(r - bg[0]) + abs(g - bg[1]) + abs(b - bg[2]) < 90:
+                px[x, y] = bg
+    OUT.parent.mkdir(parents=True, exist_ok=True)
+    im.resize((SIZE, SIZE), Image.LANCZOS).save(OUT)
+    print(OUT)
 
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--position", default="sujud")
+    ap.add_argument("--install", type=Path, help="rendu NanoBanana à poser comme icône")
     args = ap.parse_args()
-    OUT.parent.mkdir(parents=True, exist_ok=True)
-    build(args.position).save(OUT)
-    print(OUT)
+    if args.install:
+        install(args.install)
+    else:
+        print(json.dumps({"prompt": PROMPT, "output": "/tmp/AppIcon.png"}))
 
 
 if __name__ == "__main__":
