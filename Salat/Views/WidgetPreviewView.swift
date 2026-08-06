@@ -14,6 +14,11 @@ struct WidgetPreviewView: View {
     @Environment(AppSettings.self) private var settings
     @State private var tick = CarouselClock.tick(at: Date())
 
+    private let modes: [(String, Bool, WidgetRenderingMode)] = [
+        ("full colour — plain home screen", false, .fullColor),
+        ("tinted — tinted home screen", true, .accented)
+    ]
+
     // The canonical widget canvases on a 6.1" phone.
     private let sizes: [(String, CGSize, WidgetFamily)] = [
         ("small",  CGSize(width: 170, height: 170), .systemSmall),
@@ -31,18 +36,31 @@ struct WidgetPreviewView: View {
                 Stepper("Step \(entry.position) / \(entry.total)", value: $tick)
                     .font(Theme.label(12))
 
-                ForEach(sizes, id: \.0) { name, size, family in
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text(name.uppercased())
-                            .font(Theme.label(9))
-                            .foregroundStyle(Theme.gold)
-                        CarouselWidgetView(entry: entry, family: family)
-                            .frame(width: size.width, height: size.height)
-                            .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 22, style: .continuous)
-                                    .stroke(Theme.border, lineWidth: 1)
-                            )
+                // Both renderings, one under the other, because they are two
+                // different widgets: a tinted home screen throws away the cream
+                // and keeps only luminance — which is how the widget ended up
+                // looking like an empty card. Neither is reachable by tapping
+                // here on purpose: Sharik reviews this through one screenshot.
+                ForEach(modes, id: \.0) { modeName, tinted, mode in
+                    Text(modeName.uppercased())
+                        .font(Theme.label(11))
+                        .foregroundStyle(Theme.ink)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+
+                    ForEach(sizes, id: \.0) { name, size, family in
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text(name.uppercased())
+                                .font(Theme.label(9))
+                                .foregroundStyle(Theme.gold)
+                            CarouselWidgetView(entry: entry, family: family, mode: mode)
+                                .frame(width: size.width, height: size.height)
+                                .background(tinted ? Color(white: 0.13) : .clear)
+                                .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 22, style: .continuous)
+                                        .stroke(Theme.border, lineWidth: 1)
+                                )
+                        }
                     }
                 }
 

@@ -4,6 +4,14 @@
 <dict>
 	<key>CFBundleDisplayName</key>
 	<string>Salat</string>
+	<!-- Le widget est archivé ici puis dessiné par un AUTRE processus, qui ne
+	     résout que les polices déclarées par le bundle. L'enregistrement
+	     CoreText de `Theme.registerPixelFont()` suffit dans l'app, pas ici :
+	     sans cette clé, le compteur « 3 / 14 » sort vide sur l'écran d'accueil. -->
+	<key>UIAppFonts</key>
+	<array>
+		<string>04b30.ttf</string>
+	</array>
 	<key>NSExtension</key>
 	<dict>
 		<key>NSExtensionPointIdentifier</key>

@@ -8,43 +8,46 @@ import SwiftUI
 /// timeline: one entry per minute, each showing the next position, refilled
 /// when it runs out. That is the fastest rotation the system actually honours;
 /// asking for seconds would simply be ignored.
+///
+/// *Which* step each entry carries is `CarouselPlan`'s business, not this
+/// file's: the cycle skips what the reader already knows, and holds on the step
+/// they just read. That decision is a pure value so it can be tested.
 struct CarouselProvider: TimelineProvider {
 
     func placeholder(in context: Context) -> CarouselEntry {
-        entry(at: 0, date: Date())
+        entry(at: Date())
     }
 
     func getSnapshot(in context: Context, completion: @escaping (CarouselEntry) -> Void) {
-        completion(entry(at: 1, date: Date()))
+        completion(entry(at: Date()))
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<CarouselEntry>) -> Void) {
         let now = Date()
-        let base = CarouselClock.tick(at: now)
         let entries = (0..<CarouselClock.horizon).map { offset in
-            entry(at: base + offset,
-                  date: now.addingTimeInterval(Double(offset) * CarouselClock.interval))
+            entry(at: now.addingTimeInterval(Double(offset) * CarouselClock.interval))
         }
         completion(Timeline(entries: entries, policy: .atEnd))
     }
 
-    private func entry(at tick: Int, date: Date) -> CarouselEntry {
+    private func entry(at date: Date) -> CarouselEntry {
         let language = SharedStore.language
+        let localizer = Localizer(language: language)
         let steps = PrayerContent.steps(for: language)
-        guard !steps.isEmpty else {
+
+        guard let slot = CarouselPlan.slot(at: date, steps: steps, log: StudyLog.load()) else {
             let empty = PrayerStep(id: "", order: 0, image: "", posture: .standing,
                                    repetitions: 1, spoken: false, arabic: "",
                                    name: "", postureText: "", phonetic: "",
                                    translation: "", note: "")
             return CarouselEntry(date: date, step: empty, position: 0, total: 0,
-                                 localizer: Localizer(language: language))
+                                 localizer: localizer)
         }
-        let index = CarouselClock.index(tick: tick, count: steps.count)
         return CarouselEntry(date: date,
-                             step: steps[index],
-                             position: index + 1,
-                             total: steps.count,
-                             localizer: Localizer(language: language))
+                             step: slot.step,
+                             position: slot.position,
+                             total: slot.total,
+                             localizer: localizer)
     }
 }
 
