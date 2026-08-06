@@ -1,0 +1,103 @@
+{
+  "locale": "tr",
+  "steps": {
+    "niyyah": {
+      "name": "Niyet",
+      "posture": "Ayakta, kıbleye dönük, ayaklar hafif aralık, gözler secde yerinde.",
+      "phonetic": "",
+      "translation": "Kılacağın namazı kalbinden geçir. Niyet sessizdir: dille söylenmez.",
+      "note": "Niyetin yeri kalptir. Yüksek sesle söylemek namazın bir parçası değildir."
+    },
+    "takbir": {
+      "name": "İftitah tekbiri",
+      "posture": "İki elini omuz ya da kulak hizasına kaldır, sonra sağ elini sol elinin üzerine koy.",
+      "phonetic": "Allâhu ekber",
+      "translation": "Allah en büyüktür.",
+      "note": "Bu tekbir namazı başlatır. Buradan sonra konuşulmaz ve serbestçe hareket edilmez."
+    },
+    "istiftah": {
+      "name": "Sübhâneke",
+      "posture": "Ayakta, eller göğsün ya da göbeğin üzerinde bağlı.",
+      "phonetic": "Sübhâneke Allâhümme ve bihamdike, ve tebârekesmüke, ve teâlâ cedduke, ve lâ ilâhe gayruk",
+      "translation": "Seni tesbih ederim Allah'ım, hamd Sanadır. Senin adın mübarektir, şânın yücedir ve Senden başka ilâh yoktur.",
+      "note": "Sünnet bir ameldir; bir kez, sessizce ve yalnızca ilk rekâtın başında okunur. Başka rivayetleri de vardır."
+    },
+    "taawwudh": {
+      "name": "Eûzü çekmek",
+      "posture": "Yine ayakta, eller bağlı.",
+      "phonetic": "Eûzü billâhi mine'ş-şeytâni'r-racîm",
+      "translation": "Kovulmuş şeytandan Allah'a sığınırım.",
+      "note": "Sessizce, ilk Kur'an okuyuşundan önce söylenir."
+    },
+    "fatiha": {
+      "name": "Fâtiha",
+      "posture": "Ayakta, eller bağlı, bakışlar aşağıda.",
+      "phonetic": "Bismillâhi'r-Rahmâni'r-Rahîm\nElhamdü lillâhi Rabbi'l-âlemîn\nEr-Rahmâni'r-Rahîm\nMâliki yevmi'd-dîn\nİyyâke na'büdü ve iyyâke nesta'în\nİhdine's-sırâta'l-müstakîm\nSırâtallezîne en'amte aleyhim gayri'l-mağdûbi aleyhim ve le'd-dâllîn",
+      "translation": "Rahmân ve Rahîm olan Allah'ın adıyla.\nHamd, âlemlerin Rabbi Allah'a mahsustur,\nO Rahmân'dır, Rahîm'dir,\ndin gününün sahibidir.\nYalnız Sana kulluk eder, yalnız Senden yardım dileriz.\nBizi doğru yola ilet,\nnimet verdiklerinin yoluna; gazaba uğrayanların ve sapkınlarınkine değil.",
+      "note": "Fâtiha her rekâtta okunur. Ardından «Âmîn» denir. Hiçbir rekâtın onsuz sahih olmadığı tek okumadır."
+    },
+    "surah": {
+      "name": "Kısa bir sûre",
+      "posture": "Ayakta, eller bağlı.",
+      "phonetic": "Kul hüvellâhü ehad\nAllâhü's-samed\nLem yelid ve lem yûled\nVe lem yekün lehû küfüven ehad",
+      "translation": "De ki: O Allah birdir.\nAllah Samed'dir.\nDoğurmamış ve doğrulmamıştır,\nve hiçbir şey O'nun dengi değildir.",
+      "note": "Burada bildiğin herhangi bir Kur'an bölümü okunabilir. İhlâs sûresi kısa ve ezberlemesi kolay olduğu için gösterildi. Yalnızca ilk iki rekâtta eklenir."
+    },
+    "ruku": {
+      "name": "Rükû",
+      "posture": "«Allâhu ekber» de ve sırtın düz olacak şekilde eğil; eller dizleri kavrar, baş sırtla aynı hizada durur.",
+      "phonetic": "Sübhâne Rabbiye'l-Azîm",
+      "translation": "Yüce olan Rabbimi tesbih ederim.",
+      "note": "Üç kez söylenir. Sakin ol: bu hâlden aceleyle çıkma."
+    },
+    "itidal": {
+      "name": "Rükûdan doğrulmak",
+      "posture": "Tamamen doğrul, kollar yanda; secdeye inmeden önce bir an dur.",
+      "phonetic": "Semiallâhü limen hamideh\nRabbenâ ve leke'l-hamd",
+      "translation": "Allah, kendisine hamd edeni işitir.\nRabbimiz, hamd Sanadır.",
+      "note": "İlk cümle doğrulurken, ikincisi ayaktayken söylenir. İmamın arkasında sadece ikincisi söylenir."
+    },
+    "sujud": {
+      "name": "Secde",
+      "posture": "«Allâhu ekber» de ve yere in. Yedi uzuv yere değer: alın ve burun, iki avuç, iki diz, iki ayağın parmakları.",
+      "phonetic": "Sübhâne Rabbiye'l-A'lâ",
+      "translation": "En yüce olan Rabbimi tesbih ederim.",
+      "note": "Üç kez söylenir. Dirsekleri yerden ve gövdeden uzak tut."
+    },
+    "jalsa": {
+      "name": "İki secde arasında oturmak",
+      "posture": "«Allâhu ekber» de, sol ayağın üzerine otur, sağ ayak parmak uçlarında dik dursun, eller uylukların üzerinde.",
+      "phonetic": "Rabbiğfir lî",
+      "translation": "Rabbim, beni bağışla.",
+      "note": "Sakince otur. Bu kısa duruş namazın bir parçasıdır, aceleye getirilecek bir geçiş değil."
+    },
+    "sujud2": {
+      "name": "İkinci secde",
+      "posture": "«Allâhu ekber» de ve tıpkı öncekinde olduğu gibi ikinci kez secdeye git.",
+      "phonetic": "Sübhâne Rabbiye'l-A'lâ",
+      "translation": "En yüce olan Rabbimi tesbih ederim.",
+      "note": "Üç kez söylenir. Böylece bir rekât tamamlanır. Sonraki için ayağa kalk."
+    },
+    "tashahhud": {
+      "name": "Tahiyyat",
+      "posture": "İki secde arasındaki gibi otur. İki kol da uylukların üzerinde: sol el sol uyluğun üzerinde açık, sağ el sağ dizin üzerinde, parmaklar kapalı ve yalnızca işaret parmağı öne uzatılmış. Kol kaldırılmaz: işaret diz hizasında yapılır.",
+      "phonetic": "Ettehiyyâtü lillâhi ve's-salavâtü ve't-tayyibât\nEs-selâmü aleyke eyyühe'n-Nebiyyü ve rahmetullâhi ve berekâtüh\nEs-selâmü aleynâ ve alâ ibâdillâhi's-sâlihîn\nEşhedü en lâ ilâhe illallâh, ve eşhedü enne Muhammeden abdühû ve rasûlüh",
+      "translation": "Bütün selamlar, dualar ve güzellikler Allah'a aittir.\nEy Peygamber, selam sana, Allah'ın rahmeti ve bereketleri de.\nSelam bize ve Allah'ın salih kullarına olsun.\nŞahitlik ederim ki Allah'tan başka ilâh yoktur ve şahitlik ederim ki Muhammed O'nun kulu ve elçisidir.",
+      "note": "Her iki rekâtın ardından oturarak okunur. Mezhepler biraz farklı lafızlar aktarır: hepsi geçerlidir."
+    },
+    "salawat": {
+      "name": "Salli ve Bârik",
+      "posture": "Hâlâ oturur hâlde, işaret parmağı hâlâ uzatılmış.",
+      "phonetic": "Allâhümme salli alâ Muhammedin ve alâ âli Muhammed, kemâ salleyte alâ İbrâhîme ve alâ âli İbrâhîm, inneke Hamîdün Mecîd\nAllâhümme bârik alâ Muhammedin ve alâ âli Muhammed, kemâ bârekte alâ İbrâhîme ve alâ âli İbrâhîm, inneke Hamîdün Mecîd",
+      "translation": "Allah'ım, İbrahim'e ve İbrahim'in ailesine rahmet ettiğin gibi Muhammed'e ve Muhammed'in ailesine de rahmet et. Şüphesiz Sen övülmeye lâyıksın, şanı yücesin.\nAllah'ım, İbrahim'i ve İbrahim'in ailesini mübarek kıldığın gibi Muhammed'i ve Muhammed'in ailesini de mübarek kıl. Şüphesiz Sen övülmeye lâyıksın, şanı yücesin.",
+      "note": "Son oturuşta, Tahiyyat'ın hemen ardından okunur. Selamdan önce dilediğin duayı edebilirsin."
+    },
+    "taslim": {
+      "name": "Selam vermek",
+      "posture": "Başını önce sağa, sonra sola çevir.",
+      "phonetic": "Es-selâmü aleyküm ve rahmetullâh",
+      "translation": "Selam ve Allah'ın rahmeti üzerinize olsun.",
+      "note": "İki kez söylenir: biri sağa, biri sola. Namaz burada biter."
+    }
+  }
+}

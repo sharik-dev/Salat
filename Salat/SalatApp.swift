@@ -28,6 +28,13 @@ struct SalatApp: App {
                 // A two-way binding, so dismissing the sheet — by the button or
                 // by any route iOS offers — actually records that it was seen.
                 // `.constant` here meant the sheet could never close.
+                // Rewritten at every return to the app rather than only when
+                // the switch is touched: the plan names steps that are still
+                // unlearned, and that changes as the user learns them.
+                .onChange(of: scenePhase) { _, phase in
+                    guard phase == .active else { return }
+                    Task { await reminders.sync(with: settings) }
+                }
                 .sheet(isPresented: Binding(
                     get: { onboarding.shouldShowOnboarding },
                     set: { showing in if !showing { onboarding.markSeen() } }

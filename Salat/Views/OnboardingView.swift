@@ -11,6 +11,7 @@ struct OnboardingStep: Identifiable {
 
 struct OnboardingView: View {
     @Environment(OnboardingManager.self) private var onboarding
+    @Environment(AppSettings.self) private var settings
     @Environment(\.loc) private var loc
     @State private var index = 0
 
@@ -25,7 +26,13 @@ struct OnboardingView: View {
         .init(titleKey: "onboarding.5.title", bodyKey: "onboarding.5.body", icon: "checkmark.seal.fill", image: "pos_tashahhud")
     ]
 
-    private var isLast: Bool { index == steps.count - 1 }
+    /// The language picker is page 0, the five illustrated pages follow. It
+    /// comes first because everything after it is written in the language it
+    /// chooses — and the phone's own language is already selected, so the page
+    /// is a confirmation, not a form to fill.
+    private var pageCount: Int { steps.count + 1 }
+
+    private var isLast: Bool { index == pageCount - 1 }
 
     var body: some View {
         ZStack {
@@ -49,8 +56,9 @@ struct OnboardingView: View {
                 .frame(height: 40)
 
                 TabView(selection: $index) {
+                    languagePage.tag(0)
                     ForEach(Array(steps.enumerated()), id: \.offset) { i, step in
-                        page(step).tag(i)
+                        page(step).tag(i + 1)
                     }
                 }
                 .tabViewStyle(.page(indexDisplayMode: .never))
@@ -114,9 +122,76 @@ struct OnboardingView: View {
         }
     }
 
+    /// Fourteen languages do not fit on a page: the list scrolls, and the one
+    /// the phone asked for is already ticked at the top of it.
+    private var languagePage: some View {
+        VStack(spacing: 16) {
+            VStack(spacing: 10) {
+                Image(systemName: "globe")
+                    .font(.system(size: 34, weight: .light))
+                    .foregroundStyle(Theme.gold)
+
+                Text(loc.t("onboarding.language.title"))
+                    .font(Theme.title(26))
+                    .foregroundStyle(Theme.ink)
+
+                Text(loc.t("onboarding.language.body"))
+                    .font(Theme.body(15))
+                    .foregroundStyle(Theme.inkSoft)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding(.horizontal, 30)
+            .padding(.top, 10)
+
+            ScrollView {
+                VStack(spacing: 8) {
+                    ForEach(AppLanguage.shipped) { language in
+                        languageRow(language)
+                    }
+                }
+                .padding(.horizontal, 26)
+                .padding(.vertical, 4)
+            }
+            .scrollIndicators(.hidden)
+        }
+    }
+
+    private func languageRow(_ language: AppLanguage) -> some View {
+        let isOn = settings.resolvedLanguage == language
+        return Button {
+            withAnimation(Theme.spring) { settings.languagePreference = language }
+        } label: {
+            HStack(spacing: 12) {
+                Text(language.flagless)
+                    .font(Theme.label(12))
+                    .foregroundStyle(Theme.inkSoft)
+                    .frame(width: 30, alignment: .leading)
+
+                Text(language.nativeName)
+                    .font(Theme.body(15))
+                    .foregroundStyle(Theme.ink)
+
+                Spacer()
+
+                if isOn {
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundStyle(Theme.gold)
+                }
+            }
+            .environment(\.layoutDirection, .leftToRight)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
+            .contentShape(Rectangle())
+        }
+        .chunky(isOn ? Theme.goldSoft : Theme.sand, depth: isOn ? 4 : 0, haptic: .select)
+        .accessibilityIdentifier("onboarding.language.\(language.rawValue)")
+    }
+
     private var dots: some View {
         HStack(spacing: 7) {
-            ForEach(0..<steps.count, id: \.self) { i in
+            ForEach(0..<pageCount, id: \.self) { i in
                 Capsule()
                     .fill(i == index ? Theme.gold : Theme.border)
                     .frame(width: i == index ? 20 : 7, height: 7)

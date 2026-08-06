@@ -1,0 +1,103 @@
+{
+  "locale": "nl",
+  "steps": {
+    "niyyah": {
+      "name": "De intentie",
+      "posture": "Rechtop staan, gericht naar de Qibla, de voeten iets uit elkaar, de blik op de plek van de neerknieling.",
+      "phonetic": "",
+      "translation": "Vorm in je hart de intentie voor het gebed dat je gaat verrichten. De intentie is stil: ze wordt niet uitgesproken.",
+      "note": "De intentie hoort in het hart thuis. Haar hardop uitspreken maakt geen deel uit van het gebed."
+    },
+    "takbir": {
+      "name": "Openingstakbir",
+      "posture": "Breng beide handen omhoog tot schouder- of oorhoogte, leg daarna de rechterhand over de linker.",
+      "phonetic": "Allaahoe akbar",
+      "translation": "Allah is de Grootste.",
+      "note": "Deze Takbir opent het gebed. Vanaf hier wordt er niet meer gesproken en niet meer vrij bewogen."
+    },
+    "istiftah": {
+      "name": "Openingssmeekbede",
+      "posture": "Staand, de handen op de borst of op de buik.",
+      "phonetic": "Soebhaanaka Allaahoemma wa bihamdika, wa tabaaraka smoeka, wa taʿaalaa djaddoeka, wa laa ilaaha ghairoek",
+      "translation": "Glorie aan U, o Allah, en aan U de lof. Gezegend is Uw naam, verheven is Uw majesteit, en er is geen god dan U.",
+      "note": "Een aanbevolen handeling (soenna), één keer en zacht gezegd, alleen aan het begin van de eerste eenheid. Er zijn ook andere formuleringen overgeleverd."
+    },
+    "taawwudh": {
+      "name": "Bescherming zoeken",
+      "posture": "Nog steeds staand, de handen gevouwen.",
+      "phonetic": "Aʿoedhoe billaahi mina sj-sjaitaani r-radjiem",
+      "translation": "Ik zoek bescherming bij Allah tegen de vervloekte Satan.",
+      "note": "Wordt zacht gezegd, vóór de eerste recitatie uit de Koran."
+    },
+    "fatiha": {
+      "name": "Al-Fatiha",
+      "posture": "Staand, de handen gevouwen, de blik omlaag.",
+      "phonetic": "Bismillaahi r-Rahmaani r-Rahiem\nAl-hamdoe lillaahi Rabbi l-ʿaalamien\nAr-Rahmaani r-Rahiem\nMaaliki jaumi d-dien\nIjjaaka naʿboedoe wa ijjaaka nastaʿien\nIhdinaa s-siraata l-moestaqiem\nSiraata lladhiena anʿamta ʿalaihim ghairi l-maghdoebi ʿalaihim wa laa d-daallien",
+      "translation": "In de naam van Allah, de Erbarmer, de Meest Barmhartige.\nAlle lof komt toe aan Allah, Heer van de werelden,\nde Erbarmer, de Meest Barmhartige,\nHeerser op de Dag des Oordeels.\nU alleen aanbidden wij, en U alleen vragen wij om hulp.\nLeid ons op het rechte pad,\nhet pad van hen die U begunstigd hebt, niet van hen op wie Uw toorn rust, noch van de dwalenden.",
+      "note": "De Fatiha wordt in elke eenheid van het gebed gereciteerd. Zeg er «Aamien» achteraan. Het is de enige recitatie zonder welke geen enkele eenheid geldig is."
+    },
+    "surah": {
+      "name": "Een korte soera",
+      "posture": "Staand, de handen gevouwen.",
+      "phonetic": "Qoel hoewa Llaahoe ahad\nAllaahoe s-samad\nLam jalid wa lam joelad\nWa lam jakoen lahoe koefoewan ahad",
+      "translation": "Zeg: Hij is Allah, de Enige.\nAllah, de Onafhankelijke.\nHij heeft niet verwekt en is niet verwekt,\nen niemand is aan Hem gelijk.",
+      "note": "Hier mag elk stuk uit de Koran dat je kent gereciteerd worden. Al-Ichlaas staat er omdat die kort is en makkelijk te onthouden. Komt er alleen in de eerste twee eenheden bij."
+    },
+    "ruku": {
+      "name": "Roekoe, de buiging",
+      "posture": "Zeg «Allahoe akbar» en buig tot je rug vlak is, de handen om de knieën, het hoofd in lijn met de rug.",
+      "phonetic": "Soebhaana Rabbija l-ʿAdhiem",
+      "translation": "Glorie aan mijn Heer, de Geweldige.",
+      "note": "Wordt drie keer gezegd. Kom tot stilstand: verlaat de houding niet gehaast."
+    },
+    "itidal": {
+      "name": "Opkomen uit de buiging",
+      "posture": "Kom volledig rechtop, de armen langs het lichaam, en sta stil voordat je omlaag gaat.",
+      "phonetic": "Samiʿa Llaahoe liman hamidah\nRabbanaa wa laka l-hamd",
+      "translation": "Allah hoort wie Hem prijst.\nOnze Heer, aan U komt alle lof toe.",
+      "note": "De eerste zin zeg je terwijl je opkomt, de tweede staand. Achter een imam zeg je alleen de tweede."
+    },
+    "sujud": {
+      "name": "Soedjoed, de neerknieling",
+      "posture": "Zeg «Allahoe akbar» en ga omlaag. Zeven delen raken de grond: voorhoofd en neus, beide handpalmen, beide knieën, de tenen van beide voeten.",
+      "phonetic": "Soebhaana Rabbija l-Aʿlaa",
+      "translation": "Glorie aan mijn Heer, de Allerhoogste.",
+      "note": "Wordt drie keer gezegd. Houd de ellebogen van de grond en van je zij."
+    },
+    "jalsa": {
+      "name": "Zitten tussen de twee neerknielingen",
+      "posture": "Zeg «Allahoe akbar», ga zitten op je linkervoet met de rechtervoet op de tenen, de handen op de dijen.",
+      "phonetic": "Rabbi ghfir lie",
+      "translation": "Mijn Heer, vergeef mij.",
+      "note": "Ga rustig zitten. Deze korte pauze hoort bij het gebed, het is geen overgang om doorheen te jagen."
+    },
+    "sujud2": {
+      "name": "Tweede neerknieling",
+      "posture": "Zeg «Allahoe akbar» en kniel een tweede keer neer, precies zoals daarvoor.",
+      "phonetic": "Soebhaana Rabbija l-Aʿlaa",
+      "translation": "Glorie aan mijn Heer, de Allerhoogste.",
+      "note": "Wordt drie keer gezegd. Hiermee is één eenheid (rakʿa) af. Sta op voor de volgende."
+    },
+    "tashahhud": {
+      "name": "Tasjahhoed, de getuigenis",
+      "posture": "Zittend als tussen de neerknielingen. Beide onderarmen rusten op de dijen: de linkerhand vlak op de linkerdij, de rechter op de rechterknie, de vingers gebogen en alleen de wijsvinger naar voren gestrekt. De arm gaat niet omhoog: het gebaar gebeurt op kniehoogte.",
+      "phonetic": "At-tahijjaatoe lillaahi wa s-salawaatoe wa t-tajjibaat\nAs-salaamoe ʿalaika ajjoeha n-Nabijjoe wa rahmatoe Llaahi wa barakaatoeh\nAs-salaamoe ʿalainaa wa ʿalaa ʿibaadi Llaahi s-saalihien\nAsj-hadoe an laa ilaaha illa Llaah, wa asj-hadoe anna Moehammadan ʿabdoehoe wa rasoeloeh",
+      "translation": "Alle groeten, gebeden en goede daden behoren Allah toe.\nVrede zij met u, o Profeet, en de barmhartigheid van Allah en Zijn zegeningen.\nVrede zij met ons en met de oprechte dienaren van Allah.\nIk getuig dat er geen god is dan Allah, en ik getuig dat Mohammed Zijn dienaar en Zijn Boodschapper is.",
+      "note": "Wordt na elke twee eenheden zittend gereciteerd. De scholen geven iets verschillende bewoordingen door: alle zijn geldig."
+    },
+    "salawat": {
+      "name": "Zegeningen over de Profeet",
+      "posture": "Nog steeds zittend, de wijsvinger nog steeds gestrekt.",
+      "phonetic": "Allaahoemma salli ʿalaa Moehammadin wa ʿalaa aali Moehammad, kamaa sallaita ʿalaa Ibraahiema wa ʿalaa aali Ibraahiem, innaka Hamiedoen Madjied\nAllaahoemma baarik ʿalaa Moehammadin wa ʿalaa aali Moehammad, kamaa baarakta ʿalaa Ibraahiema wa ʿalaa aali Ibraahiem, innaka Hamiedoen Madjied",
+      "translation": "O Allah, schenk Uw genade aan Mohammed en aan de familie van Mohammed, zoals U die geschonken hebt aan Ibrahim en aan de familie van Ibrahim. U bent waarlijk Prijzenswaardig, Glorierijk.\nO Allah, zegen Mohammed en de familie van Mohammed, zoals U Ibrahim en de familie van Ibrahim gezegend hebt. U bent waarlijk Prijzenswaardig, Glorierijk.",
+      "note": "Wordt in de laatste zitting gezegd, direct na de Tasjahhoed. Daarna mag je vóór de Salaam elke persoonlijke smeekbede doen."
+    },
+    "taslim": {
+      "name": "Tasliem, het afsluiten van het gebed",
+      "posture": "Draai je hoofd naar rechts, daarna naar links.",
+      "phonetic": "As-salaamoe ʿalaikoem wa rahmatoe Llaah",
+      "translation": "Vrede zij met jullie, en de barmhartigheid van Allah.",
+      "note": "Wordt twee keer gezegd: één keer naar rechts, één keer naar links. Hier eindigt het gebed."
+    }
+  }
+}

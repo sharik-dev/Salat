@@ -71,5 +71,7 @@
   "settings.audio": "Recitation",
   "settings.audio.recordings": "%d recordings on this phone",
   "settings.audio.clear": "Delete my recordings",
-  "settings.audio.credits": "Recitations of Al-Fatiha and Al-Ikhlas from everyayah.com. The rest of the prayer is not Qur'an and has no such recording — those steps carry no reciter."
+  "settings.audio.credits": "Recitations of Al-Fatiha and Al-Ikhlas from everyayah.com. The rest of the prayer is not Qur'an and has no such recording — those steps carry no reciter.",
+  "onboarding.language.title": "Your language",
+  "onboarding.language.body": "We took the one your phone is set to. Change it here if you would rather read another; Settings can change it again at any time."
 }

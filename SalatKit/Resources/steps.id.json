@@ -1,0 +1,103 @@
+{
+  "locale": "id",
+  "steps": {
+    "niyyah": {
+      "name": "Niat",
+      "posture": "Berdiri tegak menghadap kiblat, kedua kaki sedikit terbuka, pandangan tertuju ke tempat sujud.",
+      "phonetic": "",
+      "translation": "Hadirkan dalam hatimu salat yang akan kamu kerjakan. Niat itu diam: tidak diucapkan.",
+      "note": "Tempat niat adalah hati. Melafalkannya dengan suara bukan bagian dari salat."
+    },
+    "takbir": {
+      "name": "Takbiratul ihram",
+      "posture": "Angkat kedua tangan setinggi bahu atau telinga, lalu letakkan tangan kanan di atas tangan kiri.",
+      "phonetic": "Allaahu akbar",
+      "translation": "Allah Maha Besar.",
+      "note": "Takbir ini membuka salat. Sejak saat ini tidak boleh lagi berbicara atau bergerak bebas."
+    },
+    "istiftah": {
+      "name": "Doa iftitah",
+      "posture": "Berdiri, kedua tangan bersedekap di dada atau di perut.",
+      "phonetic": "Subhaanakallaahumma wa bihamdika, wa tabaarakasmuka, wa ta'aalaa jadduka, wa laa ilaaha ghairuk",
+      "translation": "Maha Suci Engkau ya Allah, dan segala puji bagi-Mu. Maha Berkah nama-Mu, Maha Tinggi keagungan-Mu, dan tidak ada tuhan selain Engkau.",
+      "note": "Amalan sunah, dibaca sekali dengan pelan, hanya pada awal rakaat pertama. Ada juga lafal-lafal lain yang diriwayatkan."
+    },
+    "taawwudh": {
+      "name": "Taawudz",
+      "posture": "Masih berdiri, tangan bersedekap.",
+      "phonetic": "A'uudzu billaahi minasy-syaithaanir-rajiim",
+      "translation": "Aku berlindung kepada Allah dari setan yang terkutuk.",
+      "note": "Dibaca pelan, sebelum bacaan Al-Qur'an yang pertama."
+    },
+    "fatiha": {
+      "name": "Al-Fatihah",
+      "posture": "Berdiri, tangan bersedekap, pandangan menunduk.",
+      "phonetic": "Bismillaahir-Rahmaanir-Rahiim\nAlhamdu lillaahi Rabbil-'aalamiin\nAr-Rahmaanir-Rahiim\nMaaliki yaumid-diin\nIyyaaka na'budu wa iyyaaka nasta'iin\nIhdinash-shiraathal-mustaqiim\nShiraathalladziina an'amta 'alaihim ghairil-maghdhuubi 'alaihim wa ladh-dhaalliin",
+      "translation": "Dengan nama Allah Yang Maha Pengasih, Maha Penyayang.\nSegala puji bagi Allah, Tuhan seluruh alam,\nYang Maha Pengasih, Maha Penyayang,\nPemilik hari pembalasan.\nHanya kepada-Mu kami menyembah dan hanya kepada-Mu kami memohon pertolongan.\nTunjukilah kami jalan yang lurus,\njalan orang-orang yang telah Engkau beri nikmat, bukan jalan mereka yang dimurkai dan bukan pula jalan mereka yang sesat.",
+      "note": "Al-Fatihah dibaca pada setiap rakaat. Setelahnya ucapkan «Aamiin». Inilah satu-satunya bacaan yang tanpanya rakaat tidak sah."
+    },
+    "surah": {
+      "name": "Surah pendek",
+      "posture": "Berdiri, tangan bersedekap.",
+      "phonetic": "Qul huwallaahu ahad\nAllaahush-shamad\nLam yalid wa lam yuulad\nWa lam yakul lahuu kufuwan ahad",
+      "translation": "Katakanlah: Dialah Allah Yang Maha Esa.\nAllah tempat bergantung segala sesuatu.\nDia tidak beranak dan tidak diperanakkan,\ndan tidak ada sesuatu pun yang setara dengan Dia.",
+      "note": "Di sini boleh dibaca bagian Al-Qur'an mana pun yang kamu hafal. Al-Ikhlas ditampilkan karena pendek dan mudah dihafal. Ditambahkan hanya pada dua rakaat pertama."
+    },
+    "ruku": {
+      "name": "Rukuk",
+      "posture": "Ucapkan «Allahu akbar» lalu membungkuk sampai punggung rata, kedua tangan memegang lutut, kepala sejajar dengan punggung.",
+      "phonetic": "Subhaana Rabbiyal-'Azhiim",
+      "translation": "Maha Suci Tuhanku Yang Maha Agung.",
+      "note": "Dibaca tiga kali. Tenanglah sejenak: jangan buru-buru bangkit."
+    },
+    "itidal": {
+      "name": "Iktidal",
+      "posture": "Berdiri tegak sepenuhnya, kedua lengan di samping badan, dan diam sejenak sebelum turun.",
+      "phonetic": "Sami'allaahu liman hamidah\nRabbanaa wa lakal-hamd",
+      "translation": "Allah mendengar orang yang memuji-Nya.\nYa Tuhan kami, bagi-Mu segala puji.",
+      "note": "Kalimat pertama diucapkan saat bangkit, yang kedua setelah berdiri. Di belakang imam, kamu hanya membaca yang kedua."
+    },
+    "sujud": {
+      "name": "Sujud",
+      "posture": "Ucapkan «Allahu akbar» lalu turun. Tujuh anggota menyentuh lantai: dahi dan hidung, kedua telapak tangan, kedua lutut, jari-jari kedua kaki.",
+      "phonetic": "Subhaana Rabbiyal-A'laa",
+      "translation": "Maha Suci Tuhanku Yang Maha Tinggi.",
+      "note": "Dibaca tiga kali. Jauhkan siku dari lantai dan dari badan."
+    },
+    "jalsa": {
+      "name": "Duduk di antara dua sujud",
+      "posture": "Ucapkan «Allahu akbar», duduk di atas kaki kiri dengan kaki kanan ditegakkan, kedua tangan di atas paha.",
+      "phonetic": "Rabbighfir lii",
+      "translation": "Ya Tuhanku, ampunilah aku.",
+      "note": "Duduklah dengan tenang. Jeda singkat ini bagian dari salat, bukan peralihan yang boleh diburu."
+    },
+    "sujud2": {
+      "name": "Sujud kedua",
+      "posture": "Ucapkan «Allahu akbar» lalu sujud untuk kedua kalinya, persis seperti tadi.",
+      "phonetic": "Subhaana Rabbiyal-A'laa",
+      "translation": "Maha Suci Tuhanku Yang Maha Tinggi.",
+      "note": "Dibaca tiga kali. Dengan ini satu rakaat selesai. Bangkitlah untuk rakaat berikutnya."
+    },
+    "tashahhud": {
+      "name": "Tasyahud",
+      "posture": "Duduk seperti di antara dua sujud. Kedua lengan bawah bertumpu pada paha: tangan kiri terbuka di atas paha kiri, tangan kanan di atas lutut kanan dengan jari-jari terkepal dan hanya telunjuk yang menunjuk ke depan. Lengan tidak diangkat: isyarat itu terjadi setinggi lutut.",
+      "phonetic": "Attahiyyaatu lillaahi wash-shalawaatu wath-thayyibaat\nAssalaamu 'alaika ayyuhan-Nabiyyu wa rahmatullaahi wa barakaatuh\nAssalaamu 'alainaa wa 'alaa 'ibaadillaahish-shaalihiin\nAsyhadu allaa ilaaha illallaah, wa asyhadu anna Muhammadan 'abduhuu wa rasuuluh",
+      "translation": "Segala penghormatan, doa dan kebaikan adalah milik Allah.\nSemoga keselamatan atasmu, wahai Nabi, beserta rahmat Allah dan berkah-Nya.\nSemoga keselamatan atas kami dan atas hamba-hamba Allah yang saleh.\nAku bersaksi bahwa tiada tuhan selain Allah, dan aku bersaksi bahwa Muhammad adalah hamba dan utusan-Nya.",
+      "note": "Dibaca sambil duduk setiap selesai dua rakaat. Tiap mazhab meriwayatkan lafal yang sedikit berbeda: semuanya sah."
+    },
+    "salawat": {
+      "name": "Selawat kepada Nabi",
+      "posture": "Masih duduk, telunjuk masih menunjuk.",
+      "phonetic": "Allaahumma shalli 'alaa Muhammadin wa 'alaa aali Muhammad, kamaa shallaita 'alaa Ibraahiima wa 'alaa aali Ibraahiim, innaka Hamiidun Majiid\nAllaahumma baarik 'alaa Muhammadin wa 'alaa aali Muhammad, kamaa baarakta 'alaa Ibraahiima wa 'alaa aali Ibraahiim, innaka Hamiidun Majiid",
+      "translation": "Ya Allah, limpahkanlah rahmat kepada Muhammad dan keluarga Muhammad, sebagaimana Engkau telah melimpahkannya kepada Ibrahim dan keluarga Ibrahim. Sungguh Engkau Maha Terpuji, Maha Mulia.\nYa Allah, berkahilah Muhammad dan keluarga Muhammad, sebagaimana Engkau telah memberkahi Ibrahim dan keluarga Ibrahim. Sungguh Engkau Maha Terpuji, Maha Mulia.",
+      "note": "Dibaca pada duduk terakhir, tepat setelah tasyahud. Setelah itu kamu boleh berdoa apa saja sebelum salam."
+    },
+    "taslim": {
+      "name": "Salam",
+      "posture": "Palingkan kepala ke kanan, lalu ke kiri.",
+      "phonetic": "Assalaamu 'alaikum wa rahmatullaah",
+      "translation": "Semoga keselamatan dan rahmat Allah atas kalian.",
+      "note": "Diucapkan dua kali: sekali ke kanan, sekali ke kiri. Di sinilah salat berakhir."
+    }
+  }
+}

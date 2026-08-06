@@ -5,6 +5,7 @@ struct SettingsView: View {
     @Environment(OnboardingManager.self) private var onboarding
     @Environment(VoiceRecorder.self) private var recorder
     @Environment(\.loc) private var loc
+    @State private var showLanguages = false
 
     var body: some View {
         @Bindable var settings = settings
@@ -32,44 +33,58 @@ struct SettingsView: View {
             .padding(.top, 8)
         }
         .scrollIndicators(.hidden)
+        .task { if LaunchOptions.opensLanguages { showLanguages = true } }
+        .sheet(isPresented: $showLanguages) {
+            LanguagePickerView()
+                .localized(settings.localizer)
+                .environment(settings)
+        }
     }
 
     // MARK: Language
 
+    /// Quinze lignes empilées ici poussaient tout le reste des réglages sous
+    /// la ligne de flottaison, pour un choix qu'on fait une fois. Le bloc ne
+    /// garde que la langue en cours ; la liste vit dans `LanguagePickerView`.
     private var languageBlock: some View {
-        @Bindable var settings = settings
+        block(loc.t("settings.language"), icon: "globe") {
+            Button {
+                showLanguages = true
+            } label: {
+                HStack(spacing: 12) {
+                    Text(settings.resolvedLanguage.flagless)
+                        .font(Theme.label(12))
+                        .foregroundStyle(Theme.inkSoft)
+                        .frame(width: 30, alignment: .leading)
 
-        return block(loc.t("settings.language"), icon: "globe") {
-            VStack(spacing: 8) {
-                languageRow(.system, label: loc.t("settings.language.system"))
-                ForEach(AppLanguage.shipped) { language in
-                    languageRow(language, label: language.nativeName)
-                }
-            }
-        }
-    }
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(settings.resolvedLanguage.nativeName)
+                            .font(Theme.body(15))
+                            .foregroundStyle(Theme.ink)
+                        // Suivre le téléphone est un réglage, pas une langue :
+                        // sans cette ligne on ne saurait plus lequel des deux
+                        // est coché.
+                        if settings.languagePreference == .system {
+                            Text(loc.t("settings.language.system"))
+                                .font(Theme.label(10))
+                                .foregroundStyle(Theme.gold)
+                        }
+                    }
 
-    private func languageRow(_ language: AppLanguage, label: String) -> some View {
-        let isOn = settings.languagePreference == language
-        return Button {
-            withAnimation(Theme.spring) { settings.languagePreference = language }
-        } label: {
-            HStack {
-                Text(label)
-                    .font(Theme.body(15))
-                    .foregroundStyle(Theme.ink)
-                Spacer()
-                if isOn {
-                    Image(systemName: "checkmark")
+                    Spacer()
+
+                    Image(systemName: "chevron.right")
                         .font(.system(size: 12, weight: .bold))
                         .foregroundStyle(Theme.gold)
                 }
+                .environment(\.layoutDirection, .leftToRight)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 12)
+                .contentShape(Rectangle())
             }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 12)
-            .contentShape(Rectangle())
+            .chunky(Theme.sand, depth: 4, haptic: .select)
+            .accessibilityIdentifier("settings.language.open")
         }
-        .chunky(isOn ? Theme.goldSoft : Theme.sand, depth: isOn ? 4 : 0, haptic: .select)
     }
 
     // MARK: Widget

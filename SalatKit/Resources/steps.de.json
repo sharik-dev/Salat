@@ -1,0 +1,103 @@
+{
+  "locale": "de",
+  "steps": {
+    "niyyah": {
+      "name": "Die Absicht",
+      "posture": "Aufrecht stehen, zur Qibla gewandt, die Füße leicht auseinander, der Blick auf der Stelle der Niederwerfung.",
+      "phonetic": "",
+      "translation": "Fasse in deinem Herzen die Absicht für das Gebet, das du verrichten wirst. Die Absicht ist still: sie wird nicht ausgesprochen.",
+      "note": "Die Absicht gehört ins Herz. Sie laut auszusprechen gehört nicht zum Gebet."
+    },
+    "takbir": {
+      "name": "Eröffnungs-Takbir",
+      "posture": "Hebe beide Hände auf Schulter- oder Ohrhöhe, lege dann die rechte Hand über die linke.",
+      "phonetic": "Allaahu akbar",
+      "translation": "Allah ist der Größte.",
+      "note": "Dieser Takbir eröffnet das Gebet. Ab hier wird nicht mehr gesprochen und nicht mehr frei bewegt."
+    },
+    "istiftah": {
+      "name": "Eröffnungsbittgebet",
+      "posture": "Stehend, die Hände auf der Brust oder auf dem Bauch.",
+      "phonetic": "Ssubhaanaka Allaahumma wa bihamdika, wa tabaaraka smuka, wa taʿaalaa dschadduka, wa laa ilaaha ghairuk",
+      "translation": "Gepriesen seist Du, o Allah, und Dir gebührt das Lob. Gesegnet sei Dein Name, erhaben Deine Majestät, und es gibt keinen Gott außer Dir.",
+      "note": "Eine empfohlene Handlung (Sunna), einmal und leise gesprochen, nur zu Beginn der ersten Gebetseinheit. Auch andere Formulierungen sind überliefert."
+    },
+    "taawwudh": {
+      "name": "Zuflucht suchen",
+      "posture": "Weiterhin stehend, die Hände gefaltet.",
+      "phonetic": "Aʿuudhu billaahi mina sch-schaitaani r-radschiim",
+      "translation": "Ich suche Zuflucht bei Allah vor dem verfluchten Satan.",
+      "note": "Wird leise gesprochen, vor der ersten Koranrezitation."
+    },
+    "fatiha": {
+      "name": "Al-Fatiha",
+      "posture": "Stehend, die Hände gefaltet, der Blick gesenkt.",
+      "phonetic": "Bismillaahi r-Rahmaani r-Rahiim\nAl-hamdu lillaahi Rabbi l-ʿaalamiin\nAr-Rahmaani r-Rahiim\nMaaliki jaumi d-diin\nIjjaaka naʿbudu wa ijjaaka nastaʿiin\nIhdinaa s-siraata l-mustaqiim\nSiraata lladhiina anʿamta ʿalaihim ghairi l-maghduubi ʿalaihim wa laa d-daalliin",
+      "translation": "Im Namen Allahs, des Allerbarmers, des Barmherzigen.\nAlles Lob gebührt Allah, dem Herrn der Welten,\ndem Allerbarmer, dem Barmherzigen,\ndem Herrscher am Tag des Gerichts.\nDir allein dienen wir, und Dich allein bitten wir um Hilfe.\nFühre uns den geraden Weg,\nden Weg derer, die Du begnadet hast, nicht derer, die Deinen Zorn erregt haben, und nicht der Irregehenden.",
+      "note": "Die Fatiha wird in jeder einzelnen Gebetseinheit rezitiert. Sage danach «Aamiin». Sie ist die eine Rezitation, ohne die keine Einheit gültig ist."
+    },
+    "surah": {
+      "name": "Eine kurze Sure",
+      "posture": "Stehend, die Hände gefaltet.",
+      "phonetic": "Qul huwa Llaahu ahad\nAllaahu s-samad\nLam jalid wa lam juulad\nWa lam jakun lahu kufuwan ahad",
+      "translation": "Sprich: Er ist Allah, der Eine.\nAllah, der Absolute.\nEr zeugt nicht und ist nicht gezeugt worden,\nund keiner ist Ihm gleich.",
+      "note": "Hier darf jede Koranstelle rezitiert werden, die du kennst. Al-Ichlas wird gezeigt, weil sie kurz und leicht zu behalten ist. Sie kommt nur in den ersten beiden Einheiten dazu."
+    },
+    "ruku": {
+      "name": "Ruku, die Verbeugung",
+      "posture": "Sage «Allahu akbar» und beuge dich, bis der Rücken waagerecht ist, die Hände umfassen die Knie, der Kopf bleibt in einer Linie mit dem Rücken.",
+      "phonetic": "Ssubhaana Rabbija l-ʿAdhiim",
+      "translation": "Gepriesen sei mein Herr, der Gewaltige.",
+      "note": "Wird dreimal gesagt. Halte inne: verlasse die Position nicht hastig."
+    },
+    "itidal": {
+      "name": "Aufrichten aus der Verbeugung",
+      "posture": "Richte dich ganz auf, die Arme seitlich, und stehe ruhig, bevor du hinuntergehst.",
+      "phonetic": "Ssamiʿa Llaahu liman hamidah\nRabbanaa wa laka l-hamd",
+      "translation": "Allah hört den, der Ihn lobt.\nUnser Herr, Dir gebührt alles Lob.",
+      "note": "Der erste Satz wird beim Aufrichten gesagt, der zweite im Stehen. Hinter einem Imam sagst du nur den zweiten."
+    },
+    "sujud": {
+      "name": "Sudschud, die Niederwerfung",
+      "posture": "Sage «Allahu akbar» und gehe hinunter. Sieben Stellen berühren den Boden: Stirn und Nase, beide Handflächen, beide Knie, die Zehen beider Füße.",
+      "phonetic": "Ssubhaana Rabbija l-Aʿlaa",
+      "translation": "Gepriesen sei mein Herr, der Höchste.",
+      "note": "Wird dreimal gesagt. Halte die Ellbogen vom Boden und vom Körper fern."
+    },
+    "jalsa": {
+      "name": "Sitzen zwischen den beiden Niederwerfungen",
+      "posture": "Sage «Allahu akbar», setze dich auf den linken Fuß, der rechte steht auf den Zehen, die Hände liegen auf den Oberschenkeln.",
+      "phonetic": "Rabbi ghfir lii",
+      "translation": "Mein Herr, vergib mir.",
+      "note": "Setze dich ruhig hin. Diese kurze Pause gehört zum Gebet, sie ist kein Übergang, den man überspringt."
+    },
+    "sujud2": {
+      "name": "Zweite Niederwerfung",
+      "posture": "Sage «Allahu akbar» und wirf dich ein zweites Mal nieder, genau wie zuvor.",
+      "phonetic": "Ssubhaana Rabbija l-Aʿlaa",
+      "translation": "Gepriesen sei mein Herr, der Höchste.",
+      "note": "Wird dreimal gesagt. Damit ist eine Einheit (Rakʿa) vollendet. Steh für die nächste wieder auf."
+    },
+    "tashahhud": {
+      "name": "Taschahhud, das Zeugnis",
+      "posture": "Sitzend wie zwischen den Niederwerfungen. Beide Unterarme liegen auf den Oberschenkeln: die linke Hand flach auf dem linken Oberschenkel, die rechte auf dem rechten Knie, die Finger eingerollt und nur der Zeigefinger nach vorn ausgestreckt. Der Arm wird nicht gehoben: die Geste geschieht auf Kniehöhe.",
+      "phonetic": "At-tahijjaatu lillaahi wa s-salawaatu wa t-tajjibaat\nAs-salaamu ʿalaika ajjuha n-Nabijju wa rahmatu Llaahi wa barakaatuh\nAs-salaamu ʿalainaa wa ʿalaa ʿibaadi Llaahi s-saalihiin\nAsch-hadu an laa ilaaha illa Llaah, wa asch-hadu anna Muhammadan ʿabduhu wa rasuuluh",
+      "translation": "Alle Grüße, Gebete und guten Werke gehören Allah.\nFriede sei mit dir, o Prophet, und die Barmherzigkeit Allahs und Seine Segnungen.\nFriede sei mit uns und mit den rechtschaffenen Dienern Allahs.\nIch bezeuge, dass es keinen Gott gibt außer Allah, und ich bezeuge, dass Muhammad Sein Diener und Sein Gesandter ist.",
+      "note": "Wird nach je zwei Einheiten im Sitzen rezitiert. Die Rechtsschulen überliefern leicht verschiedene Wortlaute: alle sind gültig."
+    },
+    "salawat": {
+      "name": "Segensgebet für den Propheten",
+      "posture": "Weiterhin sitzend, der Zeigefinger weiterhin ausgestreckt.",
+      "phonetic": "Allaahumma salli ʿalaa Muhammadin wa ʿalaa aali Muhammad, kamaa sallaita ʿalaa Ibraahiima wa ʿalaa aali Ibraahiim, innaka Hamiidun Madschiid\nAllaahumma baarik ʿalaa Muhammadin wa ʿalaa aali Muhammad, kamaa baarakta ʿalaa Ibraahiima wa ʿalaa aali Ibraahiim, innaka Hamiidun Madschiid",
+      "translation": "O Allah, sende Deine Gnade auf Muhammad und auf die Familie Muhammads, wie Du sie auf Ibrahim und die Familie Ibrahims gesandt hast. Du bist wahrlich der Lobenswerte, der Ruhmvolle.\nO Allah, segne Muhammad und die Familie Muhammads, wie Du Ibrahim und die Familie Ibrahims gesegnet hast. Du bist wahrlich der Lobenswerte, der Ruhmvolle.",
+      "note": "Wird im letzten Sitzen gesagt, direkt nach dem Taschahhud. Danach darfst du vor dem Salam jedes persönliche Bittgebet sprechen."
+    },
+    "taslim": {
+      "name": "Taslim, der Abschluss des Gebets",
+      "posture": "Wende den Kopf nach rechts, dann nach links.",
+      "phonetic": "As-salaamu ʿalaikum wa rahmatu Llaah",
+      "translation": "Friede sei mit euch, und die Barmherzigkeit Allahs.",
+      "note": "Wird zweimal gesagt: einmal nach rechts, einmal nach links. Hier endet das Gebet."
+    }
+  }
+}
