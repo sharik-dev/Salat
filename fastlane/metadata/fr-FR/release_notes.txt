@@ -1,1 +1,5 @@
-Première version.
+Désormais en 14 langues, chacune avec sa propre phonétique.
+
+Nouvel onglet Mémoriser : des quiz qui ne demandent que ce que vous avez déjà lu, des cartes mémoire, et la pratique vocale ligne à ligne.
+Mes progrès : vos jours d'étude, ce que vous maîtrisez, ce qui attend encore.
+Un rappel quotidien, et un widget lisible sur tous les écrans d'accueil.

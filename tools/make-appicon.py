@@ -6,16 +6,21 @@
          -H 'Content-Type: application/json' -d @body.json
     python3 tools/make-appicon.py --install /tmp/AppIcon.png
 
-L'icône était fabriquée ici même, en polygones : étoile khatam sable, socle doré
-extrudé, silhouette de `pos_sujud.png` posée dessus. Elle empilait trois idées
-dans un carré qui se regarde à 20 mm — Sharik l'a remplacée par un dessin, une
-seule forme : l'étoile en or, la prosternation dedans.
+Troisième icône. La première était assemblée ici en polygones (étoile khatam
+sable, socle doré, silhouette de sujud) ; la deuxième, dessinée par NanoBanana,
+gardait l'étoile en or et la prosternation dedans, sur fond crème. Toutes deux se
+perdaient à 60 px : la fiche ne récoltait que 6,4 % de clics sur ses affichages.
+Depuis la 1.1 (01/10/2026), c'est une arche de mihrab dorée traversée par une
+onde sonore, sur fond nuit — ce que fait l'app (on écoute, on répète), en une
+forme qui contraste. Elle a été choisie parmi trois concepts dans App Store
+Studio, qui n'a pas gardé son prompt : celui d'ici la décrit après coup, pour la
+régénérer ou la décliner.
 
-Le prompt reste ici parce que c'est lui, désormais, la source de l'icône. Deux
-clauses ne sont pas décoratives : la tête sans aucun trait (pudeur, comme pour
-les positions) et l'étoile **à huit branches** — un hexagramme est le symbole du
-judaïsme et n'a rien à faire sur une app de salat, et le modèle y glisse tout
-seul si on écrit juste « star ».
+Les deux clauses de pudeur restent, même sans personnage : la tête sans aucun
+trait si une silhouette réapparaît, et toute étoile **à huit branches** — un
+hexagramme est le symbole du judaïsme et n'a rien à faire sur une app de salat,
+et le modèle y glisse tout seul si on écrit juste « star ». Les points du ciel
+sont de minuscules éclats à quatre branches, pas des étoiles dessinées.
 
 `--install` fait le service après-vente d'un rendu : il efface l'étincelle que
 le générateur tamponne dans un coin (une icône n'a pas de marge à recadrer, il
@@ -31,16 +36,16 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "Salat" / "Assets.xcassets" / "AppIcon.appiconset" / "AppIcon.png"
 
-PROMPT = """ONE single square image, 1:1, FULL BLEED: the flat background colour touches all four edges. This is an iOS APP ICON, so: NO rounded corners, NO frame, NO border, NO drop shadow, NO transparency, NO device mockup, NO text, NO letter, NO word, NO number, NO signature, NO watermark, NO sparkle in the corner.
+PROMPT = """ONE single square image, 1:1, FULL BLEED: the background touches all four edges. This is an iOS APP ICON, so: NO rounded corners, NO frame, NO border, NO drop shadow, NO transparency, NO device mockup, NO text, NO letter, NO word, NO number, NO signature, NO watermark, NO sparkle in the corner.
 
-Subject: a single warm gold eight-pointed Islamic khatam star, centred and large, on a plain cream field, with a small brown-ink silhouette of a man prostrating in prayer (sujud, side view, forehead to the ground) resting inside the middle of the star. Only two elements: the gold star, the ink figure.
+Subject: the outline of a tall pointed Islamic mihrab arch, drawn as one thick glowing warm-gold line, centred, its two legs running off the bottom edge. Across the middle, from the left edge to the right edge, a glowing gold sound waveform crosses the arch, tallest at the centre and quieter towards the sides, with soft pale-cream vertical level bars behind it like an audio visualiser. Only two ideas: the arch, the voice.
 
-ART DIRECTION — the app is a calm, printed-book-looking prayer app:
-- Palette, and nothing else: cream #FBF6EC, sand #EFE3CC, warm gold #C1962C, brown ink #2E2A22. No pure black, no white, no saturated colour, no blue, no red, no green, no purple.
-- Flat vector, thick hand-cut ink outlines like a linocut stamp. No gradient, no glow, no bevel, no gloss, no 3D, no photo, no texture, no shading, no hatching.
-- Big simple masses, readable when the icon is 20 mm wide on a phone home screen. Two or three shapes maximum. Generous empty margin all around, nothing touching the edges.
-- If a human figure appears, THE HEAD IS COMPLETELY BLANK — no eyes, no nose, no mouth, no ear, no hair, no face contour, one uninterrupted mass of ink. Non-negotiable, religious modesty.
-- Any star must be an EIGHT-POINTED ISLAMIC KHATAM star (two overlaid squares). NEVER a six-pointed star, never a hexagram, never a Star of David, never a crescent-and-star flag emblem.
+ART DIRECTION:
+- Background: deep night teal-blue gradient, #1E4550 at the top to #081820 at the bottom, a soft golden halo behind the tip of the arch, a few tiny four-point pinpoint sparkles in the sky.
+- Gold #F5C542 to #E8A92E, glowing neon-like lines, smooth vector, gentle bloom. No other colour: no red, no green, no purple.
+- Big simple masses, readable when the icon is 20 mm wide on a phone home screen. The arch fills about 70 % of the height.
+- If a human figure ever appears, THE HEAD IS COMPLETELY BLANK — no eyes, no nose, no mouth, no ear, no hair, no face contour. Non-negotiable, religious modesty.
+- Any star must be an EIGHT-POINTED ISLAMIC KHATAM star. NEVER a six-pointed star, never a hexagram, never a Star of David, never a crescent-and-star flag emblem.
 """
 
 SIZE = 1024

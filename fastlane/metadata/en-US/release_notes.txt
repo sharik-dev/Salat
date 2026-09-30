@@ -1,1 +1,5 @@
-First release.
+Now in 14 languages, each with its own phonetics.
+
+New Memorise tab: quizzes that only ask what you have already read, flashcards, and voice practice line by line.
+My progress: study days, what you hold, and what is still waiting.
+A daily reminder, and a widget that reads on any Home Screen.

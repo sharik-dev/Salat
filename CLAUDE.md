@@ -89,12 +89,13 @@ Si un `pos_*.png` manque, `PositionMedallion` retombe sur `PostureFigure` — le
 dessinées en `Path`. C'est un vrai plancher, pas un placeholder : l'app reste utilisable et
 conforme sans aucune image.
 
-**L'icône d'app est dessinée, pas assemblée.** `tools/make-appicon.py` la fabriquait en
-polygones — étoile sable, socle doré extrudé, silhouette de sujud posée dessus : trois idées
-empilées dans un carré qui se regarde à 20 mm. Le fichier ne porte plus que le prompt
-NanoBanana qui l'a remplacée (une étoile khatam en or, la prosternation dedans, rien d'autre),
-et un `--install` qui efface l'étincelle du générateur et force 1024×1024 **sans alpha** — iOS
-refuse une icône transparente. Même contrainte de pudeur que les positions, et l'étoile est à
+**L'icône d'app (depuis la 1.1) : une arche dorée traversée par une onde sonore, sur fond
+nuit.** Choisie le 01/10/2026 dans App Store Studio parmi trois concepts : l'étoile khatam en
+or sur fond crème (l'icône 1.0) se perdait à 60 px, et la fiche ne convertissait que 6,4 % de
+ses affichages en visites. `tools/make-appicon.py` porte un prompt NanoBanana qui la **décrit
+après coup** (le studio ne garde pas le sien) et un `--install` qui efface l'étincelle du
+générateur et force 1024×1024 **sans alpha** — iOS refuse une icône transparente. Même
+contrainte de pudeur que les positions si une silhouette y revient, et toute étoile est à
 **huit** branches : à écrire « star » tout court, le modèle rend un hexagramme.
 
 ## *Mémoriser* est un hall, pas un écran
@@ -547,6 +548,14 @@ ruby scripts/asc_state.rb         # où en est la soumission
 **La lane `metadata` échoue la première fois** sur « Error fetching app store review detail —
 No data », et c'est normal : `deliver` **lit** la fiche de revue avant de l'écrire, et sur une
 app jamais soumise elle n'existe pas. La relancer la crée. Ce n'est pas une erreur de contact.
+
+**Depuis la 1.1, la fiche se publie aussi par App Store Studio** (`~/Documents/Web/appstore-studio`),
+qui a écrit les textes et les captures de la 1.1. `fastlane/metadata/` et `fastlane/screenshots/`
+en sont la **copie** : les garder alignés sur ce qui est en ligne, sinon un `fastlane ios metadata`
+remet l'ancienne fiche. `fastlane/screenshots/` ne contient que les captures **marketing** (vraies
+captures dans des iPhone 3D inclinés, titrées par langue, rendues par shotsmith) ;
+les captures brutes de l'app, qui en sont la source, vivent dans `fastlane/screenshots_raw/`
+— hors de portée de `deliver`, qui enverrait tout ce qu'il trouve.
 
 `TARGETED_DEVICE_FAMILY: "1"` — iPhone seul. L'app est verrouillée en portrait ; déclarer la
 famille iPad obligerait à livrer un jeu de captures 2048 × 2732 d'écrans jamais pensés pour
