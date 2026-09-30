@@ -186,7 +186,10 @@ struct SettingsView: View {
 
         return block(loc.t("settings.audio"), icon: "waveform") {
             VStack(alignment: .leading, spacing: 10) {
-                ForEach(Recitations.reciters) { reciter in
+                // Only the voices there is a choice between — the Qur'anic
+                // reciters. The adhkar are carried by a single voice (Hisn
+                // al-Muslim), and a "choice" of one row would just be noise.
+                ForEach(Recitations.reciters(covering: "fatiha")) { reciter in
                     reciterRow(reciter)
                 }
 
@@ -195,6 +198,20 @@ struct SettingsView: View {
                     .foregroundStyle(Theme.inkSoft)
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.top, 2)
+
+                // Where the adhkar voice comes from — a different source than
+                // the Qur'anic verses, so it gets its own sentence.
+                Text(loc.t("settings.audio.adhkar"))
+                    .font(Theme.body(12))
+                    .foregroundStyle(Theme.inkSoft)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                // The CC BY debt for the word timings, paid where it counts:
+                // in the shipped app, not in a repo markdown file.
+                Text(loc.t("settings.audio.timing"))
+                    .font(Theme.body(12))
+                    .foregroundStyle(Theme.inkSoft)
+                    .fixedSize(horizontal: false, vertical: true)
 
                 // Only offered when there is something to delete: a button that
                 // does nothing still makes the user wonder what it did.
@@ -325,7 +342,6 @@ struct SettingsView: View {
             .foregroundStyle(Theme.gold)
             content()
         }
-        .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
         .card()
     }

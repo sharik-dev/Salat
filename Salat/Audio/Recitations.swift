@@ -27,6 +27,11 @@ enum Recitations {
         let reciters: [Reciter]
         /// reciter id → step id → resource name per line, in line order.
         let clips: [String: [String: [String]]]
+        /// reciter id → step id → per line, per arabic word, [start, end] in
+        /// seconds within that line's clip. From quran-align (CC BY 4.0); the
+        /// voices its aligner never covered are simply absent here, and the
+        /// word cursor stays off for them.
+        let timings: [String: [String: [[[Double]]]]]?
     }
 
     private static let manifest: Manifest? = {
@@ -68,5 +73,34 @@ enum Recitations {
     static func clips(step: String, reciter: Reciter?) -> [URL] {
         (0..<lineCount(step: step, reciter: reciter))
             .compactMap { clip(step: step, line: $0, reciter: reciter) }
+    }
+
+    /// The voice that actually plays this step: the preferred reciter when he
+    /// covers it, else the first voice that does. The Qur'an reciters only
+    /// cover the two Qur'anic steps (plus, for four of them, the taawwudh);
+    /// the adhkar are carried by the Hisn al-Muslim voice — so switching
+    /// reciters never silences a step that has any recording at all.
+    static func effectiveReciter(step: String, preferring reciter: Reciter?) -> Reciter? {
+        if let reciter, hasClips(step: step, reciter: reciter) { return reciter }
+        return reciters.first { hasClips(step: step, reciter: $0) }
+    }
+
+    /// The voices that cover this step — what a per-step voice menu offers.
+    static func reciters(covering step: String) -> [Reciter] {
+        reciters.filter { hasClips(step: step, reciter: $0) }
+    }
+
+    /// When each arabic word of this line sounds, in clip seconds — or nil for
+    /// the voices the aligner never covered. One range per word of the line,
+    /// in word order; the karaoke cursor is a lookup into this.
+    static func wordSpans(step: String, line: Int, reciter: Reciter?) -> [ClosedRange<Double>]? {
+        guard let reciter,
+              let lines = manifest?.timings?[reciter.id]?[step],
+              lines.indices.contains(line) else { return nil }
+        let spans = lines[line].compactMap { pair -> ClosedRange<Double>? in
+            guard pair.count == 2, pair[0] <= pair[1] else { return nil }
+            return pair[0]...pair[1]
+        }
+        return spans.isEmpty ? nil : spans
     }
 }

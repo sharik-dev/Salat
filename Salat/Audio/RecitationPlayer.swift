@@ -34,6 +34,10 @@ final class RecitationPlayer: NSObject, AVAudioPlayerDelegate {
         return player.currentTime / player.duration
     }
 
+    /// Seconds into the clip that is sounding — what the word cursor reads.
+    /// Track time, so slowing playback down does not desynchronise the words.
+    var time: Double { player?.currentTime ?? 0 }
+
     // MARK: Playing
 
     /// One line, or one whole recording of the user.

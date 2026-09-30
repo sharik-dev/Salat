@@ -34,8 +34,10 @@ struct CarouselProvider: TimelineProvider {
         let language = SharedStore.language
         let localizer = Localizer(language: language)
         let steps = PrayerContent.steps(for: language)
+        let prefs = WidgetPrefs.load()
 
-        guard let slot = CarouselPlan.slot(at: date, steps: steps, log: StudyLog.load()) else {
+        guard let slot = CarouselPlan.slot(at: date, steps: steps,
+                                           log: StudyLog.load(), prefs: prefs) else {
             let empty = PrayerStep(id: "", order: 0, image: "", posture: .standing,
                                    repetitions: 1, spoken: false, arabic: "",
                                    name: "", postureText: "", phonetic: "",
@@ -47,7 +49,8 @@ struct CarouselProvider: TimelineProvider {
                              step: slot.step,
                              position: slot.position,
                              total: slot.total,
-                             localizer: localizer)
+                             localizer: localizer,
+                             focus: prefs.focus)
     }
 }
 

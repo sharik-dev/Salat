@@ -51,12 +51,24 @@ struct ReviseHubView: View {
             .navigationDestination(for: ReviseRoute.self) { route in
                 switch route {
                 case .tool(.drill):
-                    DrillSessionView()
+                    DrillPickerView()
+                case .drillRun(let run):
+                    DrillSessionView(run: run)
+                case .tool(.flash):
+                    FlashcardsView()
+                case .tool(.fade):
+                    FadeGalleryView()
                 case .tool(.vocal):
                     VocalGalleryView()
+                case .tool(.widget):
+                    WidgetToolView()
                 case .step(let id):
                     if let step = settings.steps.first(where: { $0.id == id }) {
                         VocalStepView(step: step)
+                    }
+                case .fadeStep(let id):
+                    if let step = settings.steps.first(where: { $0.id == id }) {
+                        FadeStepView(step: step)
                     }
                 }
             }
@@ -67,9 +79,20 @@ struct ReviseHubView: View {
             // tap through two levels in the simulator.
             if let id = LaunchOptions.openStep,
                let step = settings.steps.first(where: { $0.id == id }), step.spoken {
-                path = [.tool(.vocal), .step(step.id)]
+                // `-openTool fade -openStep <id>` lands on the fading ladder;
+                // a bare `-openStep` keeps its old meaning, the vocal page.
+                path = LaunchOptions.openTool == ReviseTool.fade.rawValue
+                    ? [.tool(.fade), .fadeStep(step.id)]
+                    : [.tool(.vocal), .step(step.id)]
             } else if let raw = LaunchOptions.openTool, let tool = ReviseTool(rawValue: raw) {
-                path = [.tool(tool)]
+                // `-openTool drill` still lands in a dealt round — every
+                // script and UI test expects a question on screen — with the
+                // picker beneath; `-drillPicker 1` stops on the gallery.
+                if tool == .drill, !LaunchOptions.opensDrillPicker {
+                    path = [.tool(.drill), .drillRun(DrillRun())]
+                } else {
+                    path = [.tool(tool)]
+                }
             }
         }
         .onChange(of: path) { _, new in
@@ -112,7 +135,9 @@ struct ReviseHubView: View {
                 }
 
                 Button {
-                    path = [.tool(.drill)]
+                    // Straight into the dealt mix — the daily gesture stays
+                    // one tap — with the picker beneath it on the way back.
+                    path = [.tool(.drill), .drillRun(DrillRun())]
                 } label: {
                     Text(loc.t("memorize.start"))
                         .font(Theme.label(14))
@@ -187,8 +212,16 @@ struct PipRow: View {
 enum ReviseTool: String, CaseIterable, Identifiable, Hashable {
     /// Eight questions built from the steps already read.
     case drill
+    /// See the meaning, say the line, flip the card to check — recall where
+    /// the drill is recognition.
+    case flash
+    /// The same text with fewer and fewer words, until it carries itself.
+    case fade
     /// Listen to a reciter, record yourself, put the two side by side.
     case vocal
+    /// The home screen widget: what it does, and what it shows — the tool that
+    /// keeps the memorising going between two sessions.
+    case widget
 
     var id: String { rawValue }
 
@@ -198,7 +231,10 @@ enum ReviseTool: String, CaseIterable, Identifiable, Hashable {
     var icon: String {
         switch self {
         case .drill: return "questionmark.circle.fill"
+        case .flash: return "rectangle.on.rectangle.angled"
+        case .fade:  return "eye.slash.fill"
         case .vocal: return "waveform"
+        case .widget: return "apps.iphone"
         }
     }
 }
@@ -207,6 +243,10 @@ enum ReviseTool: String, CaseIterable, Identifiable, Hashable {
 enum ReviseRoute: Hashable {
     case tool(ReviseTool)
     case step(String)
+    /// The fading ladder for one step — a different page than the vocal one.
+    case fadeStep(String)
+    /// One chosen run of exercises, below the picker gallery.
+    case drillRun(DrillRun)
 }
 
 private struct ToolCard: View {

@@ -18,6 +18,9 @@ build/
 # Les récitations sont reproductibles : `python3 tools/fetch-recitations.py`.
 Salat/Resources/audio/*.mp3
 
+# Le paquet de timings quran-align (5,8 Mo), retéléchargé au besoin par le même script.
+tools/.cache/
+
 # Python
 __pycache__/
 *.pyc

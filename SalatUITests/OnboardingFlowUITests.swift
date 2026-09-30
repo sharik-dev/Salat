@@ -24,8 +24,9 @@ final class OnboardingFlowUITests: XCTestCase {
         XCTAssertTrue(primary.waitForExistence(timeout: 10),
                       "a fresh install should open on the onboarding")
 
-        // Five pages: four "Next" then "Let's go".
-        for page in 1...5 {
+        // Six pages: the language picker, then five illustrated ones — five
+        // "Next" and a final "Let's go".
+        for page in 1...6 {
             XCTAssertTrue(primary.waitForExistence(timeout: 5),
                           "the onboarding button vanished on page \(page)")
             primary.tap()

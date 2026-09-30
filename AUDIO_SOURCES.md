@@ -1,10 +1,11 @@
 # D'où viennent les récitations
 
-Les 77 clips de `Salat/Resources/audio/` ne sont **pas** produits ici. Ce sont des
-enregistrements de récitateurs nommés, téléchargés par `tools/fetch-recitations.py`
-depuis **everyayah.com**, un dépôt public qui republie le Coran découpé ayah par ayah.
+Les 115 clips de `Salat/Resources/audio/` ne sont **pas** produits ici. Ce sont des
+enregistrements téléchargés par `tools/fetch-recitations.py` depuis **everyayah.com**
+(le Coran, découpé ayah par ayah) et **hisnmuslim.com** (les adhkar de la prière, un mp3
+par dhikr, découpés localement — voir plus bas).
 
-C'est la seule dépendance externe de l'app, et c'est du **contenu tiers au sens
+Ce sont les seules dépendances externes de l'app, et c'est du **contenu tiers au sens
 d'App Store Connect** — `content_rights_contains_third_party_content` vaut donc `true`
 dans la lane `release`. Ne pas le rebasculer à `false` en croyant simplifier : c'est une
 déclaration légale, et elle est fausse tant qu'un mp3 de ce dossier est dans le binaire.
@@ -20,11 +21,31 @@ déclaration légale, et elle est fausse tant qu'un mp3 de ce dossier est dans l
 | Muhammad Siddiq Al-Minshawi (1920–1969) | *murattal* | `Minshawy_Murattal_128kbps` | 11 |
 | Abdul Basit Abdus-Samad (1927–1988) | *murattal* | `Abdul_Basit_Murattal_64kbps` | 11 |
 | Abu Bakr Ash-Shatri (né en 1970) | *murattal* | `Abu_Bakr_Ash-Shaatree_64kbps` | 11 |
+| Abdurrahman As-Sudais (né en 1960) | *murattal* | `Abdurrahmaan_As-Sudais_192kbps` | 11 |
+| Saud Ash-Shuraym (né en 1964) | *murattal* | `Saood_ash-Shuraym_128kbps` | 11 |
 
-Sept voix, 77 clips, 6,1 Mo. Deux d'entre elles sont des récitations **d'enseignement**
+Dix voix (neuf coraniques + Hisn al-Muslim), 115 clips, 9,2 Mo. Deux d'entre elles sont des récitations **d'enseignement**
 (Husary Muallim, Sowaid) : c'est la seule distinction que l'app expose, parce que c'est la
-seule qui change ce qu'on fait de la voix. Les cinq autres sont là pour que l'oreille ne se
+seule qui change ce qu'on fait de la voix. Les autres sont là pour que l'oreille ne se
 fixe pas sur un seul timbre.
+
+## Les timings mot à mot : la seule pièce réellement libre
+
+Le curseur karaoké (le mot doré qui suit la voix) vient de **quran-align** (Collin Fair,
+**CC BY 4.0** — une vraie licence, posée par l'auteur des données) : des timestamps mot à
+mot mesurés sur les enregistrements d'everyayah eux-mêmes. Huit voix sur neuf sont
+couvertes ; Sowaid ne l'est pas, et son curseur reste simplement éteint.
+
+Deux fichiers d'alignement visent un autre débit que celui qu'on embarque (Husary 64 vs
+128 kbps, Shatri 128 vs 64) : mêmes masters, écarts mesurés sous 80 ms, moins d'un mot.
+Le fichier As-Sudais du paquet 2016 commence par une ligne de log parasite avant le JSON ;
+le script la saute.
+
+**L'attribution CC BY est payée dans l'app** : `settings.audio.timing`, sous les crédits
+des récitateurs, dans les quatorze langues. `tools/fetch-recitations.py` valide à chaque
+run que chaque ayah alignée a exactement le compte de mots de notre texte arabe — un
+curseur qui dériverait d'un mot mentirait sous un texte sacré, silencieusement — et
+`RecitationTests.testWordTimingsPairWithArabicWordsWhereTheyExist` le revérifie côté app.
 
 Onze clips par récitateur : les 7 versets de la Fatiha (1:1–1:7) et les 4 d'Al-Ikhlas
 (112:1–112:4). Un fichier par **ligne** d'étape, pour que l'audio suive le même
@@ -32,12 +53,30 @@ appariement ligne à ligne que l'arabe, la phonétique et la traduction — c'es
 `check_line_counts()` qui empêche l'audio de dériver d'un verset quand une traduction
 change de découpage.
 
-Les étapes non coraniques (takbir, tasbih du ruku, tashahhud) n'ont **pas** de clip : il
-n'existe pas de corpus segmenté équivalent, et une voix d'amateur en guise de modèle
-apprendrait mal. L'app le gère : `RecitationPanel` s'affiche sur **toute** étape parlée,
-mais là où il n'y a pas de clip il le dit et ne propose que de s'enregistrer, en renvoyant
-à la phonétique écrite. C'est le cas de douze étapes sur quatorze — l'absence de récitateur
-est le cas normal, pas un asset manquant à réparer.
+## Les adhkar : la voix Hisn al-Muslim
+
+Les formules non coraniques ont désormais leur voix : **hisnmuslim.com**, le site officiel
+du livre *Hisn al-Muslim* (Sa'id al-Qahtani), publie un mp3 par dhikr. Sept étapes en sont
+tirées : istiftah, ruku, itidal (2 lignes), sujud (+ sujud2, même clip), jalsa, tashahhud
+(4 lignes), salawat (2 lignes). Le récitateur n'est pas nommé sur le site (l'app officielle
+du livre crédite Hamad al-Duraihem, sans certitude que ce soit la même voix) : l'app crédite
+donc la source, « Hisn al-Muslim », sans inventer un nom. Même statut juridique que les
+récitations coraniques : diffusion libre de fait, pas de licence écrite — couvert par la
+même décision du 6 août 2026.
+
+Les enregistrements bruts portent un **titre parlé** et parfois une annotation (« ثلاث
+مرات ») : chaque clip est **découpé** à la fenêtre exacte de la formule. Les fenêtres et les
+timings mot à mot sont mesurés (whisper.cpp small + DTW, coupes calées sur les silences) et
+versionnés dans `tools/adhkar_cuts.json` ; chaque clip coupé a été retranscrit et vérifié
+contre le texte attendu, mot pour mot. La formulation de hisnmuslim colle à la nôtre partout
+(tashahhud d'Ibn Mas'ud compris).
+
+Le **taawwudh** vient des récitateurs coraniques eux-mêmes : quatre dossiers everyayah
+(husary, alafasy, shatri, shuraym) publient un `audhubillah.mp3`, aligné de la même façon.
+
+Seuls **takbir** (اللَّهُ أَكْبَرُ) et **taslim** restent sans voix — aucun corpus propre ne
+les couvre, et une voix d'amateur en guise de modèle apprendrait mal. `ReciterPanel` traite
+cette absence comme le cas normal ; ne pas la « réparer » avec une TTS.
 
 ## Ce qui est vérifié, et ce qui ne l'est pas
 
@@ -70,7 +109,8 @@ Aucune autorisation écrite n'a été obtenue à ce jour.
 
 ## Le risque est assumé — décision de Sharik, 6 août 2026
 
-Les sept voix partent dans le binaire **sans** licence écrite, et ce n'est pas un oubli :
+Les voix partent dans le binaire **sans** licence écrite (les neuf coraniques comme celle
+des adhkar), et ce n'est pas un oubli :
 c'est un arbitrage pris en connaissance de cause, une fois établi qu'aucune récitation
 professionnelle segmentée n'est disponible autrement. Ça ne bloque pas la publication, et
 **ce n'est pas une tâche ouverte** : ne pas remettre le sujet sur la table, ne pas retirer

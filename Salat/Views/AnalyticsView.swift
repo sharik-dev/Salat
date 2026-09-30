@@ -216,11 +216,13 @@ struct AnalyticsView: View {
         case .new:      reason = loc.t("analytics.reason.new")
         case .review:   reason = loc.t("analytics.reason.review")
         }
-        return "\(reason) · \(elapsed(item.lastStudied))"
+        // A step never opened has nothing to say about how long ago that was:
+        // "never opened · never opened" is what saying it twice looks like.
+        guard let last = item.lastStudied else { return reason }
+        return "\(reason) · \(elapsed(last))"
     }
 
-    private func elapsed(_ date: Date?) -> String {
-        guard let date else { return loc.t("analytics.ago.never") }
+    private func elapsed(_ date: Date) -> String {
         let days = calendar.dateComponents([.day],
                                            from: calendar.startOfDay(for: date),
                                            to: calendar.startOfDay(for: now)).day ?? 0

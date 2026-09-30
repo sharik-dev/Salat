@@ -29,7 +29,12 @@ struct RecitationPanel: View {
 
     private let tick = Timer.publish(every: 0.05, on: .main, in: .common).autoconnect()
 
-    private var reciter: Reciter? { Recitations.reciter(id: settings.reciterID) }
+    /// The same voice the listening panel above resolves to: the compare rows
+    /// must trace the clip the user actually heard, not the preferred voice.
+    private var reciter: Reciter? {
+        Recitations.effectiveReciter(step: step.id,
+                                     preferring: Recitations.reciter(id: settings.reciterID))
+    }
     private var clipCount: Int { Recitations.lineCount(step: step.id, reciter: reciter) }
     private var hasClips: Bool { clipCount > 0 }
     private var clip: URL? { Recitations.clip(step: step.id, line: line, reciter: reciter) }
@@ -98,7 +103,11 @@ struct RecitationPanel: View {
                         recorder.stop()
                     } else {
                         player.stop()
-                        recorder.start(step: step.id, line: line)
+                        // The arabic line rides along so the recognizer can
+                        // move the green word cursor while the user recites.
+                        recorder.start(step: step.id, line: line,
+                                       arabic: step.arabicLines.indices.contains(line)
+                                           ? step.arabicLines[line] : nil)
                     }
                 } label: {
                     HStack(spacing: 7) {

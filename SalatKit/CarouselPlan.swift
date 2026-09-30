@@ -31,19 +31,45 @@ public enum CarouselPlan {
         public let pinned: Bool
     }
 
-    /// The steps the carousel rotates through: everything not marked known.
-    /// A reader who knows all fourteen gets the whole prayer back rather than
-    /// an empty widget — at that point it is a rehearsal, not a lesson.
-    public static func cycle(_ steps: [PrayerStep], known: Set<String>) -> [PrayerStep] {
-        let remaining = steps.filter { !known.contains($0.id) }
-        return remaining.isEmpty ? steps : remaining
+    /// The steps the carousel rotates through. The scope is the reader's word
+    /// (`WidgetPrefs`), and the default one keeps the old order of preference:
+    ///
+    /// 1. what is **being learnt right now**. Declaring a step `learning` is the
+    ///    reader saying *this is the one I am working on* — the widget is the
+    ///    home screen answering that, and nothing else;
+    /// 2. failing that, everything not yet known — the same rotation as before,
+    ///    which is what the widget does until a first step is taken on;
+    /// 3. failing that, the whole prayer: someone who knows all fourteen gets a
+    ///    rehearsal rather than an empty card.
+    ///
+    /// `.all` walks the fourteen whatever the progress says, and `.one` freezes
+    /// on the picked step. A pick that no longer resolves (or was never made)
+    /// falls back to the default scope rather than an empty card.
+    public static func cycle(_ steps: [PrayerStep], log: StudyLogState,
+                             prefs: WidgetPrefs = WidgetPrefs()) -> [PrayerStep] {
+        switch prefs.scope {
+        case .all:
+            return steps
+        case .one:
+            if let picked = steps.first(where: { $0.id == prefs.pinnedStepID }) {
+                return [picked]
+            }
+            fallthrough
+        case .learning:
+            let learning = steps.filter { log.status(of: $0.id) == .learning }
+            if !learning.isEmpty { return learning }
+
+            let remaining = steps.filter { log.status(of: $0.id) != .known }
+            return remaining.isEmpty ? steps : remaining
+        }
     }
 
     /// The step to draw at `date`.
     public static func slot(at date: Date,
                             steps: [PrayerStep],
-                            log: StudyLogState) -> Slot? {
-        let cycle = cycle(steps, known: log.known)
+                            log: StudyLogState,
+                            prefs: WidgetPrefs = WidgetPrefs()) -> Slot? {
+        let cycle = cycle(steps, log: log, prefs: prefs)
         guard !cycle.isEmpty else { return nil }
 
         if let pinned = pinned(at: date, cycle: cycle, log: log) {

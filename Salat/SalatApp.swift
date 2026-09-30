@@ -28,9 +28,6 @@ struct SalatApp: App {
                 .environment(recorder)
                 .environment(reminders)
                 .tint(Theme.gold)
-                // A two-way binding, so dismissing the sheet — by the button or
-                // by any route iOS offers — actually records that it was seen.
-                // `.constant` here meant the sheet could never close.
                 // Rewritten at every return to the app rather than only when
                 // the switch is touched: the plan names steps that are still
                 // unlearned, and that changes as the user learns them.
@@ -38,12 +35,18 @@ struct SalatApp: App {
                     guard phase == .active else { return }
                     Task { await reminders.sync(with: settings) }
                 }
+                // A two-way binding, so dismissing the sheet — by the button or
+                // by any route iOS offers — actually records that it was seen.
+                // `.constant` here meant the sheet could never close.
                 .sheet(isPresented: Binding(
                     get: { onboarding.shouldShowOnboarding },
                     set: { showing in if !showing { onboarding.markSeen() } }
                 )) {
                     OnboardingView()
                         .environment(onboarding)
+                        // The first page picks the language, so the sheet needs
+                        // the settings the rest of the app writes to.
+                        .environment(settings)
                         .localized(settings.localizer)
                 }
         }

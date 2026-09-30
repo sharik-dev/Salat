@@ -24,10 +24,19 @@ struct ReciterPanel: View {
     @Environment(RecitationPlayer.self) private var player
     @Environment(\.loc) private var loc
 
-    private var reciter: Reciter? { Recitations.reciter(id: settings.reciterID) }
+    /// The voice heard on *this* step: the preferred one when it covers it,
+    /// else whichever does — the adhkar live under the Hisn al-Muslim voice,
+    /// and choosing Minshawy in the settings must not silence the tashahhud.
+    private var reciter: Reciter? {
+        Recitations.effectiveReciter(step: step.id,
+                                     preferring: Recitations.reciter(id: settings.reciterID))
+    }
     private var clipCount: Int { Recitations.lineCount(step: step.id, reciter: reciter) }
     private var hasClips: Bool { clipCount > 0 }
     private var clip: URL? { Recitations.clip(step: step.id, line: line, reciter: reciter) }
+    /// The voices this step can be heard in — what the menu offers. One entry
+    /// means there is no choice to make, so no menu is shown.
+    private var choices: [Reciter] { Recitations.reciters(covering: step.id) }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -59,11 +68,12 @@ struct ReciterPanel: View {
                 .font(Theme.label(9))
                 .tracking(0.8)
             Spacer()
-            if hasClips, let reciter {
+            if hasClips, let reciter, choices.count > 1 {
                 // A menu rather than a settings round-trip: switching voices is
-                // something you do while listening, not before.
+                // something you do while listening, not before. Only the voices
+                // that actually cover this step are offered.
                 Menu {
-                    ForEach(Recitations.reciters) { candidate in
+                    ForEach(choices) { candidate in
                         Button {
                             settings.reciterID = candidate.id
                             Haptic.select.play()
@@ -91,6 +101,14 @@ struct ReciterPanel: View {
                     .foregroundStyle(Theme.inkSoft)
                     .frame(maxWidth: 150, alignment: .trailing)
                 }
+            } else if hasClips, let reciter {
+                // One voice covers this step: name it, offer no dead menu.
+                Text(reciter.name)
+                    .font(Theme.body(11))
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                    .foregroundStyle(Theme.inkSoft)
+                    .frame(maxWidth: 150, alignment: .trailing)
             }
         }
         .foregroundStyle(Theme.gold)
@@ -156,8 +174,10 @@ struct ReciterPanel: View {
                 player.rate = player.rate == 1 ? 0.6 : 1
                 Haptic.select.play()
             } label: {
+                // Not the pixel font: it has no "×" and the glyph came out as
+                // an empty block next to the digit.
                 Text(player.rate == 1 ? "1×" : "0.6×")
-                    .font(Theme.pixel(11))
+                    .font(Theme.label(12))
                     .foregroundStyle(Theme.ink)
                     .frame(width: 44, height: 34)
             }

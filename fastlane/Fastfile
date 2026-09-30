@@ -59,10 +59,14 @@ def review_contact
     notes: "No account, no sign-in, no network — the app works fully offline. " \
            "Onboarding: tap through the three cards, then Start. " \
            "Learn tab: tap any of the 14 steps to see the Arabic text, its " \
-           "phonetic transcription and its translation. Practice tab: tap Play " \
-           "to let the positions cycle on their own. A Home Screen widget shows " \
-           "the same positions. Content language follows the device (English, " \
-           "French, Arabic) and can be forced in Settings.",
+           "phonetic transcription and its translation; a play button under the " \
+           "illustration plays a reciter's voice with word-by-word highlighting. " \
+           "Memorise tab: quiz exercises, flashcards and a voice-practice tool. " \
+           "The microphone is only used there, on demand, to record yourself and " \
+           "compare the waveform with the reciter — recordings never leave the " \
+           "device, speech recognition is on-device only. A Home Screen widget " \
+           "shows the current step. Content ships in 14 languages and follows " \
+           "the device language; it can be forced in Settings.",
     demo_account_required: false
   }
 end
@@ -186,7 +190,10 @@ platform :ios do
   #   - 4+ — rien de répréhensible ; l'app enseigne un texte religieux.
   #   - `export_compliance_uses_encryption: false` — l'app ne chiffre rien et ne
   #     fait aucune requête réseau.
-  #   - `content_rights_contains_third_party_content: false` — illustrations
+  #   - `content_rights_contains_third_party_content: true` — les récitations
+  #     mp3 (everyayah, Hisn al-Muslim) sont du contenu tiers embarqué dans le
+  #     binaire ; voir AUDIO_SOURCES.md. Ne pas rebasculer à false tant qu'un
+  #     mp3 d'everyayah est dans l'app. Les illustrations, elles, sont
   #     générées ici, textes coraniques du domaine public.
   desc "Déclarations puis soumission pour examen"
   lane :release do
@@ -236,7 +243,7 @@ platform :ios do
       app_rating_config_path: "./fastlane/metadata/age_rating.json",
       submission_information: {
         export_compliance_uses_encryption: false,
-        content_rights_contains_third_party_content: false,
+        content_rights_contains_third_party_content: true,
         add_id_info_uses_idfa: false
       },
       submit_for_review: true,

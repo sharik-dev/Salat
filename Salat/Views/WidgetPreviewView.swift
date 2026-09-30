@@ -70,6 +70,15 @@ struct WidgetPreviewView: View {
             .padding(.top, 8)
         }
         .scrollIndicators(.hidden)
+        // `-openStep fatiha` lands on a long block rather than on whatever the
+        // clock happens to be showing: the layouts differ most between a short
+        // formula and a seven-line surah, and nobody is here to tap the stepper.
+        .task {
+            if let id = LaunchOptions.openStep,
+               let index = settings.steps.firstIndex(where: { $0.id == id }) {
+                tick = index
+            }
+        }
     }
 
     private var entry: CarouselEntry {
@@ -79,7 +88,8 @@ struct WidgetPreviewView: View {
                              step: steps[index],
                              position: index + 1,
                              total: steps.count,
-                             localizer: settings.localizer)
+                             localizer: settings.localizer,
+                             focus: settings.widgetFocus)
     }
 }
 #endif

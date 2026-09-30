@@ -8,12 +8,12 @@ final class OnboardingManager {
     /// ever telling SwiftUI — which left the onboarding sheet unable to close.
     /// The defaults are read once here and written on every set.
     var hasSeenOnboarding: Bool {
-        didSet { UserDefaults.standard.set(hasSeenOnboarding, forKey: Key.hasSeen) }
+        didSet { defaults.set(hasSeenOnboarding, forKey: Key.hasSeen) }
     }
 
     #if DEBUG
     var alwaysShowOnboarding: Bool {
-        didSet { UserDefaults.standard.set(alwaysShowOnboarding, forKey: Key.alwaysShow) }
+        didSet { defaults.set(alwaysShowOnboarding, forKey: Key.alwaysShow) }
     }
     let isDevMode = true
     #else
@@ -26,10 +26,17 @@ final class OnboardingManager {
         static let alwaysShow = "alwaysShowOnboarding"
     }
 
-    init() {
-        hasSeenOnboarding = UserDefaults.standard.bool(forKey: Key.hasSeen)
+    private let defaults: UserDefaults
+
+    /// Injected so tests can run on their own suite. The tests are hosted by
+    /// the app (`TEST_HOST`), whose onboarding sheet writes to `.standard`
+    /// through its binding *while* a test scrubs the same key — on a shared
+    /// domain the two race, and the race was lost about once per run.
+    init(defaults: UserDefaults = .standard) {
+        self.defaults = defaults
+        hasSeenOnboarding = defaults.bool(forKey: Key.hasSeen)
         #if DEBUG
-        alwaysShowOnboarding = UserDefaults.standard.bool(forKey: Key.alwaysShow)
+        alwaysShowOnboarding = defaults.bool(forKey: Key.alwaysShow)
         if LaunchOptions.resetsOnboarding {
             hasSeenOnboarding = false
             alwaysShowOnboarding = false

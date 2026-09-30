@@ -118,6 +118,9 @@ public enum SharedStore {
         public static let remindersOn = "reminders.on"
         public static let reminderHour = "reminders.hour"
         public static let reminderMinute = "reminders.minute"
+        public static let widgetScope = "widget.scope"
+        public static let widgetPinnedStep = "widget.pinnedStep"
+        public static let widgetFocus = "widget.focus"
     }
 
     public static var language: AppLanguage {

@@ -13,13 +13,17 @@ public struct CarouselEntry: TimelineEntry {
     public let position: Int
     public let total: Int
     public let localizer: Localizer
+    /// Which text leads the card — the reader's pick, made in the widget tool.
+    public let focus: WidgetFocus
 
-    public init(date: Date, step: PrayerStep, position: Int, total: Int, localizer: Localizer) {
+    public init(date: Date, step: PrayerStep, position: Int, total: Int,
+                localizer: Localizer, focus: WidgetFocus = .phonetic) {
         self.date = date
         self.step = step
         self.position = position
         self.total = total
         self.localizer = localizer
+        self.focus = focus
     }
 }
 
@@ -110,59 +114,118 @@ public struct CarouselWidgetView: View {
         }
     }
 
-    // MARK: Small — the pronunciation, and just enough to place it
+    // MARK: The three canvases — same layout, more room
 
     private var small: some View {
-        VStack(spacing: 5) {
-            header(medallion: 30, title: 11)
-            pronunciation(size: 14, floor: 0.45)
-            counter
-        }
+        layout(medallion: 30, title: 11, size: 14, floor: 0.45, arabic: 12, spacing: 5)
     }
-
-    // MARK: Medium — the pronunciation in full, the illustration as a marker
 
     private var medium: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            header(medallion: 34, title: 13)
-            pronunciation(size: 16, floor: 0.45)
-                .frame(maxWidth: .infinity, alignment: .leading)
-            HStack {
-                counter
-                Spacer(minLength: 0)
-            }
-        }
+        layout(medallion: 34, title: 13, size: 16, floor: 0.45, arabic: 14, spacing: 6)
     }
 
-    // MARK: Large — the same, with the Arabic underneath it
-
     private var large: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            header(medallion: 40, title: 15)
-
-            pronunciation(size: 19, floor: 0.5)
-                .frame(maxWidth: .infinity, alignment: .leading)
-
-            if entry.step.spoken {
-                Divider().background(isFullColor ? Theme.border : Color.white.opacity(0.3))
-
-                Text(entry.step.arabic)
-                    .font(Theme.arabic(15))
-                    .foregroundStyle(inkSoft)
-                    .environment(\.layoutDirection, .rightToLeft)
-                    .multilineTextAlignment(.trailing)
-                    .frame(maxWidth: .infinity, alignment: .trailing)
-                    .minimumScaleFactor(0.5)
-            }
-
-            HStack {
-                counter
-                Spacer(minLength: 0)
-            }
-        }
+        layout(medallion: 40, title: 15, size: 19, floor: 0.5, arabic: 17, spacing: 8)
     }
 
     // MARK: Pieces
+
+    /// One layout for all three sizes, because they say the same thing at
+    /// different volumes. What changes is how much fits, and that is not decided
+    /// here: `ViewThatFits` tries the fullest version first — the lead text plus
+    /// both companions — and falls back a rung at a time until one fits the
+    /// canvas it was given. A short formula on a large widget therefore gets the
+    /// whole card; the Fatiha on a small one keeps the lead text alone.
+    ///
+    /// *Which* text leads is `entry.focus` — the reader's pick, not the
+    /// layout's. The lead is what never gets dropped; the other two are the
+    /// rungs of the ladder.
+    private func layout(medallion: CGFloat, title: CGFloat, size: CGFloat,
+                        floor: CGFloat, arabic: CGFloat, spacing: CGFloat) -> some View {
+        VStack(alignment: .leading, spacing: spacing) {
+            header(medallion: medallion, title: title)
+
+            ViewThatFits(in: .vertical) {
+                block(size: size, floor: floor, arabic: arabic,
+                      companions: companionOrder, spacing: spacing)
+                block(size: size, floor: floor, arabic: arabic,
+                      companions: [preferredCompanion], spacing: spacing)
+                block(size: size, floor: floor, arabic: arabic,
+                      companions: [], spacing: spacing)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            Spacer(minLength: 0)
+
+            HStack {
+                counter
+                Spacer(minLength: 0)
+            }
+        }
+    }
+
+    /// The two texts that are not the lead, in the order they stack under it.
+    private var companionOrder: [WidgetFocus] {
+        switch entry.focus {
+        case .phonetic:    return [.arabic, .translation]
+        case .arabic:      return [.phonetic, .translation]
+        case .translation: return [.arabic, .phonetic]
+        }
+    }
+
+    /// The companion that survives when only one fits: the meaning under the
+    /// pronunciation, the pronunciation under the script, the script under the
+    /// meaning — always the closest help for what is being read.
+    private var preferredCompanion: WidgetFocus {
+        switch entry.focus {
+        case .phonetic:    return .translation
+        case .arabic:      return .phonetic
+        case .translation: return .arabic
+        }
+    }
+
+    private func block(size: CGFloat, floor: CGFloat, arabic: CGFloat,
+                       companions: [WidgetFocus], spacing: CGFloat) -> some View {
+        VStack(alignment: .leading, spacing: spacing * 0.7) {
+            lead(size: size, floor: floor)
+
+            ForEach(companions, id: \.rawValue) { kind in
+                companion(kind, size: size, arabic: arabic)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func companion(_ kind: WidgetFocus, size: CGFloat, arabic: CGFloat) -> some View {
+        if entry.step.spoken, !text(for: kind).isEmpty {
+            switch kind {
+            case .arabic:
+                Text(entry.step.arabic)
+                    .font(Theme.arabic(arabic))
+                    .foregroundStyle(inkSoft)
+                    .environment(\.layoutDirection, .rightToLeft)
+                    .multilineTextAlignment(.trailing)
+                    .minimumScaleFactor(0.5)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+            case .phonetic, .translation:
+                Text(text(for: kind))
+                    .font(kind == .phonetic ? Theme.body(size * 0.72).italic()
+                                            : Theme.body(size * 0.72))
+                    .foregroundStyle(inkSoft)
+                    .multilineTextAlignment(.leading)
+                    .minimumScaleFactor(0.6)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+    }
+
+    private func text(for kind: WidgetFocus) -> String {
+        switch kind {
+        case .phonetic:    return entry.step.phonetic
+        case .arabic:      return entry.step.arabic
+        case .translation: return entry.step.translation
+        }
+    }
 
     /// The illustration is a **marker**, not the subject: it says which posture
     /// this is at a glance and then gets out of the way. What is being learnt is
@@ -180,18 +243,48 @@ public struct CarouselWidgetView: View {
         }
     }
 
-    /// The reason the widget exists: the words to say, spelled the way the
-    /// reader reads. Shown **whole** — every line of the block, never a first
+    /// The reason the widget exists: the text being learnt, in the reader's
+    /// chosen form. Shown **whole** — every line of the block, never a first
     /// line and an ellipsis — and allowed to shrink a long way rather than be
     /// cut, because half a formula teaches nothing. A step that says nothing
-    /// aloud (the niyyah) falls back to what it does instead.
-    private func pronunciation(size: CGFloat, floor: CGFloat) -> some View {
-        Text(entry.step.spoken ? entry.step.phonetic : entry.step.postureText)
-            .font(entry.step.spoken ? Theme.body(size).italic() : Theme.body(size * 0.85))
-            .foregroundStyle(entry.step.spoken ? ink : inkSoft)
-            .multilineTextAlignment(.leading)
-            .minimumScaleFactor(floor)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+    /// aloud (the niyyah) falls back to what it does instead, and a lead whose
+    /// text is empty (phonetic in the Arabic locale) falls back to the Arabic.
+    @ViewBuilder
+    private func lead(size: CGFloat, floor: CGFloat) -> some View {
+        if !entry.step.spoken {
+            Text(entry.step.postureText)
+                .font(Theme.body(size * 0.85))
+                .foregroundStyle(inkSoft)
+                .multilineTextAlignment(.leading)
+                .minimumScaleFactor(floor)
+                .frame(maxWidth: .infinity, alignment: .topLeading)
+        } else {
+            let kind = text(for: entry.focus).isEmpty ? WidgetFocus.arabic : entry.focus
+            switch kind {
+            case .arabic:
+                Text(entry.step.arabic)
+                    .font(Theme.arabic(size * 1.1))
+                    .foregroundStyle(ink)
+                    .environment(\.layoutDirection, .rightToLeft)
+                    .multilineTextAlignment(.trailing)
+                    .minimumScaleFactor(floor)
+                    .frame(maxWidth: .infinity, alignment: .topTrailing)
+            case .phonetic:
+                Text(entry.step.phonetic)
+                    .font(Theme.body(size).italic())
+                    .foregroundStyle(ink)
+                    .multilineTextAlignment(.leading)
+                    .minimumScaleFactor(floor)
+                    .frame(maxWidth: .infinity, alignment: .topLeading)
+            case .translation:
+                Text(entry.step.translation)
+                    .font(Theme.body(size))
+                    .foregroundStyle(ink)
+                    .multilineTextAlignment(.leading)
+                    .minimumScaleFactor(floor)
+                    .frame(maxWidth: .infinity, alignment: .topLeading)
+            }
+        }
     }
 
     // MARK: Lock screen
@@ -201,11 +294,24 @@ public struct CarouselWidgetView: View {
             Text(entry.step.name)
                 .font(.system(size: 13, weight: .semibold))
                 .lineLimit(1)
-            Text(entry.step.spoken ? entry.step.phoneticLines[0] : entry.step.translationLines[0])
+            Text(accessoryLine)
                 .font(.system(size: 12))
                 .lineLimit(2)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// The lock screen has room for one line; it is the lead text's first line,
+    /// same pick as the widget's card.
+    private var accessoryLine: String {
+        guard entry.step.spoken else { return entry.step.translationLines[0] }
+        switch entry.focus {
+        case .phonetic:
+            let line = entry.step.phoneticLines[0]
+            return line.isEmpty ? entry.step.arabicLines[0] : line
+        case .arabic:      return entry.step.arabicLines[0]
+        case .translation: return entry.step.translationLines[0]
+        }
     }
 
     /// The same sand chip that numbers a step in the list — the widget counts

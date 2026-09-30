@@ -3,10 +3,27 @@ import SwiftUI
 struct StepDetailView: View {
     let step: PrayerStep
     @Environment(AppSettings.self) private var settings
+    @Environment(RecitationPlayer.self) private var player
     @Environment(\.loc) private var loc
     @Environment(\.dismiss) private var dismiss
     /// The verse the recitation panel is working on, when the step has several.
     @State private var recitationLine = 0
+
+    /// Twelve of the fourteen steps are not Qur'an and have no recording. Here
+    /// the panel simply stays away: in *Learn* the microphone is not offered
+    /// either, so its "no recitation" line would be a sentence about nothing,
+    /// sitting at the top of the page. *Memorise* still shows it, because there
+    /// the sentence explains why there is nothing to copy.
+    /// The voice this step actually plays in — the preferred reciter when he
+    /// covers it, else the fallback voice (Hisn al-Muslim for the adhkar).
+    private var stepReciter: Reciter? {
+        Recitations.effectiveReciter(step: step.id,
+                                     preferring: Recitations.reciter(id: settings.reciterID))
+    }
+
+    private var hasReciter: Bool {
+        Recitations.hasClips(step: step.id, reciter: stepReciter)
+    }
 
     var body: some View {
         ZStack {
@@ -16,6 +33,15 @@ struct StepDetailView: View {
             ScrollView {
                 VStack(spacing: 20) {
                     hero
+
+                    // Above the text, not under it. On the Fatiha the seven
+                    // verse cards are a screen and a half: a listen button at
+                    // the bottom of that is a button nobody ever finds, and
+                    // hearing the words is the first thing to do, not the last.
+                    if step.spoken, hasReciter {
+                        ReciterPanel(step: step, line: $recitationLine)
+                    }
+
                     section(loc.t("detail.posture"), icon: "figure.stand") {
                         Text(step.postureText)
                             .font(Theme.body(15))
@@ -26,10 +52,6 @@ struct StepDetailView: View {
 
                     if step.spoken {
                         recitation
-                        // The reciter, not the microphone: learning a step is
-                        // hearing how it sounds. Recording yourself is a
-                        // memorisation drill and belongs to *Revise*.
-                        ReciterPanel(step: step, line: $recitationLine)
                     } else {
                         section(loc.t("detail.translation"), icon: "heart.text.square") {
                             Text(step.translation)
@@ -52,7 +74,14 @@ struct StepDetailView: View {
         // Opening the step *is* the study session — that is what the calendar
         // on the analytics page counts and what the reminders measure staleness
         // against. Ticking a box afterwards is an opinion; being here is a fact.
-        .task { settings.noteStudied(step) }
+        .task {
+            settings.noteStudied(step)
+            // Same flag as the vocal page: the cursor only exists while a
+            // voice sounds, and nobody is here to press play for a screenshot.
+            if LaunchOptions.autoRecites, step.spoken, hasReciter {
+                player.playAll(.reciter, urls: Recitations.clips(step: step.id, reciter: stepReciter))
+            }
+        }
         .overlay(alignment: .topTrailing) {
             Button { dismiss() } label: {
                 Image(systemName: "xmark")
@@ -99,28 +128,81 @@ struct StepDetailView: View {
     private var recitation: some View {
         VStack(spacing: 12) {
             ForEach(Array(step.arabicLines.enumerated()), id: \.offset) { index, arabic in
-                VStack(alignment: .leading, spacing: 10) {
-                    Text(arabic)
-                        .font(Theme.arabic(25))
-                        .foregroundStyle(Theme.ink)
-                        .multilineTextAlignment(.trailing)
-                        .frame(maxWidth: .infinity, alignment: .trailing)
-                        .environment(\.layoutDirection, .rightToLeft)
-                        .lineSpacing(8)
-
-                    if let phonetic = line(step.phoneticLines, index), !phonetic.isEmpty {
-                        Divider().background(Theme.border)
-                        labelled(loc.t("detail.phonetic"), phonetic, italic: true, color: Theme.gold)
-                    }
-
-                    if let translation = line(step.translationLines, index), !translation.isEmpty {
-                        Divider().background(Theme.border)
-                        labelled(loc.t("detail.translation"), translation, italic: false, color: Theme.inkSoft)
-                    }
-                }
-                .card()
+                recitationCard(index: index, arabic: arabic)
             }
         }
+    }
+
+    private func recitationCard(index: Int, arabic: String) -> some View {
+        // The word cursor follows the voice here too: reading along while the
+        // reciter says the words *is* the lesson of this screen.
+        let sounding = player.voice == .reciter && player.line == index
+        let spans = sounding
+            ? Recitations.wordSpans(step: step.id, line: index, reciter: stepReciter)
+            : nil
+
+        return Group {
+            if let spans {
+                TimelineView(.periodic(from: .now, by: 0.08)) { _ in
+                    recitationBody(index: index, arabic: arabic,
+                                   cursor: Karaoke.wordIndex(at: player.time, in: spans))
+                }
+            } else {
+                recitationBody(index: index, arabic: arabic, cursor: nil)
+            }
+        }
+        .card()
+    }
+
+    private func recitationBody(index: Int, arabic: String, cursor: Int?) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            // One moving word, no trail: with a trail the whole line ends up
+            // gold and the cursor stops being a cursor.
+            Karaoke.line(arabic, active: cursor, base: Theme.ink, tint: Theme.gold)
+                .font(Theme.arabic(25))
+                .multilineTextAlignment(.trailing)
+                .frame(maxWidth: .infinity, alignment: .trailing)
+                .environment(\.layoutDirection, .rightToLeft)
+                .lineSpacing(8)
+
+            if let phonetic = line(step.phoneticLines, index), !phonetic.isEmpty {
+                Divider().background(Theme.border)
+                labelledKaraoke(loc.t("detail.phonetic"), phonetic,
+                                arabic: arabic, cursor: cursor)
+            }
+
+            if let translation = line(step.translationLines, index), !translation.isEmpty {
+                Divider().background(Theme.border)
+                labelled(loc.t("detail.translation"), translation, italic: false, color: Theme.inkSoft)
+            }
+        }
+    }
+
+    /// The phonetic row, with the arabic cursor projected onto its words —
+    /// a guide for the eye, not a measurement (see `Karaoke`).
+    private func labelledKaraoke(_ title: String, _ value: String,
+                                 arabic: String, cursor: Int?) -> some View {
+        let text: Text
+        if let cursor {
+            let arabicCount = arabic.split(separator: " ", omittingEmptySubsequences: true).count
+            let count = value.split(separator: " ", omittingEmptySubsequences: true).count
+            text = Karaoke.line(value,
+                                active: Karaoke.projected(cursor, from: arabicCount, onto: count),
+                                base: Theme.ink, tint: Theme.gold)
+        } else {
+            text = Text(value)
+        }
+        return VStack(alignment: .leading, spacing: 4) {
+            Text(title.uppercased())
+                .font(Theme.label(9))
+                .foregroundStyle(Theme.gold)
+                .tracking(0.8)
+            text
+                .font(Theme.body(16).italic())
+                .foregroundStyle(Theme.ink)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private func labelled(_ title: String, _ value: String, italic: Bool, color: Color) -> some View {

@@ -132,10 +132,12 @@ public enum Drill {
 
     // MARK: Per-kind candidates
 
-    private static func candidates(_ kind: DrillQuestion.Kind,
-                                   steps: [PrayerStep],
-                                   asked: [PrayerStep],
-                                   rng: inout SeededRandom) -> [DrillQuestion] {
+    /// Internal, not private: the chosen-exercise run (`Drill.run`) draws one
+    /// kind's heap on its own instead of dealing round-robin.
+    static func candidates(_ kind: DrillQuestion.Kind,
+                           steps: [PrayerStep],
+                           asked: [PrayerStep],
+                           rng: inout SeededRandom) -> [DrillQuestion] {
         switch kind {
         case .nextStep: return nextStepQuestions(steps: steps, asked: asked, rng: &rng)
         case .posture:  return postureQuestions(steps: steps, asked: asked, rng: &rng)

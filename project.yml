@@ -18,7 +18,7 @@ settings:
     # d'écrans qui n'ont jamais été pensés pour cette taille.
     TARGETED_DEVICE_FAMILY: "1"
     MARKETING_VERSION: "1.0"
-    CURRENT_PROJECT_VERSION: "1"
+    CURRENT_PROJECT_VERSION: "3"
 
 targets:
   Salat:
@@ -33,12 +33,28 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.salat
+        # Répété ici : XcodeGen écrit « 1,2 » au niveau de la cible, qui écrase
+        # le réglage projet — c'est ce doublon silencieux qui a fait réclamer
+        # des captures iPad à la soumission (SCREENSHOT_REQUIRED.IPAD_PRO).
+        TARGETED_DEVICE_FAMILY: "1"
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
+        # Portrait seul n'est accepté par la validation ASC (erreur 90474)
+        # qu'accompagné de plein écran : sans lui, Apple exige les quatre
+        # orientations pour le multitâche iPad, même sur une app iPhone.
+        INFOPLIST_KEY_UIRequiresFullScreen: YES
         INFOPLIST_KEY_CFBundleDisplayName: Salat
         # Asked only when the record button is first pressed, never at launch.
         INFOPLIST_KEY_NSMicrophoneUsageDescription: "To record you reciting a step, so you can play it back against the reciter. Recordings stay on this iPhone."
+        # On-device only (the recognizer is created with
+        # requiresOnDeviceRecognition): the words highlighted while you recite
+        # never leave the phone, which is what the privacy page promises.
+        INFOPLIST_KEY_NSSpeechRecognitionUsageDescription: "To light up each word as you recite it, like a karaoke line. Recognition runs on this iPhone only; nothing is sent anywhere."
         INFOPLIST_KEY_UIUserInterfaceStyle: Light
+        # Sans cette clé, chaque build monte en MISSING_EXPORT_COMPLIANCE et
+        # aucun testeur TestFlight n'est prévenu tant qu'on n'a pas répondu
+        # à la main. L'app ne chiffre rien : pas de réseau, pas de crypto.
+        INFOPLIST_KEY_ITSAppUsesNonExemptEncryption: NO
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         DEVELOPMENT_ASSET_PATHS: '"Salat/Preview Content"'
         ENABLE_PREVIEWS: YES
@@ -53,6 +69,7 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.salat.widget
+        TARGETED_DEVICE_FAMILY: "1"
         INFOPLIST_FILE: SalatWidget/Info.plist
         CODE_SIGN_ENTITLEMENTS: SalatWidget/SalatWidget.entitlements
         ENABLE_PREVIEWS: YES
