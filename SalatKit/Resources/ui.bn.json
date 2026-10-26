@@ -38,6 +38,7 @@
   "settings.devmode": "ডেভেলপার মোড",
   "settings.always_onboarding": "সবসময় পরিচিতি দেখান",
   "settings.reset_progress": "আমার অগ্রগতি মুছুন",
+  "settings.ad_privacy": "বিজ্ঞাপনের গোপনীয়তা বিকল্প",
   "onboarding.1.title": "স্বাগতম",
   "onboarding.1.body": "সলাত শেখায় নামাজে কী বলা হয়: আরবিতে, আপনার পড়ার ধরনে লেখা, আর আপনার ভাষায় অনুবাদসহ।",
   "onboarding.2.title": "ধাপে ধাপে",

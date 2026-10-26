@@ -38,6 +38,7 @@
   "settings.devmode": "Mode dev",
   "settings.always_onboarding": "Toujours afficher l'introduction",
   "settings.reset_progress": "Réinitialiser ma progression",
+  "settings.ad_privacy": "Choix de confidentialité des pubs",
   "onboarding.1.title": "Bienvenue",
   "onboarding.1.body": "Salat t'apprend ce qu'il faut dire pendant la prière — en arabe, écrit comme tu le lis, et traduit dans ta langue.",
   "onboarding.2.title": "Étape par étape",

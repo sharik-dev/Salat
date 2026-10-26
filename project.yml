@@ -17,8 +17,8 @@ settings:
     # déclarer la famille 2 obligerait à livrer un jeu de captures 2048 × 2732
     # d'écrans qui n'ont jamais été pensés pour cette taille.
     TARGETED_DEVICE_FAMILY: "1"
-    MARKETING_VERSION: "1.0"
-    CURRENT_PROJECT_VERSION: "3"
+    MARKETING_VERSION: "1.2"
+    CURRENT_PROJECT_VERSION: "5"
 
 targets:
   Salat:
@@ -27,9 +27,6 @@ targets:
     sources:
       - path: Salat
       - path: SalatKit
-    dependencies:
-      - target: SalatWidgetExtension
-        embed: true
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.salat
@@ -59,6 +56,17 @@ targets:
         DEVELOPMENT_ASSET_PATHS: '"Salat/Preview Content"'
         ENABLE_PREVIEWS: YES
         CODE_SIGN_ENTITLEMENTS: Salat/Salat.entitlements
+        # AdMob : l'ID d'app et SKAdNetwork ne sont pas des clés INFOPLIST_KEY_,
+        # ils vivent dans ce plist partiel, fusionné avec le plist généré.
+        INFOPLIST_FILE: Salat/Info.plist
+        INFOPLIST_KEY_NSUserTrackingUsageDescription: "Your data is used to show you more relevant ads. Ads keep Salat free."
+    # Pubs AdMob (Services/Ads.swift) : une interstitielle toutes les deux pauses.
+    dependencies:
+      - target: SalatWidgetExtension
+        embed: true
+      - package: GoogleMobileAds
+      - package: UserMessagingPlatform
+        product: GoogleUserMessagingPlatform
 
   SalatWidgetExtension:
     type: app-extension
@@ -101,6 +109,14 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.salat.uitests
         TEST_TARGET_NAME: Salat
+
+packages:
+  GoogleMobileAds:
+    url: https://github.com/googleads/swift-package-manager-google-mobile-ads.git
+    exactVersion: 13.11.0
+  UserMessagingPlatform:
+    url: https://github.com/googleads/swift-package-manager-google-user-messaging-platform.git
+    exactVersion: 3.1.0
 
 schemes:
   Salat:

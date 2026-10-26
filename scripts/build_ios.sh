@@ -16,6 +16,14 @@ SCHEME="Salat"
 echo "── 1/3 Projet Xcode ──"
 xcodegen generate
 
+# AdMob (comme crowd-rush) : un build de sortie avec les identifiants de
+# démonstration ne rapporte rien — le dire avant d'archiver, pas après la revue.
+if grep -q "ca-app-pub-3940256099942544~" Salat/Info.plist \
+   || grep -q 'liveInterstitial = ""' Salat/Services/Ads.swift; then
+  echo "⚠ AdMob : identifiants de DÉMONSTRATION ou unité vide — ce build n'affiche/ne rapporte rien."
+  echo "  Remplir GADApplicationIdentifier (Salat/Info.plist) et liveInterstitial (Salat/Services/Ads.swift)."
+fi
+
 echo "── 2/3 Archive ──"
 rm -rf "$OUT/$SCHEME.xcarchive"
 # `-allowProvisioningUpdates` a besoin de la clé ASC : c'est lui qui enregistre

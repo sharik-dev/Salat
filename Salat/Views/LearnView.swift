@@ -33,7 +33,7 @@ struct LearnView: View {
             openReminderStep()
         }
         .onChange(of: reminders.pendingStepID) { _, _ in openReminderStep() }
-        .sheet(item: $selected) { step in
+        .sheet(item: $selected, onDismiss: { Ads.shared.breakPoint() }) { step in
             StepDetailView(step: step)
                 .localized(settings.localizer)
                 .environment(settings)

@@ -527,6 +527,29 @@ que son sélecteur d'heure soit visible sans passer par l'alerte système : Shar
 téléphone et ne peut pas taper dans le simulateur, donc chaque écran doit être atteignable au
 lancement.
 
+## Les pubs AdMob (depuis le 26/10/2026)
+
+`Salat/Services/Ads.swift` : **une interstitielle toutes les deux pauses** — une page d'étape
+refermée (`LearnView`, `onDismiss` de la feuille) ou une manche d'exercices terminée
+(`DrillSessionView.advance`). Jamais pendant une lecture ou une récitation. Le SDK démarre une
+fois l'onboarding refermé : consentement RGPD (UMP) → invite ATT → SDK → préchargement. Le bouton
+« confidentialité des pubs » (`settings.ad_privacy`) n'apparaît dans les réglages que si le RGPD
+s'applique. `-debugAdsNoConsent 1` (DEBUG) saute RGPD + ATT pour voir les pubs au simulateur.
+
+Calqué sur crowd-rush, qui tourne en production (`godotGame/crowd-rush/docs/admob.md`) : le SDK
+démarre **par tous les chemins** du consentement, échecs compris ; un chargement raté retente à la
+pause suivante, jamais en boucle ; 60 s minimum entre deux pubs ; les 50 `SKAdNetworkItems` de
+Google. **En debug, toujours les unités de démonstration** (cliquer une vraie pub chez soi fait
+suspendre le compte) ; en Release, `liveInterstitial`. Console AdMob (compte `pub-3988815743198389`) : app
+`~5768518688`, bloc interstitiel « Pause » `/3222246390`, message RGPD publié.
+`GADApplicationIdentifier` est dans `Salat/Info.plist` (plist partiel, fusionné avec le plist
+généré). `scripts/build_ios.sh` prévient si l'un des deux est encore de démonstration.
+
+`fastlane/metadata/app_privacy.json` (repris de crowd-rush : identifiant d'appareil et données
+pub liés + suivi, interaction et plantages non liés) et `advertising: true` dans
+`age_rating.json` décrivent maintenant un binaire **avec** pub. La page de confidentialité
+(`sharik-dev/salat-support`) disait « aucune requête réseau » : à réécrire avant la soumission.
+
 ## La publication : la fiche et le binaire, séparés
 
 `fastlane/` et `scripts/` viennent de `godotGame/kit/template`, réécrits pour lire tous les

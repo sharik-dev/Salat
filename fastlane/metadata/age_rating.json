@@ -15,7 +15,7 @@
 
   "gambling": false,
   "lootBox": false,
-  "advertising": false,
+  "advertising": true,
   "healthOrWellnessTopics": false,
   "messagingAndChat": false,
   "userGeneratedContent": false,

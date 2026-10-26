@@ -294,6 +294,18 @@ struct SettingsView: View {
                         .padding(.vertical, 11)
                 }
                 .chunky(Theme.sand, depth: 4)
+
+                // GDPR: users in the EU must be able to change their ad consent.
+                if Ads.shared.privacyOptionsNeeded {
+                    Button { Ads.shared.showPrivacyOptions() } label: {
+                        Text(loc.t("settings.ad_privacy"))
+                            .font(Theme.label(13))
+                            .foregroundStyle(Theme.ink)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 11)
+                    }
+                    .chunky(Theme.sand, depth: 4)
+                }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }

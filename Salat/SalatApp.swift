@@ -35,6 +35,12 @@ struct SalatApp: App {
                     guard phase == .active else { return }
                     Task { await reminders.sync(with: settings) }
                 }
+                // Ads (consent form, then tracking prompt) wait for onboarding
+                // to be gone: two system sheets over the first page would be
+                // the app's first impression.
+                .onChange(of: onboarding.shouldShowOnboarding, initial: true) { _, showing in
+                    if !showing { Ads.shared.start() }
+                }
                 // A two-way binding, so dismissing the sheet — by the button or
                 // by any route iOS offers — actually records that it was seen.
                 // `.constant` here meant the sheet could never close.

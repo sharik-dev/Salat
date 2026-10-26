@@ -38,6 +38,7 @@
   "settings.devmode": "Modo desarrollo",
   "settings.always_onboarding": "Mostrar siempre la introducción",
   "settings.reset_progress": "Borrar mi progreso",
+  "settings.ad_privacy": "Opciones de privacidad de anuncios",
   "onboarding.1.title": "Bienvenido",
   "onboarding.1.body": "Salat te enseña qué decir durante la oración: en árabe, escrito tal como tú lees, y traducido a tu idioma.",
   "onboarding.2.title": "Paso a paso",

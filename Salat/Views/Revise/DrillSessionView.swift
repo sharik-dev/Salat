@@ -354,6 +354,8 @@ struct DrillSessionView: View {
         index += 1
         resetExercise()
         if index >= exercises.count, right == exercises.count { Haptic.win.play() }
+        // The round is over: a pause, and the only one in a drill.
+        if index >= exercises.count { Ads.shared.breakPoint() }
     }
 
     // MARK: Ends of the road
