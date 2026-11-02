@@ -17,6 +17,7 @@ struct SalatApp: App {
         // enough for the first buzz of the session to land after the button.
         Theme.registerPixelFont()
         Haptic.warmUp()
+        Telemetry.shared.start()
     }
 
     var body: some Scene {

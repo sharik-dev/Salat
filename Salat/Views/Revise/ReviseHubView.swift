@@ -49,6 +49,7 @@ struct ReviseHubView: View {
             .scrollIndicators(.hidden)
             .background(Color.clear)
             .navigationDestination(for: ReviseRoute.self) { route in
+                Group {
                 switch route {
                 case .tool(.drill):
                     DrillPickerView()
@@ -69,6 +70,12 @@ struct ReviseHubView: View {
                 case .fadeStep(let id):
                     if let step = settings.steps.first(where: { $0.id == id }) {
                         FadeStepView(step: step)
+                    }
+                }
+                }
+                .onAppear {
+                    if case .tool(let tool) = route {
+                        Telemetry.shared.track("tool_open", props: ["tool": tool.rawValue])
                     }
                 }
             }

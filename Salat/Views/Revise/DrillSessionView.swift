@@ -345,6 +345,7 @@ struct DrillSessionView: View {
         // still said something about those steps, and dropping it would punish
         // stopping.
         DrillLog.record(step: step, correct: won)
+        Telemetry.shared.track("drill_answer", props: ["correct": won ? "yes" : "no"])
         // Being asked about a step is studying it: the round feeds the same
         // journal a reading does, so a day spent only drilling still counts.
         if let step = settings.step(step) { settings.noteStudied(step) }
@@ -355,7 +356,11 @@ struct DrillSessionView: View {
         resetExercise()
         if index >= exercises.count, right == exercises.count { Haptic.win.play() }
         // The round is over: a pause, and the only one in a drill.
-        if index >= exercises.count { Ads.shared.breakPoint() }
+        if index >= exercises.count {
+            Telemetry.shared.track("drill_end", value: Double(right),
+                                   props: ["perfect": right == exercises.count ? "yes" : "no"])
+            Ads.shared.breakPoint()
+        }
     }
 
     // MARK: Ends of the road

@@ -56,6 +56,7 @@ final class OnboardingManager {
     /// "always show" toggle would otherwise re-present the sheet immediately
     /// and there would be no way out, so finishing clears it too.
     func markSeen() {
+        if !hasSeenOnboarding { Telemetry.shared.track("onboarding_done") }
         hasSeenOnboarding = true
         #if DEBUG
         alwaysShowOnboarding = false

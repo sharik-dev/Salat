@@ -151,6 +151,7 @@ final class AppSettings {
     func setStatus(_ status: StepStatus, for step: PrayerStep, at date: Date = Date()) {
         let target: StepStatus = log.status(of: step.id) == status ? .untouched : status
         log.set(target, for: step.id, at: date)
+        Telemetry.shared.track("step_status", props: ["step": step.id, "status": target.rawValue])
     }
 
     /// Called when a step's page opens. This is the only thing that feeds the

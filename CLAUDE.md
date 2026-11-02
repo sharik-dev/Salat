@@ -542,13 +542,29 @@ pause suivante, jamais en boucle ; 60 s minimum entre deux pubs ; les 50 `SKAdNe
 Google. **En debug, toujours les unités de démonstration** (cliquer une vraie pub chez soi fait
 suspendre le compte) ; en Release, `liveInterstitial`. Console AdMob (compte `pub-3988815743198389`) : app
 `~5768518688`, bloc interstitiel « Pause » `/3222246390`, message RGPD publié.
+`app-ads.txt` est servi par le dépôt `sharik-dev/sharik-dev.github.io` (racine du domaine des
+pages de support, celui qu'AdMob explore) : le supprimer, et AdMob refuse de valider l'app.
 `GADApplicationIdentifier` est dans `Salat/Info.plist` (plist partiel, fusionné avec le plist
 généré). `scripts/build_ios.sh` prévient si l'un des deux est encore de démonstration.
 
 `fastlane/metadata/app_privacy.json` (repris de crowd-rush : identifiant d'appareil et données
 pub liés + suivi, interaction et plantages non liés) et `advertising: true` dans
 `age_rating.json` décrivent maintenant un binaire **avec** pub. La page de confidentialité
-(`sharik-dev/salat-support`) disait « aucune requête réseau » : à réécrire avant la soumission.
+(`sharik-dev/salat-support`) décrit les pubs et, depuis la 1.3, les statistiques anonymes.
+
+## Les métriques (app-metrics, depuis la 1.3)
+
+`Salat/Services/Telemetry.swift` est le client de `~/Documents/tools/app-metrics`, le même
+serveur que MeowTube et Last Soldier : tableau de bord sharik.fr/metrics/, page « Stats apps »
+de Marvin. Constante d'app `salat`, qui doit figurer dans `APPS` de `/etc/app-metrics.env`
+sur le VPS : sans elle, le serveur répond 400 et le client **jette** le lot (pas de rattrapage).
+
+Identifiant d'installation tiré au hasard, aucun IDFA. Ce qui part : sessions, langue affichée,
+étape ouverte, statut posé, outil ouvert, réponses et fin de manche, écoute d'un récitateur,
+début d'enregistrement. **Jamais** une voix, un mot reconnu ni un texte : les propriétés sont
+des identifiants d'étape ou des oui/non. La liste exacte est dans le README d'app-metrics.
+Les builds de debug envoient une version suffixée `-debug`. La page de confidentialité décrit
+cette liste : un évènement qui transporterait autre chose (texte, mot reconnu) la rendrait fausse.
 
 ## La publication : la fiche et le binaire, séparés
 
@@ -590,8 +606,8 @@ reste vrai tant qu'un mp3 d'everyayah est dans le binaire. Ne pas le rebasculer 
 « simplifier ».
 
 Le support et la confidentialité sont deux pages GitHub Pages —
-`sharik-dev/salat-support`, EN + FR sur la même page. Elles décrivent l'absence de requête
-réseau et des enregistrements qui ne quittent pas l'appareil : changer ça dans l'app sans
+`sharik-dev/salat-support`, EN + FR sur la même page. Elles décrivent un réseau limité aux pubs
+et aux statistiques anonymes, et des enregistrements qui ne quittent pas l'appareil : changer ça dans l'app sans
 changer la page transforme la page en déclaration fausse.
 
 ### Ce qui reste

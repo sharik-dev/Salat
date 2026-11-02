@@ -131,6 +131,7 @@ final class VoiceRecorder: NSObject {
 
     private func begin(step: String, line: Int, arabic: String?) {
         stop()
+        Telemetry.shared.track("record_start", props: ["step": step])
         AudioSession.beginRecording()
 
         let engine = AVAudioEngine()

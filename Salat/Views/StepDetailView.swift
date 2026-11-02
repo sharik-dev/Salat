@@ -76,6 +76,7 @@ struct StepDetailView: View {
         // against. Ticking a box afterwards is an opinion; being here is a fact.
         .task {
             settings.noteStudied(step)
+            Telemetry.shared.track("step_open", props: ["step": step.id])
             // Same flag as the vocal page: the cursor only exists while a
             // voice sounds, and nobody is here to press play for a screenshot.
             if LaunchOptions.autoRecites, step.spoken, hasReciter {

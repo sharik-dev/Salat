@@ -33,6 +33,12 @@ struct ReciterPanel: View {
     }
     private var clipCount: Int { Recitations.lineCount(step: step.id, reciter: reciter) }
     private var hasClips: Bool { clipCount > 0 }
+    private func trackListen(all: Bool) {
+        Telemetry.shared.track("reciter_play", props: ["step": step.id,
+                                                      "reciter": reciter?.id ?? "none",
+                                                      "all": all ? "yes" : "no"])
+    }
+
     private var clip: URL? { Recitations.clip(step: step.id, line: line, reciter: reciter) }
     /// The voices this step can be heard in — what the menu offers. One entry
     /// means there is no choice to make, so no menu is shown.
@@ -154,6 +160,7 @@ struct ReciterPanel: View {
                     player.stop()
                 } else if let clip {
                     player.play(.reciter, line: line, url: clip)
+                    trackListen(all: false)
                 }
             } label: {
                 HStack(spacing: 7) {
@@ -188,6 +195,7 @@ struct ReciterPanel: View {
             if clipCount > 1 {
                 Button {
                     player.playAll(.reciter, urls: Recitations.clips(step: step.id, reciter: reciter))
+                    trackListen(all: true)
                 } label: {
                     Image(systemName: "text.line.first.and.arrowtriangle.forward")
                         .font(.system(size: 12, weight: .bold))
