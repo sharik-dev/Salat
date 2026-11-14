@@ -1051,10 +1051,16 @@ shotsmith Design/screenshots/design.ar.json --out fastlane/screenshots --fastlan
   pose **avant** les prix : un prix dans un pays où l'abonnement n'est pas encore disponible
   est refusé (409 `UNSUPPORTED_TERRITORY`).
 - **Le premier abonnement d'une app ne se soumet pas par l'API**
-  (`FIRST_SUBSCRIPTION_MUST_BE_SUBMITTED_ON_VERSION`) : il se coche sur la page de la version,
-  section « Achats intégrés et abonnements », puis la version part du site.
-  `fastlane ios release submit:false` pose tout le reste sans appuyer sur le bouton. Les
+  (`FIRST_SUBSCRIPTION_MUST_BE_SUBMITTED_ON_VERSION`) : dans le site, « Add for Review » sur
+  l'abonnement, puis sur son groupe, puis sur la version, pour les mettre dans le **même
+  brouillon de soumission**, et l'envoi part de ce brouillon. Il n'y a plus de case à cocher
+  sur la page de la version. `fastlane ios release submit:false` pose tout le reste sans
+  appuyer sur le bouton ; **ne pas lancer `fastlane ios release` tout court** dans ce cas, il
+  envoie la version seule (c'est arrivé le 14/11/2026, soumission retirée dans la foulée). Les
   abonnements suivants, eux, passent par `subscriptionSubmissions`.
+- La 1.4 (build 7) est partie en examen le 14/11/2026 à 17 h 10 avec l'abonnement et son
+  groupe dans la même soumission. `automatic_release` est à faux : la sortie se déclenche à
+  la main après l'acceptation.
 - Chrome piloté par Claude n'est pas connecté à App Store Connect, et Claude ne saisit pas de
   mot de passe : tout geste « dans le site » revient à Sharik.
 
