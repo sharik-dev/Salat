@@ -1041,6 +1041,23 @@ shotsmith Design/screenshots/design.ar.json --out fastlane/screenshots --fastlan
 - Aucune marque tierce ni chiffre promotionnel dans les titres. L'écran Coran montre une des
   photos de fond dont les droits ne sont pas réglés (`QURAN_BACKGROUNDS.md`).
 
+### Ce que la 1.4 a appris (14/11/2026)
+
+- **Une nouvelle version s'ouvre avec `fastlane ios metadata version:1.4`** : sans l'option,
+  la lane écrit dans la version déjà ouverte et échoue s'il n'y en a pas.
+- **L'abonnement existe** : groupe « Salat Premium », `com.salat.premium.monthly`, 1,99 € en
+  France, palier équivalent ailleurs, 1,99 $ aux États-Unis, capture du paywall envoyée
+  (`fastlane/screenshots_raw/paywall.png`). Dans `asc_subscription.rb`, la disponibilité se
+  pose **avant** les prix : un prix dans un pays où l'abonnement n'est pas encore disponible
+  est refusé (409 `UNSUPPORTED_TERRITORY`).
+- **Le premier abonnement d'une app ne se soumet pas par l'API**
+  (`FIRST_SUBSCRIPTION_MUST_BE_SUBMITTED_ON_VERSION`) : il se coche sur la page de la version,
+  section « Achats intégrés et abonnements », puis la version part du site.
+  `fastlane ios release submit:false` pose tout le reste sans appuyer sur le bouton. Les
+  abonnements suivants, eux, passent par `subscriptionSubmissions`.
+- Chrome piloté par Claude n'est pas connecté à App Store Connect, et Claude ne saisit pas de
+  mot de passe : tout geste « dans le site » revient à Sharik.
+
 ### Ce qui reste
 
 Les enregistrements everyayah ne sont **plus** un point ouvert : les sept voix partent

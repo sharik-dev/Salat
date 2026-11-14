@@ -212,8 +212,14 @@ platform :ios do
   #     binaire ; voir AUDIO_SOURCES.md. Ne pas rebasculer à false tant qu'un
   #     mp3 d'everyayah est dans l'app. Les illustrations, elles, sont
   #     générées ici, textes coraniques du domaine public.
+  #
+  # `fastlane ios release submit:false` pose tout (déclarations, classement
+  # d'âge, precheck) **sans** appuyer sur le bouton : c'est ce qu'il faut quand
+  # la soumission doit partir du site, comme pour le premier abonnement d'une
+  # app, qu'Apple n'accepte qu'avec une version et que l'API ne sait pas
+  # rattacher (`FIRST_SUBSCRIPTION_MUST_BE_SUBMITTED_ON_VERSION`).
   desc "Déclarations puis soumission pour examen"
-  lane :release do
+  lane :release do |options|
     # La clé d'abord, et gardée : l'appeler pose aussi
     # `Spaceship::ConnectAPI.token` globalement, et c'est ce jeton que
     # `declare_privacy` utilise juste après.
@@ -270,7 +276,7 @@ platform :ios do
         content_rights_contains_third_party_content: true,
         add_id_info_uses_idfa: false
       },
-      submit_for_review: true,
+      submit_for_review: options[:submit] != false,
       # Le jour de la sortie se décide après l'acceptation, pas trois jours
       # avant à l'aveugle.
       automatic_release: false,
