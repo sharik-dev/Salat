@@ -64,7 +64,7 @@ struct WidgetPreviewView: View {
                     }
                 }
 
-                Color.clear.frame(height: 92)
+                Color.clear.frame(height: 24)
             }
             .padding(.horizontal, 18)
             .padding(.top, 8)
@@ -82,6 +82,18 @@ struct WidgetPreviewView: View {
     }
 
     private var entry: CarouselEntry {
+        // `-widgetLocked 1`: what the home screen shows without Premium.
+        if LaunchOptions.showsLockedWidget {
+            return .locked(date: Date(), localizer: settings.localizer)
+        }
+        // `-widgetScope quran`: the reader's verses, the stepper walks them.
+        if settings.widgetScope == .quran, !settings.widgetVerses.isEmpty {
+            let verses = settings.widgetVerses
+            let index = CarouselClock.index(tick: tick, count: verses.count)
+            return CarouselEntry(date: Date(), verse: verses[index],
+                                 position: index + 1, total: verses.count,
+                                 localizer: settings.localizer, focus: settings.widgetFocus)
+        }
         let steps = settings.steps
         let index = CarouselClock.index(tick: tick, count: steps.count)
         return CarouselEntry(date: Date(),

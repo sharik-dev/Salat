@@ -95,8 +95,8 @@ struct DrillSessionView: View {
                 .animation(Theme.spring, value: phase)
                 .animation(Theme.spring, value: index)
             Text("\(min(index + 1, exercises.count))/\(exercises.count)")
-                .font(Theme.pixel(11))
-                .foregroundStyle(Theme.gold)
+                .font(Theme.rounded(14, .black).monospacedDigit())
+                .foregroundStyle(Theme.primaryDeep)
         }
     }
 
@@ -129,18 +129,19 @@ struct DrillSessionView: View {
                 } label: {
                     HStack(spacing: 10) {
                         Text(question.options[i])
-                            .font(Theme.body(16))
+                            .font(Theme.rounded(16.5, .heavy))
                             .foregroundStyle(Theme.ink)
                             .multilineTextAlignment(.leading)
                             .fixedSize(horizontal: false, vertical: true)
                         Spacer(minLength: 0)
                         mark(for: i, of: question)
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(14)
+                    .frame(maxWidth: .infinity, minHeight: 28, alignment: .leading)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 14)
                 }
-                .chunky(face(for: i, of: question), radius: 16,
-                        haptic: phase == .working ? .select : nil, sparks: false)
+                .chunky(face(for: i, of: question), radius: 20,
+                        haptic: phase == .working ? .select : nil)
                 .disabled(phase != .working)
                 .accessibilityIdentifier("drill.option.\(i)")
             }
@@ -153,7 +154,7 @@ struct DrillSessionView: View {
     private func face(for i: Int, of question: DrillQuestion) -> Color {
         switch phase {
         case .working:
-            return selection == i ? Theme.goldSoft : Theme.surface
+            return selection == i ? Theme.primarySoft : Theme.surface
         case .checked:
             if i == question.answer { return Theme.greenSoft }
             return i == selection ? Theme.sand : Theme.surface
@@ -164,11 +165,11 @@ struct DrillSessionView: View {
     private func mark(for i: Int, of question: DrillQuestion) -> some View {
         if case .checked = phase {
             if i == question.answer {
-                Image(systemName: "checkmark").font(.system(size: 14, weight: .bold))
+                Image(systemName: "checkmark.circle.fill").font(.system(size: 22, weight: .bold))
                     .foregroundStyle(Theme.green)
             } else if i == selection {
-                Image(systemName: "xmark").font(.system(size: 14, weight: .bold))
-                    .foregroundStyle(Theme.inkSoft)
+                Image(systemName: "xmark.circle.fill").font(.system(size: 22, weight: .bold))
+                    .foregroundStyle(Theme.inkSoft.opacity(0.7))
             }
         }
     }
@@ -207,16 +208,8 @@ struct DrillSessionView: View {
         .padding(.bottom, 6)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(alignment: .top) {
-            UnevenRoundedRectangle(topLeadingRadius: Theme.Radius.bar,
-                                   topTrailingRadius: Theme.Radius.bar,
-                                   style: .continuous)
-                .fill(barColor)
-                .overlay(
-                    UnevenRoundedRectangle(topLeadingRadius: Theme.Radius.bar,
-                                           topTrailingRadius: Theme.Radius.bar,
-                                           style: .continuous)
-                        .strokeBorder(Theme.ink, lineWidth: Theme.stroke)
-                )
+            barColor
+                .overlay(alignment: .top) { barLine.frame(height: 2.5) }
                 .ignoresSafeArea(edges: .bottom)
         }
         .animation(Theme.spring, value: phase)
@@ -230,34 +223,38 @@ struct DrillSessionView: View {
         }
     }
 
+    private var barLine: Color {
+        switch phase {
+        case .working:            return Theme.line
+        case .checked(true):      return Theme.primaryBorder
+        case .checked(false):     return Theme.edge(for: Theme.sand)
+        }
+    }
+
     private func wideButton(_ title: String, enabled: Bool,
                             action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Text(title)
-                .font(Theme.label(16))
-                .textCase(.uppercase)
-                .foregroundStyle(Theme.ink)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 16)
-        }
-        .chunky(enabled ? Theme.goldSoft : Theme.sand, radius: 16,
-                haptic: .press, sparks: false)
-        .disabled(!enabled)
-        .opacity(enabled ? 1 : 0.55)
+        Button(action: action) { Text(title) }
+            .buttonStyle(.cta(.primary, height: 58))
+            .disabled(!enabled)
     }
 
     private func verdict(_ exercise: DrillExercise, won: Bool) -> some View {
         HStack(alignment: .top, spacing: 10) {
-            Image(systemName: won ? "checkmark.circle.fill" : "xmark.circle.fill")
-                .font(.system(size: 26, weight: .bold))
-                .foregroundStyle(won ? Theme.green : Theme.inkSoft)
+            if won {
+                LofiIcon(.check, size: 40, interval: 1.5)
+            } else {
+                Image(systemName: "xmark.circle.fill")
+                    .font(.system(size: 30, weight: .bold))
+                    .foregroundStyle(Theme.inkSoft)
+                    .frame(width: 40, height: 40)
+            }
             VStack(alignment: .leading, spacing: 3) {
                 Text(loc.t(won ? "drill.right" : "drill.wrong"))
-                    .font(Theme.title(18))
-                    .foregroundStyle(won ? Theme.green : Theme.ink)
+                    .font(Theme.title(20))
+                    .foregroundStyle(won ? Theme.primaryDeep : Theme.ink)
                 if !won, let answer = correction(exercise) {
                     Text("\(loc.t("drill.answer")) : \(answer)")
-                        .font(Theme.body(14))
+                        .font(Theme.rounded(14.5, .semibold))
                         .foregroundStyle(Theme.inkSoft)
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -359,7 +356,9 @@ struct DrillSessionView: View {
         if index >= exercises.count {
             Telemetry.shared.track("drill_end", value: Double(right),
                                    props: ["perfect": right == exercises.count ? "yes" : "no"])
-            Ads.shared.breakPoint()
+            // The pause may be the rating request or the Premium offer; when
+            // neither is due it is the ads' (`Nudges`).
+            Nudges.shared.pause(.roundFinished(right: right, total: exercises.count))
         }
     }
 
@@ -368,13 +367,16 @@ struct DrillSessionView: View {
     private var summary: some View {
         VStack {
             Spacer()
-            VStack(spacing: 14) {
+            VStack(spacing: 12) {
+                // The trophy for a clean round, the star for any other: a
+                // round finished is worth an object either way.
+                LofiIcon(right == exercises.count ? .trophy : .star, size: 132, interval: 1.6)
                 Text(loc.t("drill.done.title"))
-                    .font(Theme.title(24))
+                    .font(Theme.title(26))
                     .foregroundStyle(Theme.ink)
                 Text("\(right) / \(exercises.count)")
-                    .font(Theme.pixel(32))
-                    .foregroundStyle(Theme.gold)
+                    .font(Theme.rounded(40, .black).monospacedDigit())
+                    .foregroundStyle(Theme.primary)
                 Text(loc.t("drill.done.score", right, exercises.count))
                     .font(Theme.body(14))
                     .foregroundStyle(Theme.inkSoft)
@@ -444,7 +446,10 @@ private struct QuestionCard: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .card()
+        .padding(Theme.cardPadding)
+        // Mint, where the answers are white: the thing asked about must not
+        // look like one more thing you could pick.
+        .plate(Theme.primarySoft)
         .accessibilityIdentifier("drill.question")
     }
 
@@ -458,7 +463,7 @@ private struct QuestionCard: View {
         else { return Text(question.subject) }
 
         let slot: Text = if let fill, !fill.isEmpty {
-            Text(fill).fontWeight(.semibold).foregroundStyle(Theme.gold)
+            Text(fill).fontWeight(.black).foregroundStyle(Theme.gold)
         } else {
             Text(String(repeating: "\u{00A0}", count: 10))
         }

@@ -44,7 +44,7 @@ struct DrillPickerView: View {
                         }
                     }
                 }
-                Color.clear.frame(height: 92)
+                Color.clear.frame(height: 24)
             }
             .padding(.horizontal, 18)
             .padding(.top, 8)
@@ -84,14 +84,14 @@ struct DrillPickerView: View {
                       action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text(label)
-                .font(Theme.label(12))
-                .foregroundStyle(Theme.ink)
+                .font(Theme.rounded(13.5, .black))
+                .foregroundStyle(selected ? .white : Theme.ink)
                 .lineLimit(1)
-                .padding(.horizontal, 14)
-                .padding(.vertical, 9)
+                .padding(.horizontal, 15)
+                .padding(.vertical, 10)
         }
-        .chunky(selected ? Theme.goldSoft : Theme.surface, radius: 12,
-                haptic: .select, sparks: false)
+        .chunky(selected ? Theme.primary : Theme.surface, radius: 16, depth: 4,
+                haptic: .select)
     }
 
     // MARK: The cards
@@ -102,7 +102,7 @@ struct DrillPickerView: View {
         NavigationLink(value: ReviseRoute.drillRun(DrillRun(focus: .mixed,
                                                             subject: subject))) {
             HStack(spacing: 14) {
-                plate("square.grid.2x2.fill")
+                LofiIcon(.quiz, size: 62, interval: 5)
                 VStack(alignment: .leading, spacing: 4) {
                     Text(loc.t("drill.picker.mixed.title"))
                         .font(Theme.title(19))
@@ -114,14 +114,15 @@ struct DrillPickerView: View {
                         .multilineTextAlignment(.leading)
                 }
                 Spacer(minLength: 0)
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 13, weight: .bold))
-                    .foregroundStyle(Theme.gold)
+                Image(systemName: "chevron.forward")
+                    .font(.system(size: 14, weight: .black))
+                    .foregroundStyle(Theme.primary)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            .card()
+            .padding(Theme.cardPadding)
+            .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .chunky(Theme.surface, radius: Theme.Radius.card, depth: 5)
         .accessibilityIdentifier("drill.picker.mixed")
     }
 
@@ -137,8 +138,11 @@ struct DrillPickerView: View {
                     Spacer(minLength: 0)
                     // How many exercises the door opens on — a fact, not a score.
                     Text("\(count)")
-                        .font(Theme.pixel(14))
-                        .foregroundStyle(Theme.gold)
+                        .font(Theme.rounded(14, .black).monospacedDigit())
+                        .foregroundStyle(Theme.primaryDeep)
+                        .padding(.horizontal, 9)
+                        .padding(.vertical, 3)
+                        .background(Capsule().fill(Theme.primarySoft))
                 }
                 Text(loc.t(focus.titleKey))
                     .font(Theme.title(16))
@@ -148,9 +152,10 @@ struct DrillPickerView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
             .frame(maxWidth: .infinity, minHeight: 116, alignment: .topLeading)
-            .card(radius: 18, padding: 14)
+            .padding(14)
+            .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .chunky(Theme.surface, radius: 22, depth: 5)
         // Greyed, not hidden: a card that vanishes with the filter looks like
         // a bug; a card that stays pale says "not for this step".
         .disabled(count == 0)
@@ -159,18 +164,14 @@ struct DrillPickerView: View {
     }
 
     private func plate(_ systemName: String) -> some View {
-        RoundedRectangle(cornerRadius: 12, style: .continuous)
-            .fill(Theme.goldSoft)
-            .overlay(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .strokeBorder(Theme.ink, lineWidth: Theme.stroke)
-            )
+        RoundedRectangle(cornerRadius: 14, style: .continuous)
+            .fill(Theme.primarySoft)
             .overlay(
                 Image(systemName: systemName)
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(Theme.ink)
+                    .font(.system(size: 18, weight: .heavy))
+                    .foregroundStyle(Theme.primaryDeep)
             )
-            .frame(width: 42, height: 42)
+            .frame(width: 44, height: 44)
     }
 
     private func icon(_ focus: DrillFocus) -> String {

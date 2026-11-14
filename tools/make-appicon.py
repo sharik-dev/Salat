@@ -1,81 +1,117 @@
 #!/usr/bin/env python3
-"""Imprime le corps JSON de l'icône d'app, pour NanoBanana.
+"""Compose l'icône d'app : la mosquée 3D du bandeau, posée sur le vert de l'app.
 
-    python3 tools/make-appicon.py > body.json
-    curl -s --max-time 290 -X POST localhost:4747/generate \
-         -H 'Content-Type: application/json' -d @body.json
-    python3 tools/make-appicon.py --install /tmp/AppIcon.png
+    B=/Applications/Blender.app/Contents/MacOS/Blender
+    $B -b -P tools/blender/icons.py -- --appicon     # Design/appicon-render/mosque.png
+    python3 tools/make-appicon.py                    # AppIcon.png, 1024×1024 sans alpha
 
-Troisième icône. La première était assemblée ici en polygones (étoile khatam
-sable, socle doré, silhouette de sujud) ; la deuxième, dessinée par NanoBanana,
-gardait l'étoile en or et la prosternation dedans, sur fond crème. Toutes deux se
-perdaient à 60 px : la fiche ne récoltait que 6,4 % de clics sur ses affichages.
-Depuis la 1.1 (01/10/2026), c'est une arche de mihrab dorée traversée par une
-onde sonore, sur fond nuit — ce que fait l'app (on écoute, on répète), en une
-forme qui contraste. Elle a été choisie parmi trois concepts dans App Store
-Studio, qui n'a pas gardé son prompt : celui d'ici la décrit après coup, pour la
-régénérer ou la décliner.
+Quatrième icône (14/11/2026). La troisième, une arche dorée sur fond nuit
+générée par NanoBanana, ne ressemblait plus à rien de ce qu'on voit une fois
+l'app ouverte après la refonte « Jardin ». Sharik a demandé la mosquée du
+bandeau d'*Apprendre* : l'icône est désormais le même objet, rendu par le même
+script Blender, sur le même vert et le même treillis que le bandeau. Ouvrir
+l'app, c'est retrouver ce qu'on a touché sur l'écran d'accueil.
 
-Les deux clauses de pudeur restent, même sans personnage : la tête sans aucun
-trait si une silhouette réapparaît, et toute étoile **à huit branches** — un
-hexagramme est le symbole du judaïsme et n'a rien à faire sur une app de salat,
-et le modèle y glisse tout seul si on écrit juste « star ». Les points du ciel
-sont de minuscules éclats à quatre branches, pas des étoiles dessinées.
-
-`--install` fait le service après-vente d'un rendu : il efface l'étincelle que
-le générateur tamponne dans un coin (une icône n'a pas de marge à recadrer, il
-faut la repeindre), force 1024×1024 sans alpha — iOS refuse une icône
-transparente — et l'écrit dans l'`AppIcon.appiconset`.
+Rien n'est dessiné à la main ici : le fond (dégradé vert, treillis d'étoiles à
+**huit** branches, halo) est calculé, la mosquée vient du rendu. iOS refuse une
+icône transparente, d'où la sortie en RGB.
 """
 from __future__ import annotations
 
-import argparse
-import json
+import math
 from pathlib import Path
 
+from PIL import Image, ImageDraw, ImageFilter
+
 ROOT = Path(__file__).resolve().parent.parent
+SRC = ROOT / "Design" / "appicon-render" / "mosque.png"
 OUT = ROOT / "Salat" / "Assets.xcassets" / "AppIcon.appiconset" / "AppIcon.png"
 
-PROMPT = """ONE single square image, 1:1, FULL BLEED: the background touches all four edges. This is an iOS APP ICON, so: NO rounded corners, NO frame, NO border, NO drop shadow, NO transparency, NO device mockup, NO text, NO letter, NO word, NO number, NO signature, NO watermark, NO sparkle in the corner.
-
-Subject: the outline of a tall pointed Islamic mihrab arch, drawn as one thick glowing warm-gold line, centred, its two legs running off the bottom edge. Across the middle, from the left edge to the right edge, a glowing gold sound waveform crosses the arch, tallest at the centre and quieter towards the sides, with soft pale-cream vertical level bars behind it like an audio visualiser. Only two ideas: the arch, the voice.
-
-ART DIRECTION:
-- Background: deep night teal-blue gradient, #1E4550 at the top to #081820 at the bottom, a soft golden halo behind the tip of the arch, a few tiny four-point pinpoint sparkles in the sky.
-- Gold #F5C542 to #E8A92E, glowing neon-like lines, smooth vector, gentle bloom. No other colour: no red, no green, no purple.
-- Big simple masses, readable when the icon is 20 mm wide on a phone home screen. The arch fills about 70 % of the height.
-- If a human figure ever appears, THE HEAD IS COMPLETELY BLANK — no eyes, no nose, no mouth, no ear, no hair, no face contour. Non-negotiable, religious modesty.
-- Any star must be an EIGHT-POINTED ISLAMIC KHATAM star. NEVER a six-pointed star, never a hexagram, never a Star of David, never a crescent-and-star flag emblem.
-"""
-
 SIZE = 1024
+SS = 2                      # suréchantillonnage du fond, pour des traits nets
+TOP = (0x3D, 0xBB, 0x82)    # un cran plus clair que Theme.primary
+BOTTOM = (0x23, 0x8E, 0x5D) # un cran plus sombre
+SUBJECT = 0.80              # part de la largeur occupée par la mosquée
 
 
-def install(path: Path) -> None:
-    from PIL import Image
+def khatam(cx: float, cy: float, r: float) -> list[list[tuple[float, float]]]:
+    """Deux carrés à 45° : l'étoile à huit branches du treillis de l'app."""
+    squares = []
+    for rot in (0.0, math.pi / 4):
+        squares.append([(cx + r * math.cos(rot + k * math.pi / 2),
+                         cy + r * math.sin(rot + k * math.pi / 2)) for k in range(4)])
+    return squares
 
-    im = Image.open(path).convert("RGB")
-    bg = im.getpixel((4, 4))
-    w, h = im.size
-    px = im.load()
-    for y in range(int(h * 0.78), h):
-        for x in range(int(w * 0.78), w):
-            r, g, b = px[x, y]
-            if abs(r - bg[0]) + abs(g - bg[1]) + abs(b - bg[2]) < 90:
-                px[x, y] = bg
-    OUT.parent.mkdir(parents=True, exist_ok=True)
-    im.resize((SIZE, SIZE), Image.LANCZOS).save(OUT)
-    print(OUT)
+
+def background() -> Image.Image:
+    n = SIZE * SS
+    bg = Image.new("RGB", (n, n))
+    px = bg.load()
+    for y in range(n):
+        t = y / (n - 1)
+        row = tuple(round(TOP[c] + (BOTTOM[c] - TOP[c]) * t) for c in range(3))
+        for x in range(n):
+            px[x, y] = row
+
+    # Le treillis, en blanc très léger, décalé d'une demi-maille une ligne sur deux.
+    lattice = Image.new("RGBA", (n, n), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(lattice)
+    step = 150 * SS
+    row = 0
+    y = 0.0
+    while y < n + step:
+        x = 0.0 if row % 2 == 0 else step / 2
+        while x < n + step:
+            for square in khatam(x, y, step * 0.30):
+                draw.line(square + [square[0]], fill=(255, 255, 255, 34), width=3 * SS, joint="curve")
+            x += step
+        y += step
+        row += 1
+    bg.paste(lattice, (0, 0), lattice)
+
+    # Un halo clair derrière la coupole : c'est lui qui détache la mosquée du fond.
+    halo = Image.new("L", (n, n), 0)
+    ImageDraw.Draw(halo).ellipse((n * 0.14, n * 0.10, n * 0.86, n * 0.82), fill=120)
+    halo = halo.filter(ImageFilter.GaussianBlur(n * 0.09))
+    bg.paste(Image.new("RGB", (n, n), (255, 255, 255)), (0, 0), halo)
+    return bg.resize((SIZE, SIZE), Image.LANCZOS)
+
+
+def strip_shadow(img: Image.Image) -> Image.Image:
+    """Retire l'ombre au sol du rendu : c'est du noir pur à alpha partiel, coupé net par le
+    bord de l'image, et l'icône pose la sienne. L'objet et son liseré ont une couleur, on
+    les reconnaît à ça (même test que `pack_icons.clean` du kit icon3d)."""
+    import numpy as np
+
+    px = np.asarray(img.convert("RGBA")).astype(np.float32)
+    shadow = np.clip((48 - px[..., :3].max(-1)) / 32, 0, 1)   # 1 = ombre pure
+    px[..., 3] *= 1 - shadow
+    return Image.fromarray(px.round().astype(np.uint8), "RGBA")
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--install", type=Path, help="rendu NanoBanana à poser comme icône")
-    args = ap.parse_args()
-    if args.install:
-        install(args.install)
-    else:
-        print(json.dumps({"prompt": PROMPT, "output": "/tmp/AppIcon.png"}))
+    if not SRC.exists():
+        raise SystemExit(f"rendu manquant : {SRC} (lancer icons.py -- --appicon)")
+    icon = background()
+
+    mosque = strip_shadow(Image.open(SRC))
+    mosque = mosque.crop(mosque.getbbox())
+    scale = SIZE * SUBJECT / max(mosque.size)
+    mosque = mosque.resize((round(mosque.width * scale), round(mosque.height * scale)), Image.LANCZOS)
+    x = (SIZE - mosque.width) // 2
+    y = (SIZE - mosque.height) // 2 - round(SIZE * 0.012)
+
+    # L'ombre de contact : la silhouette elle-même, écrasée, floutée, glissée vers le bas.
+    alpha = mosque.getchannel("A")
+    shadow = Image.new("L", (SIZE, SIZE), 0)
+    shadow.paste(alpha.point(lambda a: a * 0.42), (x, y + round(SIZE * 0.035)))
+    shadow = shadow.filter(ImageFilter.GaussianBlur(SIZE * 0.03))
+    icon.paste(Image.new("RGB", (SIZE, SIZE), (0x12, 0x4A, 0x30)), (0, 0), shadow)
+
+    icon.paste(mosque, (x, y), mosque)
+    OUT.parent.mkdir(parents=True, exist_ok=True)
+    icon.convert("RGB").save(OUT)
+    print(OUT)
 
 
 if __name__ == "__main__":

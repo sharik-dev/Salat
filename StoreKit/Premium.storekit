@@ -1,0 +1,67 @@
+{
+  "identifier" : "5A1A7C0D",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+
+  ],
+  "settings" : {
+    "_applicationInternalID" : "6798837070",
+    "_developerTeamID" : "2XR666D9B2",
+    "_failTransactionsEnabled" : false,
+    "_locale" : "fr",
+    "_storefront" : "FRA",
+    "_storeKitErrors" : [
+
+    ]
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "21500001",
+      "localizations" : [
+
+      ],
+      "name" : "Salat Premium",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "1.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "21500002",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "The home screen widget, and no ads",
+              "displayName" : "Salat Premium",
+              "locale" : "en_US"
+            },
+            {
+              "description" : "Le widget d'écran d'accueil, sans pub",
+              "displayName" : "Salat Premium",
+              "locale" : "fr"
+            }
+          ],
+          "productID" : "com.salat.premium.monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Salat Premium mensuel",
+          "subscriptionGroupID" : "21500001",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [
+
+          ]
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 4,
+    "minor" : 0
+  }
+}

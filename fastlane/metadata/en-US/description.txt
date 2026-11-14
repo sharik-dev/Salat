@@ -1,6 +1,6 @@
 Learn exactly what to say in every position of the prayer, one step at a time.
 The Arabic, how to pronounce it in your own language, and what it means, side by side.
-No account, no network: just you and the words of the salah.
+No account needed: just you and the words of the salah.
 
 You know the movements. Standing, bowing, forehead to the ground, sitting. What you do not know is what to say while you are down there, and nobody teaches it slowly enough to actually learn.
 
@@ -22,16 +22,27 @@ WRITTEN FOR YOUR LANGUAGE
 
 The pronunciation is not transliterated once and reused. A French reader does not read "Subhaana" the way an English reader does, so each language gets its own spelling, written for the way that language is read aloud. Fourteen languages: English, French, Arabic, Indonesian, Malay, Urdu, Bengali, Turkish, Russian, Spanish, Portuguese, German, Italian and Dutch.
 
+THE WHOLE QUR'AN, VERSE BY VERSE
+
+A new tab lets you swipe through the Qur'an one verse at a time, with a reciter, a translation in your language, the verses you love and your own private notes.
+
 A WIDGET THAT KEEPS TEACHING
 
-Add the widget to your Home Screen and the positions cycle on their own, with what is said at each one. You are not studying. You are just seeing it, several times a day, until it sticks.
+Add the widget to your Home Screen and the positions cycle on their own, with what is said at each one. You are not studying. You are just seeing it, several times a day, until it sticks. The widget is part of Salat Premium.
 
-PRIVATE AND OFFLINE
+PRIVATE, AND THE PRAYER WORKS OFFLINE
 
-No account. No sign-in. No network: the app makes no request of any kind, so it works on a plane, in a basement, anywhere. Nothing is collected, because there is nowhere to collect it to.
+No account. No sign-in. Your progress and your voice recordings stay on your iPhone. The lessons of the prayer, their text and their reciters are inside the app, so they work on a plane, in a basement, anywhere. Only the recitation of the Qur'an is downloaded, verse by verse, as you listen. The free version shows an occasional ad at a natural pause and sends anonymous usage statistics; the privacy policy says exactly what.
 
 ON THE CONTENT
 
 The prayer described here is the ground shared by the four Sunni schools of law. Where they differ (the wording of the Tashahhud, where the hands rest, the Qunut), the app tells you they differ, in a note on that step, instead of quietly picking one.
 
 It is a memorisation aid. It does not replace a teacher, and it does not claim to.
+
+SALAT PREMIUM
+
+The app is free. Salat Premium is an optional monthly subscription that unlocks the Home Screen widget (the steps of the prayer, or your own verses of the Qur'an) and removes ads. Payment is charged to your Apple account. The subscription renews automatically every month unless it is cancelled at least 24 hours before the end of the current period. You can manage or cancel it in your App Store account settings.
+
+Terms of Use: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+Privacy Policy: https://sharik-dev.github.io/salat-support/privacy.html

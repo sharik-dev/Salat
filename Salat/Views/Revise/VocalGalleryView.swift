@@ -29,7 +29,7 @@ struct VocalGalleryView: View {
                     }
                 }
 
-                Color.clear.frame(height: 92)
+                Color.clear.frame(height: 24)
             }
             .padding(.horizontal, 18)
             .padding(.top, 8)
@@ -42,7 +42,7 @@ struct VocalGalleryView: View {
 
     private var header: some View {
         Text(loc.t("revise.gallery.subtitle"))
-            .font(Theme.body(15))
+            .font(Theme.rounded(15, .semibold))
             .foregroundStyle(Theme.inkSoft)
             .fixedSize(horizontal: false, vertical: true)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -73,15 +73,22 @@ private struct GalleryCard: View {
 
     var body: some View {
         VStack(spacing: 8) {
-            PositionMedallion(step: step, size: 78)
-
-            StepBadge(order: step.order, size: 10)
+            PositionMedallion(step: step, size: 84)
+                .overlay(alignment: .bottomTrailing) {
+                    Text(String(step.order))
+                        .font(Theme.rounded(12, .black).monospacedDigit())
+                        .foregroundStyle(.white)
+                        .frame(minWidth: 24, minHeight: 24)
+                        .background(Circle().fill(Theme.primary))
+                        .overlay(Circle().strokeBorder(.white, lineWidth: 2.5))
+                        .offset(x: 2, y: 2)
+                }
 
             Text(step.name)
-                .font(Theme.title(15))
+                .font(Theme.rounded(15.5, .heavy))
                 .foregroundStyle(Theme.ink)
                 .multilineTextAlignment(.center)
-                .lineLimit(2)
+                .lineLimit(2, reservesSpace: true)
                 .frame(maxWidth: .infinity)
 
             // Two marks, two different facts: a voice exists to copy, and you
@@ -89,24 +96,24 @@ private struct GalleryCard: View {
             HStack(spacing: 6) {
                 if hasReciter {
                     Image(systemName: "waveform")
-                        .font(.system(size: 9, weight: .bold))
+                        .font(.system(size: 12, weight: .black))
                         .foregroundStyle(Theme.gold)
                 }
                 if recorded > 0 {
                     HStack(spacing: 3) {
                         Image(systemName: "mic.fill")
-                            .font(.system(size: 8, weight: .bold))
+                            .font(.system(size: 11, weight: .black))
                         Text("\(recorded)")
-                            .font(Theme.pixel(9))
+                            .font(Theme.rounded(12, .black).monospacedDigit())
                     }
                     .foregroundStyle(Theme.green)
                 }
             }
-            .frame(height: 12)
+            .frame(height: 16)
         }
         .frame(maxWidth: .infinity)
         // A tile is narrow: the rim is what keeps a two-line step name from
         // ending flush against the outline.
-        .card(radius: 18, padding: 12)
+        .card(radius: 22, padding: 12)
     }
 }

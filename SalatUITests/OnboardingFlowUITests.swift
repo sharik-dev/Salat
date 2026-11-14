@@ -2,7 +2,7 @@ import XCTest
 
 /// One test, for the one thing that must never break again: you can always get
 /// out of the onboarding and into the app. The unit tests cover the state; this
-/// covers the sheet actually going away when you tap the button.
+/// covers the welcome actually going away when you tap the buttons.
 final class OnboardingFlowUITests: XCTestCase {
 
     override func setUp() {
@@ -24,13 +24,21 @@ final class OnboardingFlowUITests: XCTestCase {
         XCTAssertTrue(primary.waitForExistence(timeout: 10),
                       "a fresh install should open on the onboarding")
 
-        // Six pages: the language picker, then five illustrated ones — five
-        // "Next" and a final "Let's go".
-        for page in 1...6 {
+        // Three pitch pages, then the language question: four taps on the
+        // same wide button.
+        for page in 1...4 {
             XCTAssertTrue(primary.waitForExistence(timeout: 5),
                           "the onboarding button vanished on page \(page)")
             primary.tap()
         }
+
+        // The last question asks about the daily reminder. "Later" is the way
+        // through that never raises the system alert, which a UI test cannot
+        // count on being able to answer.
+        let later = app.buttons["onboarding.later"]
+        XCTAssertTrue(later.waitForExistence(timeout: 5),
+                      "the reminder question never showed its way out")
+        later.tap()
 
         // Anchored on the identifier, never on a label: the app runs in
         // whatever language the device asks for, and a test that waits for the

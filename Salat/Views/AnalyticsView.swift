@@ -13,7 +13,6 @@ struct AnalyticsView: View {
 
     @Environment(AppSettings.self) private var settings
     @Environment(\.loc) private var loc
-    @Environment(\.dismiss) private var dismiss
 
     /// Thirteen weeks: a season of reading, and the widest grid that still fits
     /// a portrait screen without shrinking a day to a crumb.
@@ -23,83 +22,49 @@ struct AnalyticsView: View {
     private var now: Date { Date() }
 
     var body: some View {
-        ZStack {
-            Theme.paper.ignoresSafeArea()
-            StarLattice().ignoresSafeArea()
-
-            ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
-                    title
-                    tiles
-                    calendarCard
-                    dueCard
-                    acquiredCard
-                    journalCard
-                    Color.clear.frame(height: 20)
-                }
-                .padding(.horizontal, 18)
-                .padding(.top, 16)
+        SheetScaffold(title: loc.t("analytics.title"), icon: .chart) {
+            VStack(alignment: .leading, spacing: 16) {
+                tiles
+                calendarCard
+                dueCard
+                acquiredCard
+                journalCard
             }
-            .scrollIndicators(.hidden)
         }
-        .overlay(alignment: .topTrailing) {
-            Button { dismiss() } label: {
-                Image(systemName: "xmark")
-                    .font(.system(size: 13, weight: .bold))
-                    .foregroundStyle(Theme.ink)
-                    .frame(width: 34, height: 34)
-            }
-            .chunky(Theme.sand, radius: 12, depth: 3)
-            .padding(16)
-        }
-    }
-
-    // MARK: Title
-
-    private var title: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(loc.t("analytics.title"))
-                .font(Theme.title(28))
-                .foregroundStyle(Theme.ink)
-                .fixedSize(horizontal: false, vertical: true)
-            Text(loc.t("analytics.subtitle"))
-                .font(Theme.body(14))
-                .foregroundStyle(Theme.inkSoft)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .padding(.trailing, 44) // clear the close button
-        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     // MARK: The four numbers
 
     private var tiles: some View {
         HStack(spacing: 10) {
-            tile(String(settings.learned.count), loc.t("analytics.stat.known"), Theme.green)
-            tile(String(settings.learningNow.count), loc.t("analytics.stat.learning"), Theme.gold)
-            tile(String(settings.log.studyDays(calendar: calendar).count),
-                 loc.t("analytics.stat.days"), Theme.ink)
-            tile(String(settings.log.streak(now: now, calendar: calendar)),
-                 loc.t("analytics.stat.streak"), Theme.ink)
+            tile(.check, String(settings.learned.count), loc.t("analytics.stat.known"))
+            tile(.sprout, String(settings.learningNow.count), loc.t("analytics.stat.learning"))
+            tile(.calendar, String(settings.log.studyDays(calendar: calendar).count),
+                 loc.t("analytics.stat.days"))
+            tile(.flame, String(settings.log.streak(now: now, calendar: calendar)),
+                 loc.t("analytics.stat.streak"))
         }
     }
 
-    private func tile(_ value: String, _ label: String, _ color: Color) -> some View {
-        VStack(spacing: 4) {
+    /// The object says which number this is; the caption is only there to
+    /// confirm it.
+    private func tile(_ icon: Icon3D, _ value: String, _ label: String) -> some View {
+        VStack(spacing: 2) {
+            LofiIcon(icon, size: 40, animated: false)
             Text(value)
-                .font(Theme.pixel(20))
-                .foregroundStyle(color)
+                .font(Theme.rounded(22, .black).monospacedDigit())
+                .foregroundStyle(Theme.ink)
             Text(label)
-                .font(Theme.label(9))
+                .font(Theme.rounded(11, .heavy))
                 .foregroundStyle(Theme.inkSoft)
                 .multilineTextAlignment(.center)
-                .lineLimit(2)
-                .minimumScaleFactor(0.8)
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 12)
-        .padding(.horizontal, 6)
-        .plate(Theme.surface, radius: Theme.Radius.chip)
+        .padding(.vertical, 10)
+        .padding(.horizontal, 4)
+        .plate(Theme.surface, radius: 20)
     }
 
     // MARK: The days
@@ -135,12 +100,8 @@ struct AnalyticsView: View {
 
     private func square(day: Date, studied: Bool) -> some View {
         let future = calendar.startOfDay(for: day) > calendar.startOfDay(for: now)
-        return RoundedRectangle(cornerRadius: 3, style: .continuous)
-            .fill(studied ? Theme.gold : Theme.sand.opacity(future ? 0.35 : 1))
-            .overlay(
-                RoundedRectangle(cornerRadius: 3, style: .continuous)
-                    .strokeBorder(Theme.ink.opacity(studied ? 0.55 : 0.12), lineWidth: 1)
-            )
+        return RoundedRectangle(cornerRadius: 5, style: .continuous)
+            .fill(studied ? Theme.primary : Theme.sand.opacity(future ? 0.4 : 1))
             .aspectRatio(1, contentMode: .fit)
     }
 
@@ -170,35 +131,30 @@ struct AnalyticsView: View {
                     .foregroundStyle(Theme.inkSoft)
                     .fixedSize(horizontal: false, vertical: true)
             } else {
-                Text(loc.t("analytics.due.hint"))
-                    .font(Theme.body(12))
-                    .foregroundStyle(Theme.inkSoft)
-                    .fixedSize(horizontal: false, vertical: true)
-
                 ForEach(due) { item in
                     if let step = settings.step(item.stepID) {
                         Button { onOpen(step) } label: {
-                            HStack(spacing: 10) {
-                                PositionMedallion(step: step, size: 38)
+                            HStack(spacing: 12) {
+                                PositionMedallion(step: step, size: 46)
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(step.name)
-                                        .font(Theme.title(15))
+                                        .font(Theme.rounded(15.5, .heavy))
                                         .foregroundStyle(Theme.ink)
                                         .multilineTextAlignment(.leading)
                                     Text(reasonLine(item))
-                                        .font(Theme.label(10))
+                                        .font(Theme.rounded(12, .heavy))
                                         .foregroundStyle(Theme.inkSoft)
                                 }
                                 Spacer(minLength: 0)
-                                Image(systemName: "chevron.right")
-                                    .font(.system(size: 10, weight: .bold))
-                                    .foregroundStyle(Theme.inkSoft)
+                                Image(systemName: "chevron.forward")
+                                    .font(.system(size: 13, weight: .black))
+                                    .foregroundStyle(Theme.primary)
                             }
-                            .padding(.vertical, 8)
-                            .padding(.horizontal, 10)
+                            .padding(.vertical, 9)
+                            .padding(.horizontal, 12)
+                            .contentShape(Rectangle())
                         }
-                        .chunky(Theme.sand.opacity(0.7), radius: Theme.Radius.chip,
-                                depth: 2, haptic: .tap, sparks: false)
+                        .chunky(Theme.surface, radius: 20, depth: 4, haptic: .tap)
                     }
                 }
             }
@@ -295,9 +251,9 @@ struct AnalyticsView: View {
                 ForEach(grouped.keys.sorted(by: >), id: \.self) { day in
                     VStack(alignment: .leading, spacing: 5) {
                         Text(dayLabel(day).uppercased())
-                            .font(Theme.label(9))
-                            .foregroundStyle(Theme.gold)
-                            .tracking(0.8)
+                            .font(Theme.rounded(11, .black))
+                            .foregroundStyle(Theme.inkSoft)
+                            .tracking(0.6)
 
                         ForEach(grouped[day] ?? []) { event in
                             HStack(spacing: 7) {
@@ -349,11 +305,11 @@ struct AnalyticsView: View {
     // MARK: Bits
 
     private func sectionTitle(_ text: String, icon: String) -> some View {
-        HStack(spacing: 6) {
-            Image(systemName: icon).font(.system(size: 11))
-            Text(text.uppercased()).font(Theme.label(9)).tracking(0.8)
-        }
-        .foregroundStyle(Theme.gold)
+        Text(text)
+            .font(Theme.rounded(12.5, .black))
+            .textCase(.uppercase)
+            .tracking(0.6)
+            .foregroundStyle(Theme.primaryDeep)
     }
 
     /// Dates are written in the app's language, not the phone's: someone reading

@@ -1,107 +1,87 @@
 import SwiftUI
-import CoreText
 
-private final class ThemeBundleToken {}
-
-/// Visual identity: cream paper, warm sand, muted gold. Sober, no imagery, no
-/// hard black — the palette of an old manuscript rather than of an interface.
+/// Visual identity « Jardin » : warm beige page, white cards, a frank garden
+/// green for everything you can press, and gold kept as the one accent — the
+/// word being recited, a step in progress, a reward.
+///
+/// The shapes and the motion come from SelfTransfer (rounded SF, thick pastel
+/// outlines, buttons that sink on their edge, 3D clay icons). Only the palette
+/// is Salat's own.
 public enum Theme {
 
     // MARK: Palette
 
-    public static let paper      = Color(hex: 0xFBF6EC) // main background
-    public static let surface    = Color(hex: 0xFFFDF7) // cards
-    public static let sand       = Color(hex: 0xEFE3CC) // filled blocks
-    public static let border     = Color(hex: 0xE3D6B9)
-    public static let gold       = Color(hex: 0xC1962C) // accent
-    public static let goldSoft   = Color(hex: 0xE8D9A8)
-    public static let ink        = Color(hex: 0x2E2A22) // primary text
-    public static let inkSoft    = Color(hex: 0x7A6E5B) // secondary text
-    public static let green      = Color(hex: 0x5C7A5A) // "learned" marker
-    /// The face of a right answer. Sage washed into the cream rather than a
-    /// quiz-app green: the drill marks what you remembered, it does not cheer.
-    public static let greenSoft  = Color(hex: 0xD7E2D0)
+    public static let paper       = Color(hex: 0xFAF4E6) // page background
+    public static let surface     = Color(hex: 0xFFFFFF) // cards
+    public static let sand        = Color(hex: 0xF3EAD6) // filled beige blocks, quiet buttons
+    public static let border      = Color(hex: 0xE7DBC1) // card outlines
+    public static let line        = Color(hex: 0xF0E7D3) // separators inside a card
 
-    /// The sparks thrown on release. Cut from the same paper as everything
-    /// else — cream face, outlined. A saturated orange or yellow would be the
-    /// only thing in the app that is not paper, and it read as a foreign
-    /// effect dropped on top of the page.
-    ///
-    /// The outline is deeper than `border` on purpose: sparks land on the
-    /// sand of a button, and a light beige on sand is not an edge.
-    public static let sparkFace  = Color(hex: 0xFFFDF7)
-    public static let sparkEdge  = Color(hex: 0xB09863)
+    /// The green of the banner, the main button, the active tab.
+    public static let primary       = Color(hex: 0x2FA56F)
+    /// The edge under a green button, links, green text on a light ground.
+    public static let primaryDeep   = Color(hex: 0x1E7A50)
+    /// Selected rows, the active tab's pill, the posture medallion.
+    public static let primarySoft   = Color(hex: 0xE1F4E8)
+    public static let primaryBorder = Color(hex: 0xB9E4CB)
+
+    /// The accent: the word being said, a step in progress, a reward.
+    public static let gold        = Color(hex: 0xDE9A12)
+    public static let goldSoft    = Color(hex: 0xFCECC2)
+    public static let goldDeep    = Color(hex: 0xB67A0A)
+
+    public static let ink         = Color(hex: 0x1F3329) // primary text
+    public static let inkSoft     = Color(hex: 0x6C7B70) // secondary text
+
+    /// "Acquired", a right answer. Same hue as `primary` on purpose: knowing a
+    /// step and pressing the main button are the same good news.
+    public static let green       = Color(hex: 0x2FA56F)
+    public static let greenSoft   = Color(hex: 0xD3F0DF)
+
+    public static let danger      = Color(hex: 0xE5604F)
+
+    /// The sparks thrown when a button comes back up: gold on any ground.
+    public static let sparkFace   = Color(hex: 0xFFD45E)
+    public static let sparkEdge   = Color(hex: 0xDE9A12)
 
     // MARK: Radii
 
     public enum Radius {
-        public static let card: CGFloat = 22
-        public static let chip: CGFloat = 12
+        public static let card: CGFloat = 26
+        public static let chip: CGFloat = 16
         public static let bar: CGFloat  = 24
     }
 
     /// The margin between a card's outline and whatever it holds. One value for
     /// the whole app: cards of the same family with different rims read as
     /// misaligned, and a thin rim lets a long word touch the edge.
-    public static let cardPadding: CGFloat = 16
+    public static let cardPadding: CGFloat = 18
 
     // MARK: Type
 
-    /// Titles use a serif face — it reads as a book rather than as an app.
-    public static func title(_ size: CGFloat) -> Font {
-        .system(size: size, weight: .semibold, design: .serif)
+    /// Everything is SF Rounded: it is what makes the app read as friendly
+    /// rather than as a manuscript.
+    public static func rounded(_ size: CGFloat, _ weight: Font.Weight = .heavy) -> Font {
+        .system(size: size, weight: weight, design: .rounded)
     }
 
-    public static func body(_ size: CGFloat = 16) -> Font {
-        .system(size: size, weight: .regular, design: .default)
-    }
+    public static func title(_ size: CGFloat) -> Font { rounded(size, .black) }
 
-    public static func label(_ size: CGFloat = 12) -> Font {
-        .system(size: size, weight: .semibold, design: .default)
-    }
+    public static func body(_ size: CGFloat = 16) -> Font { rounded(size, .semibold) }
 
-    // MARK: Pixel face
+    public static func label(_ size: CGFloat = 12) -> Font { rounded(size, .heavy) }
 
-    /// The pixel face from 5min, used **only for numbers and short uppercase
-    /// labels** — step counters, "12 / 14", the small gold captions. Never for
-    /// the prayer text, the translations or the Arabic: `04b_30` has no Arabic
-    /// at all, and a sacred text set in an arcade face would be grotesque.
-    /// This is the app's furniture, not its content.
+    /// Numbers — step counters, "12 / 14", seconds. It used to be a pixel face;
+    /// the name stayed because every counter in the app calls it.
     public static func pixel(_ size: CGFloat) -> Font {
-        registerPixelFont()
-        guard let family = pixelFamily else {
-            // Rounded and heavy is the closest vector stand-in, and it covers
-            // the accents 04b_30 is missing.
-            return .system(size: size * 0.78, weight: .heavy, design: .rounded)
-        }
-        return .custom(family, size: snap(size))
+        rounded(size * 0.92, .black).monospacedDigit()
     }
 
-    /// The face is drawn on an 8px grid. A size that is not a multiple of 8
-    /// falls between two pixels and the stems of an `M` stop matching — the
-    /// whole point of a pixel face goes with it.
-    public static func snap(_ size: CGFloat) -> CGFloat {
-        max(8, (size / 8).rounded() * 8)
-    }
+    /// Kept for the call sites that sized the old pixel face on its grid.
+    public static func snap(_ size: CGFloat) -> CGFloat { size }
 
-    private static var pixelFamily: String?
-    private static var pixelRegistrationTried = false
-
-    /// Registering through CoreText rather than `UIAppFonts` avoids having to
-    /// hand-write an Info.plist: the project builds with
-    /// `GENERATE_INFOPLIST_FILE = YES`, and a hand-added plist would be
-    /// overwritten. It also works from the widget extension unchanged.
-    public static func registerPixelFont() {
-        guard !pixelRegistrationTried else { return }
-        pixelRegistrationTried = true
-        let bundle = Bundle(for: ThemeBundleToken.self)
-        guard let url = bundle.url(forResource: "04b30", withExtension: "ttf"),
-              let data = NSData(contentsOf: url),
-              let provider = CGDataProvider(data: data),
-              let font = CGFont(provider) else { return }
-        CTFontManagerRegisterGraphicsFont(font, nil)
-        pixelFamily = font.postScriptName as String?
-    }
+    /// Nothing to register any more; the app and the widget still call it.
+    public static func registerPixelFont() {}
 
     /// Arabic needs a face that carries the diacritics without crushing them.
     public static func arabic(_ size: CGFloat = 26) -> Font {
@@ -110,15 +90,15 @@ public enum Theme {
 
     // MARK: Motion
 
-    public static let spring = Animation.spring(response: 0.35, dampingFraction: 0.78)
-    public static let softSpring = Animation.spring(response: 0.5, dampingFraction: 0.85)
+    public static let spring = Animation.spring(duration: 0.4, bounce: 0.25)
+    public static let softSpring = Animation.spring(duration: 0.5, bounce: 0.15)
 }
 
 // MARK: - Card surface
 
 public extension View {
-    /// Every card in the app is a `Plate` — an outlined face with a solid
-    /// bottom face under it. See `Plate.swift` for why that beats a shadow.
+    /// Every card in the app is a `Plate` — a white face with a thick pastel
+    /// outline. See `Plate.swift`.
     ///
     /// The inner margin belongs to the card, not to the call site: a card is an
     /// object with a rim, and text that runs into that rim reads as a bug. Pass
@@ -127,6 +107,9 @@ public extension View {
     func card(radius: CGFloat = Theme.Radius.card,
               padding: CGFloat = Theme.cardPadding) -> some View {
         self.padding(padding)
+            // A card with no padding holds rows that reach its edge: clipped,
+            // so a pressed first or last row keeps the card's rounded corners.
+            .clipShape(RoundedRectangle(cornerRadius: padding == 0 ? radius : 0, style: .continuous))
             .plate(Theme.surface, radius: radius)
     }
 }
@@ -137,11 +120,13 @@ public extension View {
 /// stays crisp at any size and adds no weight to the widget.
 public struct StarLattice: View {
     public var spacing: CGFloat = 64
-    public var opacity: Double = 0.055
+    public var opacity: Double = 0.05
+    public var color: Color = Theme.gold
 
-    public init(spacing: CGFloat = 64, opacity: Double = 0.055) {
+    public init(spacing: CGFloat = 64, opacity: Double = 0.05, color: Color = Theme.gold) {
         self.spacing = spacing
         self.opacity = opacity
+        self.color = color
     }
 
     public var body: some View {
@@ -154,8 +139,8 @@ public struct StarLattice: View {
                 while x < size.width + spacing {
                     context.stroke(
                         Self.star(center: CGPoint(x: x, y: y), radius: r),
-                        with: .color(Theme.gold.opacity(opacity)),
-                        lineWidth: 1
+                        with: .color(color.opacity(opacity)),
+                        lineWidth: 1.5
                     )
                     x += spacing
                 }
@@ -199,34 +184,27 @@ public extension Color {
 
 // MARK: - Step numeral
 
-/// The step number as a pixel numeral on a sand chip.
-///
-/// It is a bare numeral rather than "Step 5" because `04b_30` has no `É`, and
-/// the French "ÉTAPE" fell back glyph by glyph into a visible mix of two
-/// typefaces. Digits are the one thing the pixel face renders identically in
-/// every language the app ships.
+/// The step number in a small green pill. A bare numeral rather than "Step 5":
+/// digits are the one thing that reads identically in the fourteen languages.
 public struct StepBadge: View {
     public let order: Int
     public var size: CGFloat = 12
+    /// White when the badge sits on a mint ground, where its own mint vanishes.
+    public var fill: Color = Theme.primarySoft
 
-    public init(order: Int, size: CGFloat = 12) {
+    public init(order: Int, size: CGFloat = 12, fill: Color = Theme.primarySoft) {
         self.order = order
         self.size = size
+        self.fill = fill
     }
 
     public var body: some View {
-        Text(String(format: "%02d", order))
-            .font(Theme.pixel(size))
-            .foregroundStyle(Theme.gold)
-            .padding(.horizontal, 7)
-            .padding(.vertical, 3)
-            .background(
-                RoundedRectangle(cornerRadius: 6, style: .continuous)
-                    .fill(Theme.sand)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 6, style: .continuous)
-                            .strokeBorder(Theme.gold.opacity(0.45), lineWidth: 1)
-                    )
-            )
+        Text(String(order))
+            .font(Theme.rounded(size, .black).monospacedDigit())
+            .foregroundStyle(Theme.primaryDeep)
+            .padding(.horizontal, size * 0.62)
+            .padding(.vertical, size * 0.2)
+            .frame(minWidth: size * 2)
+            .background(Capsule().fill(fill))
     }
 }

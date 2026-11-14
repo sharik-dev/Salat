@@ -14,6 +14,9 @@ final class AppSettings {
         didSet {
             SharedStore.defaults.set(languagePreference.rawValue, forKey: SharedStore.Key.language)
             refreshContent()
+            // The widget's verses carry their translation: another language
+            // means looking them up again.
+            resolveWidgetVerses()
             WidgetCenter.shared.reloadAllTimelines()
         }
     }
@@ -76,6 +79,13 @@ final class AppSettings {
         }
     }
 
+    /// The sound of the Qur'an feed. Remembered: someone who reads it in
+    /// silence on the train should not be recited at the next time they open
+    /// the tab. Stored, like every preference a view reads (see `reciterID`).
+    var quranMuted: Bool {
+        didSet { UserDefaults.standard.set(quranMuted, forKey: "quran.muted") }
+    }
+
     var widgetFocus: WidgetFocus {
         didSet {
             SharedStore.defaults.set(widgetFocus.rawValue, forKey: SharedStore.Key.widgetFocus)
@@ -85,6 +95,83 @@ final class AppSettings {
 
     var widgetPrefs: WidgetPrefs {
         WidgetPrefs(scope: widgetScope, pinnedStepID: widgetPinnedStep, focus: widgetFocus)
+    }
+
+    /// What the widget would draw right now, for the previews inside the app
+    /// (its own page, the paywall). Same plan, same clock as the extension;
+    /// never the locked card, since the preview is how the widget is sold.
+    func widgetPreviewEntry(at date: Date = Date()) -> CarouselEntry? {
+        if widgetScope == .quran,
+           let slot = CarouselPlan.verseSlot(at: date, verses: widgetVerses) {
+            return CarouselEntry(date: date, verse: slot.verse,
+                                 position: slot.position, total: slot.total,
+                                 localizer: localizer, focus: widgetFocus)
+        }
+        guard let slot = CarouselPlan.slot(at: date, steps: steps, log: log,
+                                           prefs: widgetPrefs) else { return nil }
+        return CarouselEntry(date: date, step: slot.step,
+                             position: slot.position, total: slot.total,
+                             localizer: localizer, focus: widgetFocus)
+    }
+
+    // MARK: - Qur'an excerpts on the widget
+
+    /// The passages of the Qur'an the reader put on the widget, in the order
+    /// they were added. Every write looks the verses up again.
+    var widgetPassages: [WidgetPassage] {
+        didSet {
+            guard widgetPassages != oldValue else { return }
+            QuranExcerpts.savePassages(widgetPassages)
+            resolveWidgetVerses()
+        }
+    }
+
+    /// The same passages as text: what the widget reads from the shared suite,
+    /// and what the preview in the app draws. Stored, so the preview follows.
+    private(set) var widgetVerses: [WidgetVerse]
+
+    /// Bumped at every lookup, so a slow one that finishes after a newer one
+    /// cannot write an older list over it.
+    @ObservationIgnored private var verseGeneration = 0
+
+    func addWidgetPassage(_ passage: WidgetPassage) {
+        guard !widgetPassages.contains(passage) else { return }
+        widgetPassages.append(passage)
+    }
+
+    func removeWidgetPassage(_ passage: WidgetPassage) {
+        widgetPassages.removeAll { $0 == passage }
+    }
+
+    /// Passages into verses, off the main thread: the Qur'an and one
+    /// translation are a couple of megabytes of JSON to decode, and this runs
+    /// under a tap. The widget is only nudged once the text is in the suite.
+    private func resolveWidgetVerses() {
+        verseGeneration += 1
+        let generation = verseGeneration
+        let passages = widgetPassages
+        let code = resolvedLanguage.rawValue
+
+        guard !passages.isEmpty else {
+            widgetVerses = []
+            QuranExcerpts.saveVerses([], language: code)
+            WidgetCenter.shared.reloadAllTimelines()
+            return
+        }
+
+        Task { @MainActor [weak self] in
+            let verses = await Task.detached(priority: .userInitiated) { () -> [WidgetVerse]? in
+                guard let quran = Quran.shared else { return nil }
+                return QuranExcerpts.resolve(passages,
+                                             names: quran.surahs.map(\.latin),
+                                             arabic: quran.arabic,
+                                             translation: QuranTranslation.load(code: code)?.verses)
+            }.value
+            guard let self, let verses, self.verseGeneration == generation else { return }
+            self.widgetVerses = verses
+            QuranExcerpts.saveVerses(verses, language: code)
+            WidgetCenter.shared.reloadAllTimelines()
+        }
     }
 
     /// The reminder time as a `Date`, for the picker. Only the two components
@@ -120,10 +207,26 @@ final class AppSettings {
         let minute = SharedStore.defaults.object(forKey: SharedStore.Key.reminderMinute) as? Int
         reminderHour = hour ?? 19
         reminderMinute = minute ?? 30
+        quranMuted = UserDefaults.standard.bool(forKey: "quran.muted") || LaunchOptions.forcesQuranMuted
         let prefs = WidgetPrefs.load()
-        widgetScope = prefs.scope
+        widgetScope = LaunchOptions.widgetScope.flatMap(WidgetScope.init(rawValue:)) ?? prefs.scope
         widgetPinnedStep = prefs.pinnedStepID
         widgetFocus = prefs.focus
+        widgetPassages = QuranExcerpts.passages()
+        widgetVerses = QuranExcerpts.verses()
+        // Screenshot fixture: `-widgetScope quran` on a phone that never
+        // picked a passage starts from the seed, as the menu does.
+        if widgetScope == .quran, widgetPassages.isEmpty {
+            widgetPassages = QuranExcerpts.seed
+            QuranExcerpts.savePassages(widgetPassages)
+        }
+        // The verses were written in the language of the day they were picked.
+        // If the phone has changed language since (it can, with the app
+        // closed: "match my device"), or a passage has no text yet, look again.
+        if !widgetPassages.isEmpty,
+           widgetVerses.isEmpty || QuranExcerpts.versesLanguage != resolved.rawValue {
+            resolveWidgetVerses()
+        }
         // Screenshot fixture: the drill has nothing to ask on a phone where
         // nothing has been read. Debug builds only — `LaunchOptions` returns
         // nil everywhere else.

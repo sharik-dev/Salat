@@ -75,15 +75,13 @@ struct RecitationPanel: View {
     // MARK: Header
 
     private var header: some View {
-        HStack(spacing: 8) {
-            Image(systemName: "mic")
-                .font(.system(size: 11))
-            Text(loc.t("audio.mine.title").uppercased())
-                .font(Theme.label(9))
-                .tracking(0.8)
-            Spacer()
+        HStack(spacing: 12) {
+            IconTile(icon: .mic, animated: recorder.isRecording)
+            Text(loc.t("audio.mine.title"))
+                .font(Theme.rounded(17, .black))
+                .foregroundStyle(Theme.ink)
+            Spacer(minLength: 0)
         }
-        .foregroundStyle(Theme.gold)
     }
 
     // MARK: Record
@@ -110,18 +108,15 @@ struct RecitationPanel: View {
                                            ? step.arabicLines[line] : nil)
                     }
                 } label: {
-                    HStack(spacing: 7) {
+                    HStack(spacing: 8) {
                         Image(systemName: active ? "stop.fill" : "mic.fill")
-                            .font(.system(size: 13, weight: .bold))
+                            .font(.system(size: 15, weight: .black))
                         Text(active ? loc.t("audio.stop") : loc.t(mine == nil ? "audio.record" : "audio.retake"))
-                            .font(Theme.label(13))
                     }
-                    .foregroundStyle(Theme.ink)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 11)
                 }
-                .chunky(active ? Theme.gold : Theme.sand, radius: 13, depth: 4,
-                        haptic: .press, sparks: false)
+                // Red only while the microphone is open: it is the one moment
+                // the button means "this is being captured".
+                .buttonStyle(.cta(active ? .danger : (mine == nil ? .primary : .secondary), height: 52))
                 .accessibilityIdentifier("audio.record")
 
                 if active {
@@ -130,14 +125,14 @@ struct RecitationPanel: View {
                     // that is working, and you only find out on playback.
                     HStack(spacing: 6) {
                         Circle()
-                            .fill(Theme.gold)
+                            .fill(Theme.danger)
                             .frame(width: 10 + 12 * recorder.level, height: 10 + 12 * recorder.level)
                             .animation(.linear(duration: 0.05), value: recorder.level)
                             .frame(width: 22, height: 22)
                         Text(String(format: "%.1f", recorder.elapsed))
-                            .font(Theme.pixel(11))
-                            .foregroundStyle(Theme.gold)
-                            .frame(width: 34, alignment: .leading)
+                            .font(Theme.rounded(14, .black).monospacedDigit())
+                            .foregroundStyle(Theme.danger)
+                            .frame(width: 38, alignment: .leading)
                     }
                 }
             }
@@ -163,7 +158,7 @@ struct RecitationPanel: View {
             traceRow(
                 label: loc.t("audio.mine"),
                 trace: mineTrace,
-                color: Theme.ink,
+                color: Theme.primary,
                 longest: longest,
                 voice: .mine,
                 url: mine
@@ -175,33 +170,32 @@ struct RecitationPanel: View {
                         guard let clip, let mine else { return }
                         playBackToBack(clip: clip, mine: mine)
                     } label: {
-                        HStack(spacing: 6) {
+                        HStack(spacing: 7) {
                             Image(systemName: "arrow.left.arrow.right")
-                                .font(.system(size: 11, weight: .bold))
-                            Text(loc.t("audio.both")).font(Theme.label(12))
+                                .font(.system(size: 13, weight: .black))
+                            Text(loc.t("audio.both")).font(Theme.rounded(14.5, .heavy))
                         }
-                        .foregroundStyle(Theme.ink)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 9)
+                        .foregroundStyle(Theme.primaryDeep)
+                        .frame(maxWidth: .infinity, minHeight: 44)
                     }
-                    .chunky(Theme.goldSoft, radius: 11, depth: 3, haptic: .tap, sparks: false)
+                    .chunky(Theme.surface, radius: 16, depth: 4, haptic: .tap)
                 }
 
                 Button {
                     player.stop()
                     recorder.delete(step: step.id, line: line)
                 } label: {
-                    Image(systemName: "trash")
-                        .font(.system(size: 12, weight: .bold))
-                        .foregroundStyle(Theme.inkSoft)
-                        .frame(width: 42, height: 34)
+                    Image(systemName: "trash.fill")
+                        .font(.system(size: 14, weight: .black))
+                        .foregroundStyle(Theme.danger)
+                        .frame(width: 50, height: 44)
                 }
-                .chunky(Theme.sand, radius: 11, depth: 0, haptic: .tap, sparks: false)
+                .chunky(Theme.surface, radius: 16, depth: 4, haptic: .tap)
                 .accessibilityLabel(loc.t("audio.delete"))
             }
 
             Text(loc.t("audio.compare.hint"))
-                .font(Theme.body(11))
+                .font(Theme.rounded(12.5, .semibold))
                 .foregroundStyle(Theme.inkSoft)
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -220,25 +214,24 @@ struct RecitationPanel: View {
                 }
             } label: {
                 Image(systemName: isPlaying ? "stop.fill" : "play.fill")
-                    .font(.system(size: 11, weight: .bold))
-                    .foregroundStyle(Theme.ink)
-                    .frame(width: 32, height: 30)
+                    .font(.system(size: 13, weight: .black))
+                    .foregroundStyle(voice == .reciter ? Theme.goldDeep : Theme.primaryDeep)
+                    .frame(width: 40, height: 38)
             }
-            .chunky(voice == .reciter ? Theme.goldSoft : Theme.sand,
-                    radius: 10, depth: 0, haptic: .tap, sparks: false)
+            .chunky(voice == .reciter ? Theme.goldSoft : Theme.primarySoft,
+                    radius: 13, depth: 3, haptic: .tap)
             .disabled(url == nil)
 
             VStack(alignment: .leading, spacing: 3) {
                 HStack {
                     Text(label)
-                        .font(Theme.label(9))
-                        .tracking(0.6)
-                        .foregroundStyle(color)
+                        .font(Theme.rounded(12, .black))
+                        .foregroundStyle(voice == .reciter ? Theme.goldDeep : Theme.primaryDeep)
                         .lineLimit(1)
                     Spacer()
                     if let trace {
                         Text(String(format: "%.1fs", trace.duration))
-                            .font(Theme.pixel(9))
+                            .font(Theme.rounded(11.5, .heavy).monospacedDigit())
                             .foregroundStyle(Theme.inkSoft)
                     }
                 }

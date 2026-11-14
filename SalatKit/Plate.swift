@@ -3,82 +3,83 @@ import SwiftUI
 import UIKit
 #endif
 
-/// The form language borrowed from **5min**: a rounded rectangle with a thick
-/// ink outline and a solid bottom face extruded straight down — no blur, no
-/// drop shadow. That bottom face is what makes a block read as an *object set
-/// down* rather than a coloured area, and it is what makes the app feel warm
-/// and handled rather than printed.
+/// The form language, borrowed from **SelfTransfer**: a rounded rectangle with
+/// a thick *pastel* outline for anything you read (a card), and a slab sitting
+/// on a darker edge for anything you press (a button). No blur, no drop shadow.
 ///
-/// Only the shapes are borrowed. 5min sits on dark felt with saturated
-/// accents; here the same forms are cut in cream, sand and gold, and the
-/// outline is the brown ink — a near-black rule on cream would punch holes in
-/// the page instead of drawing edges.
+/// The outline is never ink. On white and beige a dark rule draws boxes; a
+/// pastel one draws objects, and that is most of what makes the app friendly.
 
 public extension Theme {
-    /// Outline weight. Thinner than 5min's 3pt: the contrast between brown ink
-    /// and cream is already high, and 3pt on this palette reads as a border,
-    /// not as an edge.
-    static let stroke: CGFloat = 2
+    /// Outline weight of cards and buttons.
+    static let stroke: CGFloat = 2.5
 
-    /// Extrusion at rest, and once pressed. It is this delta that is felt —
-    /// not a colour change, which a thumb covers anyway.
+    /// How far a button's face travels down onto its edge.
     static let chunk: CGFloat = 5
-    static let chunkPressed: CGFloat = 1.5
+    static let chunkPressed: CGFloat = 0
 
-    /// The bottom face of `color`: the same hue, darkened.
-    static func shade(_ color: Color, _ amount: CGFloat = 0.28) -> Color {
+    /// The same hue, darkened: the edge of a button of an arbitrary colour.
+    static func shade(_ color: Color, _ amount: CGFloat = 0.2) -> Color {
         #if canImport(UIKit)
         var h: CGFloat = 0, s: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
         UIColor(color).getHue(&h, saturation: &s, brightness: &b, alpha: &a)
-        return Color(hue: h, saturation: min(s * 1.10, 1), brightness: b * (1 - amount), opacity: a)
+        return Color(hue: h, saturation: min(s * 1.15, 1), brightness: b * (1 - amount), opacity: a)
         #else
         return color.opacity(0.7)
         #endif
     }
+
+    /// The outline (and, for a button, the edge) that goes with a face colour.
+    /// The house colours get a hand-picked partner; anything else is darkened.
+    static func edge(for color: Color) -> Color {
+        switch color {
+        case Theme.surface, Theme.paper: return Theme.border
+        case Theme.sand:                 return Color(hex: 0xDFD0AC)
+        case Theme.primary, Theme.green: return Theme.primaryDeep
+        case Theme.primarySoft, Theme.greenSoft: return Theme.primaryBorder
+        case Theme.gold:                 return Theme.goldDeep
+        case Theme.goldSoft:             return Color(hex: 0xEFD286)
+        case Theme.danger:               return Color(hex: 0xC2402F)
+        default:                         return shade(color)
+        }
+    }
 }
 
-// MARK: - The plate
+// MARK: - The plate (a card)
 
-/// A flat top face, an ink outline, and a bottom face of the same hue darkened.
-/// The base is drawn as its own shape offset downward rather than as a thicker
-/// bottom border, because a border can only be one colour and two are needed:
-/// ink around, darkened hue underneath.
+/// A flat face and a pastel outline. `depth` adds a solid edge underneath for
+/// the rare card that should read as an object you could pick up.
 public struct Plate<Content: View>: View {
     var color: Color
     var radius: CGFloat
     var depth: CGFloat
     var border: CGFloat
+    var stroke: Color?
     @ViewBuilder var content: () -> Content
 
     public init(color: Color = Theme.surface,
                 radius: CGFloat = Theme.Radius.card,
-                depth: CGFloat = Theme.chunk,
+                depth: CGFloat = 0,
                 border: CGFloat = Theme.stroke,
+                stroke: Color? = nil,
                 @ViewBuilder content: @escaping () -> Content) {
         self.color = color
         self.radius = radius
         self.depth = depth
         self.border = border
+        self.stroke = stroke
         self.content = content
     }
 
     public var body: some View {
+        let shape = RoundedRectangle(cornerRadius: radius, style: .continuous)
+        let edge = stroke ?? Theme.edge(for: color)
         content()
             .background(
                 ZStack {
-                    RoundedRectangle(cornerRadius: radius, style: .continuous)
-                        .fill(Theme.shade(color))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: radius, style: .continuous)
-                                .strokeBorder(Theme.ink, lineWidth: border)
-                        )
-                        .offset(y: depth)
-                    RoundedRectangle(cornerRadius: radius, style: .continuous)
-                        .fill(color)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: radius, style: .continuous)
-                                .strokeBorder(Theme.ink, lineWidth: border)
-                        )
+                    if depth > 0 { shape.fill(edge).offset(y: depth) }
+                    shape.fill(color)
+                    shape.strokeBorder(edge, lineWidth: border)
                 }
             )
             .padding(.bottom, depth)
@@ -89,77 +90,51 @@ public extension View {
     /// Sets any view down on a plate.
     func plate(_ color: Color = Theme.surface,
                radius: CGFloat = Theme.Radius.card,
-               depth: CGFloat = Theme.chunk,
-               border: CGFloat = Theme.stroke) -> some View {
-        Plate(color: color, radius: radius, depth: depth, border: border) { self }
+               depth: CGFloat = 0,
+               border: CGFloat = Theme.stroke,
+               stroke: Color? = nil) -> some View {
+        Plate(color: color, radius: radius, depth: depth, border: border, stroke: stroke) { self }
     }
 }
 
 // MARK: - The button that sinks
 
-/// The top face travels down onto its base and the thickness shrinks. The
-/// haptic fires on the way *down* — that is the only moment it coincides with
-/// what the thumb is doing; played on release it lands after the fact.
-public struct ChunkyButtonStyle: ButtonStyle {
-    var color: Color
-    var radius: CGFloat
-    var depth: CGFloat
-    /// What the finger feels on the way down. `nil` for a silent button.
-    var haptic: Haptic?
-    /// Whether gold stars are thrown on release.
-    var sparks: Bool
-
-    public init(color: Color = Theme.goldSoft,
-                radius: CGFloat = Theme.Radius.chip,
-                depth: CGFloat = Theme.chunk,
-                haptic: Haptic? = .tap,
-                sparks: Bool = true) {
-        self.color = color
-        self.radius = radius
-        self.depth = depth
-        self.haptic = haptic
-        self.sparks = sparks
-    }
-
-    public func makeBody(configuration: Configuration) -> some View {
-        ChunkyButtonBody(configuration: configuration, color: color,
-                         radius: radius, depth: depth,
-                         haptic: haptic, sparks: sparks)
-    }
-}
-
-/// The body is its own view rather than the contents of `makeBody`: it needs a
-/// `@State` to hold the live bursts, and a `ButtonStyle` has none.
-private struct ChunkyButtonBody: View {
-    let configuration: ButtonStyleConfiguration
+/// A slab on its edge, the way Duolingo does it: on press the face drops in one
+/// go until it covers the edge (no bounce, no squash); on release it comes back
+/// up on a spring that overshoots a little. A lightning tap stays down for
+/// `minDown`, so the press is always seen.
+///
+/// The haptic fires on the way *down* — that is the only moment it coincides
+/// with what the thumb is doing.
+struct ChunkyFace<Label: View>: View {
+    let isPressed: Bool
+    let label: Label
     let color: Color
+    var edge: Color?
     let radius: CGFloat
     let depth: CGFloat
     let haptic: Haptic?
     let sparks: Bool
 
-    /// One entry per live burst. Rapid taps stack instead of cutting each
-    /// other — an interrupted effect makes the second tap feel unregistered.
+    private let minDown: Double = 0.09
+
+    @State private var down = false
+    @State private var downAt = Date.distantPast
+    @State private var token = 0
     @State private var bursts: [UUID] = []
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        let pressed = configuration.isPressed
-        let travel = depth - Theme.chunkPressed
+        let shape = RoundedRectangle(cornerRadius: radius, style: .continuous)
+        let rim = edge ?? Theme.edge(for: color)
 
         // Both shapes go in `background`, never in a `ZStack` with the label: a
         // RoundedRectangle is greedy and would impose its size instead of
-        // receiving it, which blows a tab button up to fill the screen.
-        configuration.label
-            .background(
-                RoundedRectangle(cornerRadius: radius, style: .continuous)
-                    .fill(color)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: radius, style: .continuous)
-                            .strokeBorder(Theme.ink, lineWidth: Theme.stroke)
-                    )
-            )
-            // The stars sit on the face and travel with it: they leave the
-            // button, not the spot the button used to occupy.
+        // receiving it.
+        label
+            .background(shape.fill(color))
+            .overlay(shape.fill(.black.opacity(down ? 0.05 : 0)).allowsHitTesting(false))
+            .overlay(shape.strokeBorder(rim, lineWidth: Theme.stroke).allowsHitTesting(false))
             .overlay(
                 ZStack {
                     ForEach(bursts, id: \.self) { _ in
@@ -169,24 +144,29 @@ private struct ChunkyButtonBody: View {
                 }
                 .allowsHitTesting(false)
             )
-            .offset(y: pressed ? travel : 0)
-            .background(
-                // The base never moves: it is the ground. It takes the label's
-                // size, since `offset` does not change the layout frame.
-                RoundedRectangle(cornerRadius: radius, style: .continuous)
-                    .fill(Theme.shade(color))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: radius, style: .continuous)
-                            .strokeBorder(Theme.ink, lineWidth: Theme.stroke)
-                    )
-                    .offset(y: depth)
-            )
+            // The face comes down onto the edge, which never moves.
+            .offset(y: down ? depth : 0)
+            .background(shape.fill(rim).offset(y: depth))
             .padding(.bottom, depth)
-            .animation(.spring(response: 0.16, dampingFraction: 0.7), value: pressed)
-            .onChange(of: pressed) { _, isPressed in
-                // Down: the only instant the vibration coincides with what the
-                // finger is doing. Played on release it arrives after the fact.
-                if isPressed { haptic?.play() } else if sparks { fireBurst() }
+            .onChange(of: isPressed) { _, isDown in
+                token += 1
+                if isDown {
+                    downAt = .now
+                    haptic?.play()
+                    withAnimation(.easeOut(duration: 0.05)) { down = true }
+                } else {
+                    let mine = token
+                    let wait = max(0, minDown - Date.now.timeIntervalSince(downAt))
+                    Task { @MainActor in
+                        if wait > 0 { try? await Task.sleep(for: .seconds(wait)) }
+                        guard mine == token else { return }
+                        withAnimation(reduceMotion ? .easeOut(duration: 0.12)
+                                                   : .spring(duration: 0.32, bounce: 0.5)) {
+                            down = false
+                        }
+                        if sparks { fireBurst() }
+                    }
+                }
             }
     }
 
@@ -201,13 +181,121 @@ private struct ChunkyButtonBody: View {
     }
 }
 
-public extension View {
-    func chunky(_ color: Color = Theme.goldSoft,
+/// The free-form chunky button: the call site brings its own label, padding
+/// and colours. Used for chips, rows and anything that is not *the* button of
+/// the screen — that one is `.cta()`.
+public struct ChunkyButtonStyle: ButtonStyle {
+    var color: Color
+    var radius: CGFloat
+    var depth: CGFloat
+    /// What the finger feels on the way down. `nil` for a silent button.
+    var haptic: Haptic?
+    /// Whether gold sparks are thrown on release. Off by default: sparks are a
+    /// reward, and a reward on every tap is wallpaper.
+    var sparks: Bool
+
+    public init(color: Color = Theme.sand,
                 radius: CGFloat = Theme.Radius.chip,
                 depth: CGFloat = Theme.chunk,
                 haptic: Haptic? = .tap,
-                sparks: Bool = true) -> some View {
+                sparks: Bool = false) {
+        self.color = color
+        self.radius = radius
+        self.depth = depth
+        self.haptic = haptic
+        self.sparks = sparks
+    }
+
+    public func makeBody(configuration: Configuration) -> some View {
+        ChunkyFace(isPressed: configuration.isPressed, label: configuration.label,
+                   color: color, radius: radius, depth: depth, haptic: haptic, sparks: sparks)
+    }
+}
+
+public extension View {
+    func chunky(_ color: Color = Theme.sand,
+                radius: CGFloat = Theme.Radius.chip,
+                depth: CGFloat = Theme.chunk,
+                haptic: Haptic? = .tap,
+                sparks: Bool = false) -> some View {
         buttonStyle(ChunkyButtonStyle(color: color, radius: radius, depth: depth,
                                       haptic: haptic, sparks: sparks))
+    }
+}
+
+// MARK: - The button of the screen
+
+/// One wide button that owns the bottom of a screen: *Continue*, *Check*,
+/// *Start a round*. The style brings the type, the colours and the width, so
+/// every main action in the app is the same object.
+public struct CTAButtonStyle: ButtonStyle {
+    public enum Kind { case primary, secondary, gold, danger }
+
+    var kind: Kind
+    var height: CGFloat
+    var haptic: Haptic
+    var sparks: Bool
+
+    public init(kind: Kind = .primary, height: CGFloat = 58,
+                haptic: Haptic = .press, sparks: Bool = false) {
+        self.kind = kind
+        self.height = height
+        self.haptic = haptic
+        self.sparks = sparks
+    }
+
+    public func makeBody(configuration: Configuration) -> some View {
+        CTABody(configuration: configuration, kind: kind, height: height,
+                haptic: haptic, sparks: sparks)
+    }
+}
+
+private struct CTABody: View {
+    let configuration: ButtonStyleConfiguration
+    let kind: CTAButtonStyle.Kind
+    let height: CGFloat
+    let haptic: Haptic
+    let sparks: Bool
+    @Environment(\.isEnabled) private var isEnabled
+
+    private var fill: Color {
+        guard isEnabled else { return Theme.sand }
+        switch kind {
+        case .primary:   return Theme.primary
+        case .secondary: return Theme.surface
+        case .gold:      return Theme.goldSoft
+        case .danger:    return Theme.danger
+        }
+    }
+
+    private var foreground: Color {
+        guard isEnabled else { return Theme.inkSoft.opacity(0.7) }
+        switch kind {
+        case .primary, .danger: return .white
+        case .secondary:        return Theme.primaryDeep
+        case .gold:             return Theme.ink
+        }
+    }
+
+    var body: some View {
+        ChunkyFace(
+            isPressed: configuration.isPressed,
+            label: configuration.label
+                .font(Theme.rounded(18, .black))
+                .foregroundStyle(foreground)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+                .padding(.horizontal, 20)
+                .frame(maxWidth: .infinity, minHeight: height),
+            color: fill, radius: min(height / 2.4, 24), depth: isEnabled ? 6 : 3,
+            haptic: haptic, sparks: sparks
+        )
+    }
+}
+
+public extension ButtonStyle where Self == CTAButtonStyle {
+    static func cta(_ kind: CTAButtonStyle.Kind = .primary, height: CGFloat = 58,
+                    haptic: Haptic = .press, sparks: Bool = false) -> CTAButtonStyle {
+        CTAButtonStyle(kind: kind, height: height, haptic: haptic, sparks: sparks)
     }
 }

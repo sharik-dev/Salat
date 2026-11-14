@@ -1,3 +1,9 @@
-Small improvements under the hood.
+A brand new Salat.
 
-Salat now sends anonymous usage statistics (which step or tool is opened, how a round of exercises went) so we can see what helps you learn. No account, nothing that identifies you, and your voice recordings never leave your iPhone. Details in the privacy policy.
+• A whole new look: friendlier, greener, with 3D objects and calmer screens.
+• New Quran tab: the whole Quran, one verse at a time, with a reciter, a translation, the verses you love and your own private notes.
+• Salat Premium: an optional monthly subscription that unlocks the Home Screen widget and removes ads. The widget can now also show the Quran verses you choose.
+• A new welcome tour, and a simple guide to add the widget.
+• Softer click sounds.
+
+The Home Screen widget is now part of Salat Premium. The recitations of the Quran tab are downloaded when you listen to them; details in the privacy policy.

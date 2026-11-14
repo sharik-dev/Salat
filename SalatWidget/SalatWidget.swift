@@ -15,42 +15,78 @@ import SwiftUI
 struct CarouselProvider: TimelineProvider {
 
     func placeholder(in context: Context) -> CarouselEntry {
-        entry(at: Date())
+        Source().entry(at: Date(), unlocked: true)
     }
 
+    /// The widget gallery is the one place the widget shows its content
+    /// without a subscription: that is where it gets chosen, and a padlock
+    /// there would be choosing blind.
     func getSnapshot(in context: Context, completion: @escaping (CarouselEntry) -> Void) {
-        completion(entry(at: Date()))
+        completion(Source().entry(at: Date(), unlocked: context.isPreview || Premium.isActive))
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<CarouselEntry>) -> Void) {
         let now = Date()
+        let source = Source()
+        // Locked, there is nothing to rotate: one entry, and no refresh until
+        // the app says the subscription changed (`Store` reloads the timelines).
+        guard Premium.isActive else {
+            completion(Timeline(entries: [source.entry(at: now, unlocked: false)], policy: .never))
+            return
+        }
         let entries = (0..<CarouselClock.horizon).map { offset in
-            entry(at: now.addingTimeInterval(Double(offset) * CarouselClock.interval))
+            source.entry(at: now.addingTimeInterval(Double(offset) * CarouselClock.interval),
+                         unlocked: true)
         }
         completion(Timeline(entries: entries, policy: .atEnd))
     }
 
-    private func entry(at date: Date) -> CarouselEntry {
-        let language = SharedStore.language
-        let localizer = Localizer(language: language)
-        let steps = PrayerContent.steps(for: language)
+    /// Everything a timeline reads from the shared suite, read **once**: sixty
+    /// entries that each decoded the reader's verses again would be sixty
+    /// decodes of the same list.
+    private struct Source {
+        let localizer: Localizer
+        let steps: [PrayerStep]
         let prefs = WidgetPrefs.load()
+        let log = StudyLog.load()
+        let verses: [WidgetVerse]
 
-        guard let slot = CarouselPlan.slot(at: date, steps: steps,
-                                           log: StudyLog.load(), prefs: prefs) else {
-            let empty = PrayerStep(id: "", order: 0, image: "", posture: .standing,
-                                   repetitions: 1, spoken: false, arabic: "",
-                                   name: "", postureText: "", phonetic: "",
-                                   translation: "", note: "")
-            return CarouselEntry(date: date, step: empty, position: 0, total: 0,
-                                 localizer: localizer)
+        init() {
+            let language = SharedStore.language
+            localizer = Localizer(language: language)
+            steps = PrayerContent.steps(for: language)
+            verses = prefs.scope == .quran ? QuranExcerpts.verses() : []
         }
-        return CarouselEntry(date: date,
-                             step: slot.step,
-                             position: slot.position,
-                             total: slot.total,
-                             localizer: localizer,
-                             focus: prefs.focus)
+
+        func entry(at date: Date, unlocked: Bool) -> CarouselEntry {
+            // The widget is Salat Premium.
+            guard unlocked else { return .locked(date: date, localizer: localizer) }
+
+            // The reader's verses of the Qur'an, when that is what was asked
+            // for and there is at least one. With none, the prayer below is
+            // the fallback: a widget is never an empty card.
+            if let slot = CarouselPlan.verseSlot(at: date, verses: verses) {
+                return CarouselEntry(date: date, verse: slot.verse,
+                                     position: slot.position, total: slot.total,
+                                     localizer: localizer, focus: prefs.focus)
+            }
+
+            guard let slot = CarouselPlan.slot(at: date, steps: steps,
+                                               log: log, prefs: prefs) else {
+                let empty = PrayerStep(id: "", order: 0, image: "", posture: .standing,
+                                       repetitions: 1, spoken: false, arabic: "",
+                                       name: "", postureText: "", phonetic: "",
+                                       translation: "", note: "")
+                return CarouselEntry(date: date, step: empty, position: 0, total: 0,
+                                     localizer: localizer)
+            }
+            return CarouselEntry(date: date,
+                                 step: slot.step,
+                                 position: slot.position,
+                                 total: slot.total,
+                                 localizer: localizer,
+                                 focus: prefs.focus)
+        }
     }
 }
 
@@ -64,8 +100,12 @@ struct SalatCarouselWidget: Widget {
             CarouselWidgetView(entry: entry)
         }
         .configurationDisplayName("Salat")
-        .description("The positions of the prayer, one after another.")
+        .description("The steps of the prayer, or your verses of the Qur'an, one after another.")
         .supportedFamilies([.systemSmall, .systemMedium, .systemLarge, .accessoryRectangular])
+        // The green banner runs to the widget's edge; the view brings its own
+        // margins. It also makes the in-app preview exact: that one never had
+        // the system's margins around it.
+        .contentMarginsDisabled()
     }
 }
 

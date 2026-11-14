@@ -15,6 +15,12 @@ import AppTrackingTransparency
 /// without a GDPR message, it must still start and serve non-personalised ads;
 /// a path that forgets to start it means no ad at all until the next launch.
 ///
+/// **Salat Premium has no ads.** A subscriber is never asked for consent or
+/// tracking and the SDK never starts: `start()` and `breakPoint()` both stop
+/// at `Premium.isActive`. If the subscription lapses, `SalatApp` calls
+/// `start()` again and the usual path runs, which is why the premium check
+/// comes before `booted` is set.
+///
 /// Debug builds always use Google's demo units: tapping a real ad in your own
 /// app is the fastest way to get the AdMob account suspended. The real unit is
 /// used in Release only.
@@ -49,12 +55,13 @@ final class Ads: NSObject {
     private var booted = false
     private var initialized = false
     private var breaks = 0
-    private var lastAd = Date.distantPast
+    /// Read by `Nudges`: nothing of ours comes up right after an ad.
+    private(set) var lastAd = Date.distantPast
 
     /// Called once onboarding is out of the way: two system dialogs over the
     /// first page would be the app's first impression.
     func start() {
-        guard !booted else { return }
+        guard !Premium.isActive, !booted else { return }
         booted = true
         #if DEBUG
         // `-debugAdsNoConsent 1`: skips GDPR + ATT, to see ads in the simulator.
@@ -91,7 +98,7 @@ final class Ads: NSObject {
     /// A natural pause just happened. Every second one shows the interstitial
     /// if it is ready — otherwise nothing, and the count waits for the next.
     func breakPoint() {
-        guard initialized else { return }
+        guard initialized, !Premium.isActive else { return }
         breaks += 1
         guard let ad = interstitial else {
             // A failed load does not retry in a loop (offline, that drains the
@@ -110,6 +117,7 @@ final class Ads: NSObject {
                   let vc = Self.topController() else { interstitial = ad; return }
             showing = true
             lastAd = Date()
+            AdTally.bump()
             ad.present(from: vc)
         }
     }
@@ -169,6 +177,7 @@ final class Ads {
     static let shared = Ads()
     let privacyOptionsNeeded = false
     let showing = false
+    let lastAd = Date.distantPast
     func start() {}
     func breakPoint() {}
     func showPrivacyOptions() {}

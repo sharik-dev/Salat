@@ -32,7 +32,7 @@ struct FadeGalleryView: View {
                     }
                 }
 
-                Color.clear.frame(height: 92)
+                Color.clear.frame(height: 24)
             }
             .padding(.horizontal, 18)
             .padding(.top, 8)
@@ -49,17 +49,27 @@ private struct FadeGalleryCard: View {
 
     var body: some View {
         VStack(spacing: 8) {
-            PositionMedallion(step: step, size: 78)
-            StepBadge(order: step.order, size: 10)
+            PositionMedallion(step: step, size: 84)
+                .overlay(alignment: .bottomTrailing) {
+                    Text(String(step.order))
+                        .font(Theme.rounded(12, .black).monospacedDigit())
+                        .foregroundStyle(.white)
+                        .frame(minWidth: 24, minHeight: 24)
+                        .background(Circle().fill(Theme.primary))
+                        .overlay(Circle().strokeBorder(.white, lineWidth: 2.5))
+                        .offset(x: 2, y: 2)
+                }
             Text(step.name)
-                .font(Theme.title(15))
+                .font(Theme.rounded(15.5, .heavy))
                 .foregroundStyle(Theme.ink)
                 .multilineTextAlignment(.center)
-                .lineLimit(2)
+                // Two lines kept even for a short name: tiles of one row
+                // that differ in height read as a broken grid.
+                .lineLimit(2, reservesSpace: true)
                 .frame(maxWidth: .infinity)
         }
         .frame(maxWidth: .infinity)
-        .card(radius: 18, padding: 12)
+        .card(radius: 22, padding: 12)
     }
 }
 
@@ -181,20 +191,15 @@ struct FadeStepView: View {
     private var actionBar: some View {
         HStack(spacing: 12) {
             Text("\(level)/\(Fade.levels - 1)")
-                .font(Theme.pixel(14))
-                .foregroundStyle(Theme.gold)
+                .font(Theme.rounded(15, .black).monospacedDigit())
+                .foregroundStyle(Theme.primaryDeep)
 
             Button {
                 climb(by: 1)
             } label: {
                 Text(loc.t(level < Fade.levels - 1 ? "fade.hide" : "fade.show"))
-                    .font(Theme.label(15))
-                    .textCase(.uppercase)
-                    .foregroundStyle(Theme.ink)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 16)
             }
-            .chunky(Theme.goldSoft, radius: 16, haptic: .press, sparks: false)
+            .buttonStyle(.cta(.primary, haptic: .press))
             .accessibilityIdentifier("fade.step")
 
             Button {
@@ -215,16 +220,8 @@ struct FadeStepView: View {
         .padding(.top, 14)
         .padding(.bottom, 6)
         .background(alignment: .top) {
-            UnevenRoundedRectangle(topLeadingRadius: Theme.Radius.bar,
-                                   topTrailingRadius: Theme.Radius.bar,
-                                   style: .continuous)
-                .fill(Theme.surface)
-                .overlay(
-                    UnevenRoundedRectangle(topLeadingRadius: Theme.Radius.bar,
-                                           topTrailingRadius: Theme.Radius.bar,
-                                           style: .continuous)
-                        .strokeBorder(Theme.ink, lineWidth: Theme.stroke)
-                )
+            Theme.surface
+                .overlay(alignment: .top) { Theme.line.frame(height: 2.5) }
                 .ignoresSafeArea(edges: .bottom)
         }
     }

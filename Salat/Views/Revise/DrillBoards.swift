@@ -51,7 +51,7 @@ struct PairsBoard: View {
                       action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text(text)
-                .font(Theme.body(14))
+                .font(Theme.rounded(14.5, .heavy))
                 .foregroundStyle(done ? Theme.inkSoft : Theme.ink)
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
@@ -59,7 +59,7 @@ struct PairsBoard: View {
                 .padding(.horizontal, 8)
                 .padding(.vertical, 10)
         }
-        .chunky(face, radius: 14, haptic: lit ? nil : .select, sparks: false)
+        .chunky(face, radius: 18, haptic: lit ? nil : .select)
         .disabled(locked || done)
         .opacity(done ? 0.55 : 1)
     }
@@ -77,7 +77,7 @@ struct PairsBoard: View {
     private func face(pair: Int, lit: Bool, missed: Bool) -> Color {
         if matched.contains(pair) { return Theme.greenSoft }
         if missed { return Theme.sand }
-        return lit ? Theme.goldSoft : Theme.surface
+        return lit ? Theme.primarySoft : Theme.surface
     }
 
     private func tapReading(_ row: Int) {
@@ -152,18 +152,19 @@ struct OrderBoard: View {
         FlowLayout(spacing: 8) {
             ForEach(placed, id: \.self) { i in
                 Button { unplace(i) } label: { chipLabel(exercise.bank[i]) }
-                    .chunky(Theme.goldSoft, radius: 10, haptic: .select, sparks: false)
+                    .chunky(Theme.primarySoft, radius: 14, haptic: .select)
                     .disabled(locked)
             }
         }
         .frame(maxWidth: .infinity, minHeight: 64, alignment: .topLeading)
         .padding(10)
         .background(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
                 .fill(Theme.sand)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .strokeBorder(Theme.ink.opacity(0.45), lineWidth: 1.5)
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        .strokeBorder(Theme.edge(for: Theme.sand),
+                                      style: StrokeStyle(lineWidth: 2.5, dash: [7, 6]))
                 )
         )
         .accessibilityIdentifier("drill.order.answer")
@@ -178,8 +179,8 @@ struct OrderBoard: View {
                     // makes the next word land somewhere else.
                     chipLabel(exercise.bank[i]).opacity(used ? 0 : 1)
                 }
-                .chunky(used ? Theme.sand : Theme.surface, radius: 10,
-                        haptic: .select, sparks: false)
+                .chunky(used ? Theme.sand : Theme.surface, radius: 14,
+                        haptic: .select)
                 .disabled(locked || used)
                 .accessibilityIdentifier("drill.order.word.\(i)")
             }
@@ -189,7 +190,7 @@ struct OrderBoard: View {
 
     private func chipLabel(_ word: String) -> some View {
         Text(word)
-            .font(Theme.body(15))
+            .font(Theme.rounded(15.5, .heavy))
             .foregroundStyle(Theme.ink)
             .padding(.horizontal, 12)
             .padding(.vertical, 9)

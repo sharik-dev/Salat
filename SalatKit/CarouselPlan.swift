@@ -55,7 +55,10 @@ public enum CarouselPlan {
                 return [picked]
             }
             fallthrough
-        case .learning:
+        case .learning, .quran:
+            // `.quran` only reaches here when there is no verse to show: the
+            // verses have their own slot (`verseSlot`), and the prayer is the
+            // fallback.
             let learning = steps.filter { log.status(of: $0.id) == .learning }
             if !learning.isEmpty { return learning }
 
@@ -78,6 +81,24 @@ public enum CarouselPlan {
 
         let index = CarouselClock.index(at: date, count: cycle.count)
         return Slot(step: cycle[index], position: index + 1, total: cycle.count, pinned: false)
+    }
+
+    // MARK: Qur'an excerpts
+
+    public struct VerseSlot: Equatable, Sendable {
+        public let verse: WidgetVerse
+        public let position: Int
+        public let total: Int
+    }
+
+    /// The verse to draw at `date`: the same clock as the steps, one a minute,
+    /// in the order the reader listed them, so a passage reads through from
+    /// its first verse to its last. Nothing is pinned: a verse is not a step
+    /// being studied, there is no "the one I just opened".
+    public static func verseSlot(at date: Date, verses: [WidgetVerse]) -> VerseSlot? {
+        guard !verses.isEmpty else { return nil }
+        let index = CarouselClock.index(at: date, count: verses.count)
+        return VerseSlot(verse: verses[index], position: index + 1, total: verses.count)
     }
 
     /// The last step opened, if it was opened recently **and** still belongs to

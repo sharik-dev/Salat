@@ -205,31 +205,33 @@ private final class SalatKitBundleToken {}
 
 // MARK: - Framed illustration used on cards and in the widget
 
-/// The generated illustration when there is one, the drawn figure otherwise.
-/// The illustrations are cut out on transparency, so they sit on the sand disc
-/// with no seam and can be inset far enough that no limb is ever clipped.
+/// The 3D figure when its render is in the bundle, the drawn figure otherwise.
+/// The renders are cut out on transparency and carry their own soft ground
+/// shadow, so they sit on the mint disc with no seam.
 public struct PositionMedallion: View {
     public let step: PrayerStep
     public var size: CGFloat
 
-    /// Drawn as a light silhouette instead of dark ink on sand. Used when the
-    /// home screen is tinted: there, iOS keeps only the *luminance* of what the
-    /// widget drew, and brown ink on cream comes out as an almost empty card.
+    /// Drawn as a light silhouette instead of in colour. Used when the home
+    /// screen is tinted: there, iOS keeps only the *luminance* of what the
+    /// widget drew, and a cream figure on mint comes out as an almost empty card.
     public var monochrome: Bool
 
-    public init(step: PrayerStep, size: CGFloat = 120, monochrome: Bool = false) {
+    /// `false` drops the disc and its rim: the figure alone, for a hero that
+    /// already stands on a coloured ground.
+    public var framed: Bool
+
+    public init(step: PrayerStep, size: CGFloat = 120, monochrome: Bool = false, framed: Bool = true) {
         self.step = step
         self.size = size
         self.monochrome = monochrome
+        self.framed = framed
     }
 
     public var body: some View {
         ZStack {
-            Circle().fill(monochrome ? Color.white.opacity(0.16) : Theme.sand)
-
-            if !monochrome {
-                StarLattice(spacing: size / 2.6, opacity: 0.10)
-                    .clipShape(Circle())
+            if framed {
+                Circle().fill(monochrome ? Color.white.opacity(0.16) : Theme.primarySoft)
             }
 
             if let illustration = PositionAsset.image(named: step.image, maxPixel: size * 3) {
@@ -240,15 +242,17 @@ public struct PositionMedallion: View {
                     .resizable()
                     .scaledToFit()
                     .foregroundStyle(.white)
-                    .padding(size * 0.13)
+                    .padding(size * (framed ? 0.07 : 0))
             } else {
                 PostureFigure(posture: step.posture,
-                              tint: monochrome ? .white : Theme.ink.opacity(0.82))
+                              tint: monochrome ? .white : Theme.primaryDeep)
                     .padding(size * 0.14)
             }
 
-            Circle().strokeBorder(monochrome ? Color.white.opacity(0.45) : Theme.goldSoft,
-                                  lineWidth: 1.5)
+            if framed {
+                Circle().strokeBorder(monochrome ? Color.white.opacity(0.45) : Theme.primaryBorder,
+                                      lineWidth: max(1.5, size * 0.022))
+            }
         }
         .frame(width: size, height: size)
     }

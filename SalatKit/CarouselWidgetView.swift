@@ -15,15 +15,42 @@ public struct CarouselEntry: TimelineEntry {
     public let localizer: Localizer
     /// Which text leads the card — the reader's pick, made in the widget tool.
     public let focus: WidgetFocus
+    /// True when Salat Premium is not active: the widget then draws an
+    /// invitation to open the app instead of its content. Only the extension
+    /// ever sets it, the previews inside the app always show the real card,
+    /// since showing it is how the widget is sold.
+    public let locked: Bool
 
     public init(date: Date, step: PrayerStep, position: Int, total: Int,
-                localizer: Localizer, focus: WidgetFocus = .phonetic) {
+                localizer: Localizer, focus: WidgetFocus = .phonetic,
+                locked: Bool = false) {
         self.date = date
         self.step = step
         self.position = position
         self.total = total
         self.localizer = localizer
         self.focus = focus
+        self.locked = locked
+    }
+
+    /// A verse of the Qur'an on the card. It has no phonetic, so a reader who
+    /// asked for the pronunciation first gets the Arabic first: that is the
+    /// text the pronunciation would have been of.
+    public init(date: Date, verse: WidgetVerse, position: Int, total: Int,
+                localizer: Localizer, focus: WidgetFocus = .arabic) {
+        self.init(date: date, step: PrayerStep(verse: verse),
+                  position: position, total: total, localizer: localizer,
+                  focus: focus == .phonetic ? .arabic : focus)
+    }
+
+    /// What the extension draws without a subscription.
+    public static func locked(date: Date, localizer: Localizer) -> CarouselEntry {
+        let none = PrayerStep(id: "", order: 0, image: "", posture: .standing,
+                              repetitions: 1, spoken: false, arabic: "",
+                              name: "", postureText: "", phonetic: "",
+                              translation: "", note: "")
+        return CarouselEntry(date: date, step: none, position: 0, total: 0,
+                             localizer: localizer, locked: true)
     }
 }
 
@@ -52,108 +79,248 @@ public struct CarouselWidgetView: View {
     // MARK: Palette
     //
     // A tinted home screen (and the lock screen) do not show what the widget
-    // painted: iOS keeps only its luminance and re-tints it. The cream card
-    // then disappears and the brown ink with it — the widget reads as an empty
+    // painted: iOS keeps only its luminance and re-tints it. The white card
+    // then disappears and the dark ink with it — the widget reads as an empty
     // plate. In those modes everything is redrawn light on nothing.
 
     private var isFullColor: Bool { mode == .fullColor }
     private var ink: Color      { isFullColor ? Theme.ink : .white }
     private var inkSoft: Color  { isFullColor ? Theme.inkSoft : .white.opacity(0.7) }
-    private var accent: Color   { isFullColor ? Theme.gold : .white.opacity(0.85) }
 
     public var body: some View {
         Group {
+            if entry.locked {
+                // The green is painted here as well as in the container
+                // background: the previews inside the app are not WidgetKit
+                // containers and would draw white words on the page.
+                lockedCard
+                    .background { if isFullColor { greenGround } }
+            } else {
+                card
+            }
+        }
+        .localized(entry.localizer)
+        // A locked widget opens the paywall; an open one just opens the app.
+        .widgetURL(entry.locked ? Premium.unlockURL : nil)
+        .containerBackground(for: .widget) {
+            if !isFullColor {
+                // Painting anything here would be re-read as luminance and
+                // washed over the content; the system's own plate is what a
+                // tinted home screen expects to see.
+                Color.clear
+            } else if entry.locked {
+                greenGround
+            } else {
+                Theme.surface
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var card: some View {
             switch family {
             case .accessoryRectangular:
                 // The lock screen has no page to set anything down on.
                 accessory
-            case .systemSmall:  plated(small, radius: 20)
-            case .systemLarge:  plated(large, radius: 22)
-            default:            plated(medium, radius: 22)
-            }
-        }
-        .localized(entry.localizer)
-        .containerBackground(for: .widget) {
-            if isFullColor {
-                ZStack {
-                    Theme.paper
-                    StarLattice(spacing: 46, opacity: 0.09)
+            case .systemSmall:
+                if isFullColor {
+                    banded(band: 60, figure: 58, title: 13.5, showsCounter: false,
+                           size: 15, floor: 0.45, arabic: 13, spacing: 5, inset: 12)
+                } else {
+                    bare(medallion: 30, title: 11, size: 14, floor: 0.45, arabic: 12, spacing: 5)
                 }
-            } else {
-                // Painting the cream here would be re-read as luminance and
-                // washed over the content; the system's own plate is what a
-                // tinted home screen expects to see.
-                Color.clear
+            case .systemLarge:
+                if isFullColor {
+                    banded(band: 104, figure: 104, title: 21, showsCounter: true,
+                           size: 20, floor: 0.5, arabic: 18, spacing: 9, inset: 16)
+                } else {
+                    bare(medallion: 40, title: 15, size: 19, floor: 0.5, arabic: 17, spacing: 8)
+                }
+            default:
+                if isFullColor {
+                    sided
+                } else {
+                    bare(medallion: 34, title: 13, size: 16, floor: 0.45, arabic: 14, spacing: 6)
+                }
             }
-        }
     }
 
-    /// The app never lays text straight onto the page: it sets it on a plate —
-    /// cream face, thick ink outline, a solid face extruded underneath. The
-    /// widget is the corner of the app that shows on the home screen, so it
-    /// gets the same object. A tinted home screen keeps only luminance, and an
-    /// ink outline there would come back as a grey box, so that rendering does
-    /// without the plate rather than draw a broken one.
-    private func plated<V: View>(_ content: V, radius: CGFloat) -> some View {
-        Group {
-            if isFullColor {
-                content
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 10)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .plate(Theme.surface, radius: radius)
-                    .padding(.horizontal, 7)
-                    .padding(.top, 7)
-                    .padding(.bottom, 3)
-            } else {
-                content
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 8)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            }
-        }
-    }
+    // MARK: Locked — the widget is Salat Premium
+    //
+    // Without a subscription the widget says so and nothing else: the app's
+    // green from edge to edge, the 3D padlock, and one line that tells where
+    // to go. It is white on green in full colour and white on nothing when the
+    // home screen is tinted, so it never depends on a dark ink to be read.
 
-    // MARK: The three canvases — same layout, more room
+    @ViewBuilder
+    private var lockedCard: some View {
+        let title = entry.localizer.t("premium.title")
+        let hint = entry.localizer.t("widget.locked.body")
 
-    private var small: some View {
-        layout(medallion: 30, title: 11, size: 14, floor: 0.45, arabic: 12, spacing: 5)
-    }
-
-    private var medium: some View {
-        layout(medallion: 34, title: 13, size: 16, floor: 0.45, arabic: 14, spacing: 6)
-    }
-
-    private var large: some View {
-        layout(medallion: 40, title: 15, size: 19, floor: 0.5, arabic: 17, spacing: 8)
-    }
-
-    // MARK: Pieces
-
-    /// One layout for all three sizes, because they say the same thing at
-    /// different volumes. What changes is how much fits, and that is not decided
-    /// here: `ViewThatFits` tries the fullest version first — the lead text plus
-    /// both companions — and falls back a rung at a time until one fits the
-    /// canvas it was given. A short formula on a large widget therefore gets the
-    /// whole card; the Fatiha on a small one keeps the lead text alone.
-    ///
-    /// *Which* text leads is `entry.focus` — the reader's pick, not the
-    /// layout's. The lead is what never gets dropped; the other two are the
-    /// rungs of the ladder.
-    private func layout(medallion: CGFloat, title: CGFloat, size: CGFloat,
-                        floor: CGFloat, arabic: CGFloat, spacing: CGFloat) -> some View {
-        VStack(alignment: .leading, spacing: spacing) {
-            header(medallion: medallion, title: title)
-
-            ViewThatFits(in: .vertical) {
-                block(size: size, floor: floor, arabic: arabic,
-                      companions: companionOrder, spacing: spacing)
-                block(size: size, floor: floor, arabic: arabic,
-                      companions: [preferredCompanion], spacing: spacing)
-                block(size: size, floor: floor, arabic: arabic,
-                      companions: [], spacing: spacing)
+        switch family {
+        case .accessoryRectangular:
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.system(size: 13, weight: .semibold))
+                    .lineLimit(1)
+                Text(hint)
+                    .font(.system(size: 12))
+                    .lineLimit(2)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
+        case .systemMedium:
+            HStack(spacing: 14) {
+                padlock(84)
+                lockedWords(title: title, hint: hint, titleSize: 19, hintSize: 14,
+                            alignment: .leading)
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, 18)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        default:
+            let large = family == .systemLarge
+            VStack(spacing: large ? 14 : 6) {
+                padlock(large ? 132 : 66)
+                lockedWords(title: title, hint: hint,
+                            titleSize: large ? 24 : 15, hintSize: large ? 16 : 12,
+                            alignment: .center)
+            }
+            .padding(large ? 22 : 12)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+    }
+
+    private func lockedWords(title: String, hint: String, titleSize: CGFloat,
+                             hintSize: CGFloat, alignment: HorizontalAlignment) -> some View {
+        VStack(alignment: alignment, spacing: 3) {
+            Text(title)
+                .font(Theme.rounded(titleSize, .black))
+                .foregroundStyle(.white)
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
+            Text(hint)
+                .font(Theme.rounded(hintSize, .heavy))
+                .foregroundStyle(.white.opacity(0.88))
+                .multilineTextAlignment(alignment == .center ? .center : .leading)
+                .lineLimit(3)
+                .minimumScaleFactor(0.7)
+        }
+    }
+
+    /// The 3D padlock of the app, or its silhouette on a tinted home screen
+    /// (the render carries its shape in its alpha, like the figures do).
+    @ViewBuilder
+    private func padlock(_ size: CGFloat) -> some View {
+        if let image = PositionAsset.image(named: "widget_lock", maxPixel: size * 3) {
+            Image(uiImage: image)
+                .renderingMode(isFullColor ? .original : .template)
+                .resizable()
+                .scaledToFit()
+                .foregroundStyle(.white)
+                .frame(width: size, height: size)
+        } else {
+            Image(systemName: "lock.fill")
+                .font(.system(size: size * 0.6, weight: .black))
+                .foregroundStyle(.white)
+                .frame(width: size, height: size)
+        }
+    }
+
+    // MARK: Full colour — the app's banner, at widget size
+    //
+    // The widget is the corner of the app that lives on the home screen, so it
+    // is built like the app's own pages: a green ground carrying the 3D figure
+    // and the step's name, and the words on white underneath. The widget draws
+    // to its very edge (`contentMarginsDisabled` in the extension): the green
+    // has to reach the corners to read as a banner and not as a box in a box.
+
+    /// The banner's green with the house lattice in white.
+    private var greenGround: some View {
+        ZStack {
+            Theme.primary
+            StarLattice(spacing: 34, opacity: 0.16, color: .white)
+        }
+    }
+
+    private func figure(_ size: CGFloat) -> some View {
+        PositionMedallion(step: entry.step, size: size, framed: false)
+    }
+
+    /// Small and large: the green runs across the top.
+    private func banded(band: CGFloat, figure side: CGFloat, title: CGFloat, showsCounter: Bool,
+                        size: CGFloat, floor: CGFloat, arabic: CGFloat,
+                        spacing: CGFloat, inset: CGFloat) -> some View {
+        VStack(spacing: 0) {
+            HStack(spacing: 8) {
+                figure(side)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(entry.step.name)
+                        .font(Theme.rounded(title, .black))
+                        .foregroundStyle(.white)
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.65)
+                        .multilineTextAlignment(.leading)
+                    if showsCounter { counter }
+                }
+                Spacer(minLength: 0)
+            }
+            .padding(.leading, inset - 6)
+            .padding(.trailing, inset)
+            .frame(maxWidth: .infinity)
+            .frame(height: band)
+            .background(greenGround)
+
+            texts(size: size, floor: floor, arabic: arabic, spacing: spacing)
+                .padding(.horizontal, inset)
+                .padding(.vertical, inset * 0.75)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        }
+    }
+
+    /// Medium: the green stands on the leading side, the words get the width.
+    private var sided: some View {
+        HStack(spacing: 0) {
+            VStack(spacing: 2) {
+                figure(106)
+                counter
+            }
+            .frame(width: 118)
+            .frame(maxHeight: .infinity)
+            .background(greenGround)
+
+            VStack(alignment: .leading, spacing: 5) {
+                Text(entry.step.name)
+                    .font(Theme.rounded(13, .black))
+                    .foregroundStyle(Theme.primaryDeep)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+                texts(size: 17, floor: 0.45, arabic: 15, spacing: 6)
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        }
+    }
+
+    // MARK: Tinted — light on nothing
+
+    /// A tinted home screen keeps only luminance: no ground, no banner, the
+    /// figure as a light silhouette and every text in white.
+    private func bare(medallion: CGFloat, title: CGFloat, size: CGFloat,
+                      floor: CGFloat, arabic: CGFloat, spacing: CGFloat) -> some View {
+        VStack(alignment: .leading, spacing: spacing) {
+            HStack(spacing: 7) {
+                PositionMedallion(step: entry.step, size: medallion, monochrome: true)
+                Text(entry.step.name)
+                    .font(Theme.title(title))
+                    .foregroundStyle(ink)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.7)
+                    .multilineTextAlignment(.leading)
+                Spacer(minLength: 0)
+            }
+
+            texts(size: size, floor: floor, arabic: arabic, spacing: spacing)
 
             Spacer(minLength: 0)
 
@@ -162,6 +329,31 @@ public struct CarouselWidgetView: View {
                 Spacer(minLength: 0)
             }
         }
+        .padding(14)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    // MARK: Pieces
+
+    /// What changes from one size to the next is how much fits, and that is not
+    /// decided here: `ViewThatFits` tries the fullest version first — the lead
+    /// text plus both companions — and falls back a rung at a time until one
+    /// fits the room it was given. A short formula on a large widget therefore
+    /// gets all three texts; the Fatiha on a small one keeps the lead alone.
+    ///
+    /// *Which* text leads is `entry.focus` — the reader's pick, not the
+    /// layout's. The lead is what never gets dropped; the other two are the
+    /// rungs of the ladder.
+    private func texts(size: CGFloat, floor: CGFloat, arabic: CGFloat, spacing: CGFloat) -> some View {
+        ViewThatFits(in: .vertical) {
+            block(size: size, floor: floor, arabic: arabic,
+                  companions: companionOrder, spacing: spacing)
+            block(size: size, floor: floor, arabic: arabic,
+                  companions: [preferredCompanion], spacing: spacing)
+            block(size: size, floor: floor, arabic: arabic,
+                  companions: [], spacing: spacing)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     /// The two texts that are not the lead, in the order they stack under it.
@@ -209,8 +401,7 @@ public struct CarouselWidgetView: View {
                     .frame(maxWidth: .infinity, alignment: .trailing)
             case .phonetic, .translation:
                 Text(text(for: kind))
-                    .font(kind == .phonetic ? Theme.body(size * 0.72).italic()
-                                            : Theme.body(size * 0.72))
+                    .font(Theme.rounded(size * 0.72, kind == .phonetic ? .heavy : .semibold))
                     .foregroundStyle(inkSoft)
                     .multilineTextAlignment(.leading)
                     .minimumScaleFactor(0.6)
@@ -224,22 +415,6 @@ public struct CarouselWidgetView: View {
         case .phonetic:    return entry.step.phonetic
         case .arabic:      return entry.step.arabic
         case .translation: return entry.step.translation
-        }
-    }
-
-    /// The illustration is a **marker**, not the subject: it says which posture
-    /// this is at a glance and then gets out of the way. What is being learnt is
-    /// the pronunciation, so the picture shrank to make room for it.
-    private func header(medallion: CGFloat, title: CGFloat) -> some View {
-        HStack(spacing: 7) {
-            PositionMedallion(step: entry.step, size: medallion, monochrome: !isFullColor)
-            Text(entry.step.name)
-                .font(Theme.title(title))
-                .foregroundStyle(ink)
-                .lineLimit(2)
-                .minimumScaleFactor(0.7)
-                .multilineTextAlignment(.leading)
-            Spacer(minLength: 0)
         }
     }
 
@@ -271,7 +446,7 @@ public struct CarouselWidgetView: View {
                     .frame(maxWidth: .infinity, alignment: .topTrailing)
             case .phonetic:
                 Text(entry.step.phonetic)
-                    .font(Theme.body(size).italic())
+                    .font(Theme.rounded(size, .heavy))
                     .foregroundStyle(ink)
                     .multilineTextAlignment(.leading)
                     .minimumScaleFactor(floor)
@@ -314,24 +489,14 @@ public struct CarouselWidgetView: View {
         }
     }
 
-    /// The same sand chip that numbers a step in the list — the widget counts
-    /// with the app's furniture, not with a loose line of text.
+    /// Where the cycle stands. Only ever drawn on the green ground or on a
+    /// tinted home screen, so it is white on a veil in both.
     private var counter: some View {
         Text("\(entry.position) / \(entry.total)")
-            .font(Theme.pixel(10))
-            .foregroundStyle(accent)
-            .padding(.horizontal, 7)
+            .font(Theme.rounded(10.5, .black).monospacedDigit())
+            .foregroundStyle(.white)
+            .padding(.horizontal, 8)
             .padding(.vertical, 3)
-            .background(
-                RoundedRectangle(cornerRadius: 6, style: .continuous)
-                    .fill(isFullColor ? Theme.sand : Color.white.opacity(0.14))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 6, style: .continuous)
-                            .strokeBorder(isFullColor ? Theme.gold.opacity(0.45)
-                                                      : Color.white.opacity(0.35),
-                                          lineWidth: 1)
-                    )
-            )
+            .background(Capsule().fill(Color.white.opacity(0.22)))
     }
 }
-

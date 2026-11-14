@@ -75,7 +75,7 @@ struct VocalStepView: View {
                     // deliberate trip to the bottom of the page.
                     RecitationPanel(step: step, line: $line)
 
-                    Color.clear.frame(height: 92)
+                    Color.clear.frame(height: 24)
                 }
                 .padding(.horizontal, 18)
                 .padding(.top, 8)
@@ -102,21 +102,22 @@ struct VocalStepView: View {
 
     private var hero: some View {
         VStack(spacing: 8) {
-            PositionMedallion(step: step, size: 108)
-            StepBadge(order: step.order, size: 12)
-
-            if step.repetitions > 1 {
-                Text(loc.t("detail.repeat", step.repetitions))
-                    .font(Theme.label(11))
-                    .foregroundStyle(Theme.inkSoft)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 5)
-                    .background(Capsule().fill(Theme.sand))
+            PositionMedallion(step: step, size: 120)
+            HStack(spacing: 8) {
+                StepBadge(order: step.order, size: 13)
+                if step.repetitions > 1 {
+                    Text(loc.t("detail.repeat", step.repetitions))
+                        .font(Theme.rounded(12.5, .heavy))
+                        .foregroundStyle(Theme.goldDeep)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 4)
+                        .background(Capsule().fill(Theme.goldSoft))
+                }
             }
 
             if step.arabicLines.count > 1 {
                 Text(loc.t("vocal.tap_hint"))
-                    .font(Theme.body(12))
+                    .font(Theme.rounded(13, .semibold))
                     .foregroundStyle(Theme.inkSoft)
                     .multilineTextAlignment(.center)
             }
@@ -174,26 +175,26 @@ private struct LineCard: View {
         .padding(.vertical, isActive ? 16 : 12)
         .padding(.horizontal, 18)
         .frame(maxWidth: .infinity)
-        // The lit line is a gold plate; the others are the ordinary cream card.
+        // The lit line is a gold plate; the others are the ordinary white card.
         .plate(isActive ? Theme.goldSoft : Theme.surface,
                radius: Theme.Radius.card,
-               depth: isActive ? 5 : 2)
+               depth: isActive ? 5 : 0)
         // Dimmed rather than greyed: the ink stays ink, so a line you have not
         // selected is still readable if you look at it on purpose.
         .opacity(isActive ? 1 : 0.72)
         .overlay(alignment: .topTrailing) {
             if isSounding {
                 Image(systemName: "waveform")
-                    .font(.system(size: 11, weight: .bold))
-                    .foregroundStyle(Theme.gold)
-                    .padding(10)
+                    .font(.system(size: 13, weight: .black))
+                    .foregroundStyle(Theme.goldDeep)
+                    .padding(12)
                     .transition(.scale.combined(with: .opacity))
                     .accessibilityLabel(loc.t("audio.listen"))
             } else if spokenWords != nil {
                 Image(systemName: "mic.fill")
-                    .font(.system(size: 11, weight: .bold))
+                    .font(.system(size: 13, weight: .black))
                     .foregroundStyle(Theme.green)
-                    .padding(10)
+                    .padding(12)
                     .transition(.scale.combined(with: .opacity))
             }
         }
@@ -215,7 +216,7 @@ private struct LineCard: View {
         // the information.
         let userCount = spokenWords ?? 0
         let arabicActive = arabicCursor ?? (userCount > 0 ? userCount - 1 : nil)
-        let tint = arabicCursor != nil ? Theme.gold : Theme.green
+        let tint = arabicCursor != nil ? Theme.goldDeep : Theme.green
         let trail = arabicCursor != nil ? nil : Theme.green.opacity(0.55)
 
         return VStack(spacing: 8) {
@@ -228,7 +229,7 @@ private struct LineCard: View {
 
             if let phonetic {
                 phoneticText(cursor: arabicActive)
-                    .font(Theme.body(isActive ? 16 : 14).italic())
+                    .font(Theme.rounded(isActive ? 17 : 15, .heavy))
                     .multilineTextAlignment(.center)
             }
 
@@ -237,7 +238,7 @@ private struct LineCard: View {
                 // them, it triples the height of the page and the eye stops
                 // finding the Arabic.
                 Text(translation)
-                    .font(Theme.body(13))
+                    .font(Theme.rounded(14, .semibold))
                     .foregroundStyle(Theme.inkSoft)
                     .multilineTextAlignment(.center)
                     .transition(.opacity)
@@ -250,7 +251,7 @@ private struct LineCard: View {
     /// `Karaoke`), which is why it never runs without the arabic one.
     private func phoneticText(cursor: Int?) -> Text {
         guard let phonetic else { return Text(verbatim: "") }
-        let base = isActive ? Theme.ink : Theme.gold
+        let base = isActive ? Theme.ink : Theme.primaryDeep
         guard let cursor else {
             return Text(phonetic).foregroundColor(base)
         }
@@ -258,7 +259,7 @@ private struct LineCard: View {
         let projected = Karaoke.projected(cursor, from: arabicWordCount, onto: count)
         let reciting = spokenWords == nil
         return Karaoke.line(phonetic, active: projected, base: base,
-                            tint: reciting ? Theme.gold : Theme.green,
+                            tint: reciting ? Theme.goldDeep : Theme.green,
                             saidTint: reciting ? nil : Theme.green.opacity(0.55))
     }
 }

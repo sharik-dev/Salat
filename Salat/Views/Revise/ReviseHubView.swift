@@ -30,24 +30,46 @@ struct ReviseHubView: View {
 
     var body: some View {
         NavigationStack(path: $path) {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    header
-                    startCard
-                    ForEach(ReviseTool.allCases) { tool in
-                        NavigationLink(value: ReviseRoute.tool(tool)) {
-                            ToolCard(tool: tool)
-                        }
-                        .buttonStyle(.plain)
-                    }
-                    strengthSection
-                    Color.clear.frame(height: 92) // clear the floating bar
+            VStack(spacing: 0) {
+                Banner(title: loc.t("tab.memorize"),
+                       subtitle: nil, subtitleAction: nil, subtitleID: nil, back: nil) {
+                    LofiIcon(.bulb, size: 100, interval: 4)
                 }
-                .padding(.horizontal, 18)
-                .padding(.top, 8)
+
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 14) {
+                        startCard
+
+                        LazyVGrid(columns: [GridItem(.flexible(), spacing: 12),
+                                            GridItem(.flexible(), spacing: 12)], spacing: 12) {
+                            ForEach(ReviseTool.allCases.filter { $0 != .widget }) { tool in
+                                NavigationLink(value: ReviseRoute.tool(tool)) {
+                                    ToolTile(tool: tool)
+                                }
+                                .chunky(Theme.surface, radius: 26, depth: 5)
+                                .accessibilityIdentifier("revise.tool.\(tool.rawValue)")
+                            }
+                        }
+                        .padding(.top, 4)
+
+                        NavigationLink(value: ReviseRoute.tool(.widget)) {
+                            ToolRow(tool: .widget)
+                        }
+                        .chunky(Theme.surface, radius: 26, depth: 5)
+                        .accessibilityIdentifier("revise.tool.widget")
+
+                        PremiumShortcut(place: "revise.premium")
+
+                        strengthSection
+                    }
+                    .padding(.horizontal, 18)
+                    .padding(.top, 18)
+                    .padding(.bottom, 24)
+                }
+                .scrollIndicators(.hidden)
             }
-            .scrollIndicators(.hidden)
-            .background(Color.clear)
+            .background(Theme.paper.ignoresSafeArea())
+            .toolbar(.hidden, for: .navigationBar)
             .navigationDestination(for: ReviseRoute.self) { route in
                 Group {
                 switch route {
@@ -108,57 +130,46 @@ struct ReviseHubView: View {
         }
     }
 
-    private var header: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(loc.t("tab.memorize"))
-                .font(Theme.title(30))
-                .foregroundStyle(Theme.ink)
-            Text(loc.t("revise.subtitle"))
-                .font(Theme.body(15))
-                .foregroundStyle(Theme.inkSoft)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.bottom, 2)
-    }
-
-    /// One tap to a round, from the top of the tab. The tool card below leads to
-    /// the same place; this is the door you use every day, and burying it under
-    /// a list would make a daily gesture cost two taps for no reason.
+    /// One tap to a round, from the top of the tab. This is the door you use
+    /// every day, and burying it under a list would make a daily gesture cost
+    /// two taps for no reason.
     @ViewBuilder
     private var startCard: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            if pool.count >= 2 {
-                HStack(spacing: 10) {
-                    Text(String(format: "%02d", pool.count))
-                        .font(Theme.pixel(24))
-                        .foregroundStyle(Theme.gold)
-                    // The count is the badge; the sentence never repeats it, so
-                    // no language has to bend a plural around a number.
-                    Text(loc.t("memorize.ready"))
-                        .font(Theme.body(15))
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(spacing: 14) {
+                LofiIcon(.quiz, size: 76, interval: 5, animated: pool.count >= 2)
+
+                if pool.count >= 2 {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(String(pool.count))
+                            .font(Theme.rounded(34, .black).monospacedDigit())
+                            .foregroundStyle(Theme.primary)
+                        // The count is the badge; the sentence never repeats it,
+                        // so no language has to bend a plural around a number.
+                        Text(loc.t("memorize.ready"))
+                            .font(Theme.rounded(14, .semibold))
+                            .foregroundStyle(Theme.inkSoft)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                } else {
+                    Text(loc.t("drill.empty"))
+                        .font(Theme.rounded(14.5, .semibold))
                         .foregroundStyle(Theme.inkSoft)
                         .fixedSize(horizontal: false, vertical: true)
                 }
+                Spacer(minLength: 0)
+            }
 
+            if pool.count >= 2 {
                 Button {
                     // Straight into the dealt mix — the daily gesture stays
                     // one tap — with the picker beneath it on the way back.
                     path = [.tool(.drill), .drillRun(DrillRun())]
                 } label: {
                     Text(loc.t("memorize.start"))
-                        .font(Theme.label(14))
-                        .foregroundStyle(Theme.ink)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
                 }
-                .chunky(Theme.goldSoft, radius: 16, haptic: .press)
+                .buttonStyle(.cta(.primary))
                 .accessibilityIdentifier("memorize.start")
-            } else {
-                Text(loc.t("drill.empty"))
-                    .font(Theme.body(15))
-                    .foregroundStyle(Theme.inkSoft)
-                    .fixedSize(horizontal: false, vertical: true)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -172,25 +183,25 @@ struct ReviseHubView: View {
     private var strengthSection: some View {
         let seen = pool.filter { (scores[$0.id]?.asked ?? 0) > 0 }
         if !seen.isEmpty {
-            VStack(alignment: .leading, spacing: 10) {
-                Text(loc.t("memorize.strength.title"))
-                    .font(Theme.label(11))
-                    .foregroundStyle(Theme.gold)
-                    .textCase(.uppercase)
+            SectionLabel(loc.t("memorize.strength.title"))
+                .padding(.top, 8)
 
+            VStack(spacing: 0) {
                 ForEach(seen) { step in
                     HStack(spacing: 12) {
                         Text(step.name)
-                            .font(Theme.body(15))
+                            .font(Theme.rounded(15.5, .heavy))
                             .foregroundStyle(Theme.ink)
                             .lineLimit(1)
                         Spacer(minLength: 8)
                         PipRow(filled: scores[step.id]?.pips ?? 0)
                     }
+                    .padding(.horizontal, Theme.cardPadding)
+                    .padding(.vertical, 13)
+                    if step.id != seen.last?.id { RowDivider().padding(.leading, Theme.cardPadding) }
                 }
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .card()
+            .card(padding: 0)
             .accessibilityIdentifier("memorize.strength")
         }
     }
@@ -198,7 +209,7 @@ struct ReviseHubView: View {
 
 // MARK: - Pips
 
-/// Five dots, gold once earned. The same ladder wherever recall is drawn.
+/// Five dots, green once earned. The same ladder wherever recall is drawn.
 struct PipRow: View {
     let filled: Int
 
@@ -206,9 +217,8 @@ struct PipRow: View {
         HStack(spacing: 4) {
             ForEach(0..<5, id: \.self) { i in
                 Circle()
-                    .fill(i < filled ? Theme.gold : Theme.sand)
-                    .overlay(Circle().strokeBorder(Theme.ink.opacity(0.55), lineWidth: 1))
-                    .frame(width: 9, height: 9)
+                    .fill(i < filled ? Theme.primary : Theme.sand)
+                    .frame(width: 11, height: 11)
             }
         }
     }
@@ -235,13 +245,13 @@ enum ReviseTool: String, CaseIterable, Identifiable, Hashable {
     var titleKey: String { "revise.tool.\(rawValue).title" }
     var bodyKey: String { "revise.tool.\(rawValue).body" }
 
-    var icon: String {
+    var icon: Icon3D {
         switch self {
-        case .drill: return "questionmark.circle.fill"
-        case .flash: return "rectangle.on.rectangle.angled"
-        case .fade:  return "eye.slash.fill"
-        case .vocal: return "waveform"
-        case .widget: return "apps.iphone"
+        case .drill: return .quiz
+        case .flash: return .cards
+        case .fade:  return .eraser
+        case .vocal: return .mic
+        case .widget: return .phone
         }
     }
 }
@@ -256,57 +266,70 @@ enum ReviseRoute: Hashable {
     case drillRun(DrillRun)
 }
 
-private struct ToolCard: View {
+/// A tool as a tile: its object, its name. The sentence that used to sit
+/// under each title is gone — the object says what the tool is, and the tool's
+/// own page says the rest.
+private struct ToolTile: View {
     let tool: ReviseTool
     @Environment(\.loc) private var loc
 
     var body: some View {
-        HStack(spacing: 14) {
-            // The gold plate carries the icon: on cream, a bare glyph next to a
-            // serif title reads as a bullet point rather than as a door.
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(Theme.goldSoft)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .strokeBorder(Theme.ink, lineWidth: Theme.stroke)
-                )
-                .overlay(
-                    Image(systemName: tool.icon)
-                        .font(.system(size: 20, weight: .semibold))
-                        .foregroundStyle(Theme.ink)
-                )
-                .frame(width: 56, height: 56)
-
-            VStack(alignment: .leading, spacing: 4) {
-                Text(loc.t(tool.titleKey))
-                    .font(Theme.title(19))
-                    .foregroundStyle(Theme.ink)
-                Text(loc.t(tool.bodyKey))
-                    .font(Theme.body(13))
-                    .foregroundStyle(Theme.inkSoft)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .multilineTextAlignment(.leading)
-            }
-
-            Spacer(minLength: 0)
-
-            Image(systemName: "chevron.right")
-                .font(.system(size: 13, weight: .bold))
-                .foregroundStyle(Theme.gold)
+        VStack(spacing: 8) {
+            LofiIcon(tool.icon, size: 78, interval: 6)
+            Text(loc.t(tool.titleKey))
+                .font(Theme.rounded(16, .heavy))
+                .foregroundStyle(Theme.ink)
+                .multilineTextAlignment(.center)
+                .lineLimit(2)
+                .minimumScaleFactor(0.8)
+                .frame(maxWidth: .infinity, minHeight: 40, alignment: .top)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .card()
+        .padding(.horizontal, 12)
+        .padding(.top, 14)
+        .padding(.bottom, 10)
+        .frame(maxWidth: .infinity)
+        .contentShape(Rectangle())
+    }
+}
+
+/// The same tool laid flat, for the one that closes the list.
+private struct ToolRow: View {
+    let tool: ReviseTool
+    @Environment(\.loc) private var loc
+    @Environment(Store.self) private var store
+
+    var body: some View {
+        HStack(spacing: 14) {
+            LofiIcon(tool.icon, size: 58, interval: 6)
+            Text(loc.t(tool.titleKey))
+                .font(Theme.rounded(16, .heavy))
+                .foregroundStyle(Theme.ink)
+                .multilineTextAlignment(.leading)
+            Spacer(minLength: 0)
+            // The widget is the one tool the subscription unlocks; the mark
+            // goes once it is unlocked.
+            if tool == .widget, !store.isPremium { PremiumBadge() }
+            Image(systemName: "chevron.forward")
+                .font(.system(size: 14, weight: .black))
+                .foregroundStyle(Theme.primary)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
+        .frame(maxWidth: .infinity)
+        .contentShape(Rectangle())
     }
 }
 
 // MARK: - Toolbar
 
 extension View {
-    /// The pushed screens of *Memorise* keep the app's paper under the nav bar.
-    /// Left to itself the bar is system white, which on cream reads as another
-    /// app's screen sliding in.
+    /// The pushed screens of *Memorise* keep the banner's green under the nav
+    /// bar, with a white title and back arrow. Left to itself the bar is system
+    /// white, which reads as another app's screen sliding in.
     func paperToolbar() -> some View {
-        self.toolbarBackground(Theme.paper, for: .navigationBar)
+        self.toolbarBackground(Theme.primary, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
+            .toolbarColorScheme(.dark, for: .navigationBar)
+            .background(Theme.paper.ignoresSafeArea())
     }
 }

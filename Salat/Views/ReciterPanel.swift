@@ -45,14 +45,14 @@ struct ReciterPanel: View {
     private var choices: [Reciter] { Recitations.reciters(covering: step.id) }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 14) {
             header
             if hasClips {
                 if clipCount > 1 { lineChips }
                 listenRow
             } else {
                 Text(loc.t(marksRecordings ? "audio.none" : "audio.none.listen"))
-                    .font(Theme.body(13))
+                    .font(Theme.rounded(14, .semibold))
                     .foregroundStyle(Theme.inkSoft)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -64,67 +64,72 @@ struct ReciterPanel: View {
     // MARK: Header
 
     private var header: some View {
-        HStack(spacing: 8) {
-            Image(systemName: "person.wave.2")
-                .font(.system(size: 11))
-            // "The reciter", not "Recitation": the panel below is a recitation
-            // too, and two headers saying the same word teach nothing about
-            // which is which.
-            Text(loc.t("audio.reciter").uppercased())
-                .font(Theme.label(9))
-                .tracking(0.8)
-            Spacer()
-            if hasClips, let reciter, choices.count > 1 {
-                // A menu rather than a settings round-trip: switching voices is
-                // something you do while listening, not before. Only the voices
-                // that actually cover this step are offered.
-                Menu {
-                    ForEach(choices) { candidate in
-                        Button {
-                            settings.reciterID = candidate.id
-                            Haptic.select.play()
+        HStack(spacing: 12) {
+            IconTile(icon: .headphones, size: 46, animated: player.voice == .reciter)
+
+            VStack(alignment: .leading, spacing: 1) {
+                // "The reciter", not "Recitation": the panel below is a recitation
+                // too, and two headers saying the same word teach nothing about
+                // which is which.
+                Text(loc.t("audio.reciter"))
+                    .font(Theme.rounded(12.5, .black))
+                    .textCase(.uppercase)
+                    .tracking(0.6)
+                    .foregroundStyle(Theme.primaryDeep)
+
+                if hasClips, let reciter {
+                    if choices.count > 1 {
+                        // A menu rather than a settings round-trip: switching
+                        // voices is something you do while listening, not
+                        // before. Only the voices that cover this step are
+                        // offered.
+                        Menu {
+                            ForEach(choices) { candidate in
+                                Button {
+                                    settings.reciterID = candidate.id
+                                    Haptic.select.play()
+                                } label: {
+                                    Label(
+                                        // The style is part of the name here
+                                        // too: the same reciter can appear
+                                        // twice, once teaching and once at pace.
+                                        candidate.name + " · " + loc.t(candidate.isTeaching ? "audio.style.teaching" : "audio.style.murattal"),
+                                        systemImage: candidate.id == reciter.id ? "checkmark" : "person.wave.2"
+                                    )
+                                }
+                            }
                         } label: {
-                            Label(
-                                // The style is part of the name here too: the
-                                // same reciter can appear twice, once teaching
-                                // and once at pace.
-                                candidate.name + " · " + loc.t(candidate.isTeaching ? "audio.style.teaching" : "audio.style.murattal"),
-                                systemImage: candidate.id == reciter.id ? "checkmark" : "person.wave.2"
-                            )
+                            HStack(spacing: 5) {
+                                name(reciter)
+                                Image(systemName: "chevron.down")
+                                    .font(.system(size: 11, weight: .black))
+                                    .foregroundStyle(Theme.primary)
+                            }
                         }
+                    } else {
+                        // One voice covers this step: name it, offer no dead menu.
+                        name(reciter)
                     }
-                } label: {
-                    HStack(spacing: 4) {
-                        Text(reciter.name)
-                            .font(Theme.body(11))
-                            // One line: a name wrapping onto two pushes the
-                            // whole panel down and the header stops reading as
-                            // a header.
-                            .lineLimit(1)
-                            .truncationMode(.tail)
-                        Image(systemName: "chevron.down").font(.system(size: 8, weight: .bold))
-                    }
-                    .foregroundStyle(Theme.inkSoft)
-                    .frame(maxWidth: 150, alignment: .trailing)
                 }
-            } else if hasClips, let reciter {
-                // One voice covers this step: name it, offer no dead menu.
-                Text(reciter.name)
-                    .font(Theme.body(11))
-                    .lineLimit(1)
-                    .truncationMode(.tail)
-                    .foregroundStyle(Theme.inkSoft)
-                    .frame(maxWidth: 150, alignment: .trailing)
             }
+            Spacer(minLength: 0)
         }
-        .foregroundStyle(Theme.gold)
+    }
+
+    private func name(_ reciter: Reciter) -> some View {
+        Text(reciter.name)
+            .font(Theme.rounded(16, .heavy))
+            .foregroundStyle(Theme.ink)
+            // One line: a name wrapping onto two pushes the whole panel down.
+            .lineLimit(1)
+            .truncationMode(.tail)
     }
 
     // MARK: Verse picker
 
     private var lineChips: some View {
         ScrollView(.horizontal) {
-            HStack(spacing: 6) {
+            HStack(spacing: 8) {
                 ForEach(0..<clipCount, id: \.self) { index in
                     let isOn = index == line
                     Button {
@@ -132,21 +137,25 @@ struct ReciterPanel: View {
                         withAnimation(Theme.spring) { line = index }
                     } label: {
                         Text("\(index + 1)")
-                            .font(Theme.pixel(11))
-                            .foregroundStyle(isOn ? Theme.ink : Theme.inkSoft)
-                            .frame(width: 30, height: 26)
+                            .font(Theme.rounded(15, .black).monospacedDigit())
+                            .foregroundStyle(isOn ? .white : Theme.inkSoft)
+                            .frame(width: 38, height: 34)
                     }
-                    .chunky(isOn ? Theme.goldSoft : Theme.sand,
-                            radius: 9, depth: isOn ? 3 : 0,
-                            haptic: .select, sparks: false)
+                    .chunky(isOn ? Theme.primary : Theme.sand,
+                            radius: 13, depth: isOn ? 4 : 0, haptic: .select)
+                    .padding(.top, isOn ? 0 : 4)
                     .overlay(alignment: .topTrailing) {
                         if marksRecordings, VoiceRecorder.recording(step: step.id, line: index) != nil {
-                            Circle().fill(Theme.green).frame(width: 5, height: 5).offset(x: 1, y: -1)
+                            Circle().fill(Theme.gold)
+                                .overlay(Circle().strokeBorder(.white, lineWidth: 1.5))
+                                .frame(width: 10, height: 10)
+                                .offset(x: 3, y: isOn ? -3 : 1)
                         }
                     }
                 }
             }
             .padding(.vertical, 2)
+            .padding(.horizontal, 1)
         }
         .scrollIndicators(.hidden)
     }
@@ -154,7 +163,7 @@ struct ReciterPanel: View {
     // MARK: Listen
 
     private var listenRow: some View {
-        HStack(spacing: 8) {
+        HStack(alignment: .top, spacing: 10) {
             Button {
                 if player.voice == .reciter {
                     player.stop()
@@ -163,34 +172,26 @@ struct ReciterPanel: View {
                     trackListen(all: false)
                 }
             } label: {
-                HStack(spacing: 7) {
+                HStack(spacing: 8) {
                     Image(systemName: player.voice == .reciter ? "stop.fill" : "play.fill")
-                        .font(.system(size: 12, weight: .bold))
-                    Text(loc.t("audio.listen")).font(Theme.label(13))
+                        .font(.system(size: 15, weight: .black))
+                    Text(loc.t("audio.listen"))
                 }
-                .foregroundStyle(Theme.ink)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 10)
             }
-            .chunky(Theme.goldSoft, radius: 12, depth: 3, haptic: .press, sparks: false)
+            .buttonStyle(.cta(.primary, height: 50))
             .accessibilityIdentifier("audio.listen")
 
             // One slow step, not a slider: below about 0.6× the pitch-corrected
             // recitation turns into a growl and stops being a model to copy.
             Button {
                 player.rate = player.rate == 1 ? 0.6 : 1
-                Haptic.select.play()
             } label: {
-                // Not the pixel font: it has no "×" and the glyph came out as
-                // an empty block next to the digit.
                 Text(player.rate == 1 ? "1×" : "0.6×")
-                    .font(Theme.label(12))
-                    .foregroundStyle(Theme.ink)
-                    .frame(width: 44, height: 34)
+                    .font(Theme.rounded(15, .black))
+                    .foregroundStyle(player.rate == 1 ? Theme.inkSoft : Theme.goldDeep)
+                    .frame(width: 54, height: 50)
             }
-            .chunky(player.rate == 1 ? Theme.sand : Theme.goldSoft,
-                    radius: 11, depth: player.rate == 1 ? 0 : 3,
-                    haptic: .select, sparks: false)
+            .chunky(player.rate == 1 ? Theme.sand : Theme.goldSoft, radius: 18, depth: 6, haptic: .select)
 
             if clipCount > 1 {
                 Button {
@@ -198,11 +199,11 @@ struct ReciterPanel: View {
                     trackListen(all: true)
                 } label: {
                     Image(systemName: "text.line.first.and.arrowtriangle.forward")
-                        .font(.system(size: 12, weight: .bold))
-                        .foregroundStyle(Theme.ink)
-                        .frame(width: 40, height: 34)
+                        .font(.system(size: 16, weight: .black))
+                        .foregroundStyle(Theme.primaryDeep)
+                        .frame(width: 54, height: 50)
                 }
-                .chunky(Theme.sand, radius: 11, depth: 0, haptic: .tap, sparks: false)
+                .chunky(Theme.primarySoft, radius: 18, depth: 6, haptic: .tap)
                 .accessibilityLabel(loc.t("audio.all"))
             }
         }

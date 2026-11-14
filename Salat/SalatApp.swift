@@ -9,6 +9,7 @@ struct SalatApp: App {
     @State private var player = RecitationPlayer()
     @State private var recorder = VoiceRecorder()
     @State private var reminders = StudyReminders()
+    @State private var store = Store()
     @Environment(\.scenePhase) private var scenePhase
 
     init() {
@@ -28,33 +29,34 @@ struct SalatApp: App {
                 .environment(player)
                 .environment(recorder)
                 .environment(reminders)
-                .tint(Theme.gold)
+                .environment(store)
+                .tint(Theme.primary)
+                .task {
+                    store.start()
+                    Nudges.shared.attach(store)
+                }
                 // Rewritten at every return to the app rather than only when
                 // the switch is touched: the plan names steps that are still
                 // unlearned, and that changes as the user learns them.
                 .onChange(of: scenePhase) { _, phase in
                     guard phase == .active else { return }
                     Task { await reminders.sync(with: settings) }
+                    // A renewal, a refund or a cancellation happens while the
+                    // app is away: the App Store is asked again at each return.
+                    Task { await store.refresh() }
                 }
-                // Ads (consent form, then tracking prompt) wait for onboarding
+                // Ads (consent form, then tracking prompt) wait for the welcome
                 // to be gone: two system sheets over the first page would be
-                // the app's first impression.
+                // the app's first impression. The welcome itself is an overlay
+                // drawn by `ContentView`.
                 .onChange(of: onboarding.shouldShowOnboarding, initial: true) { _, showing in
                     if !showing { Ads.shared.start() }
                 }
-                // A two-way binding, so dismissing the sheet — by the button or
-                // by any route iOS offers — actually records that it was seen.
-                // `.constant` here meant the sheet could never close.
-                .sheet(isPresented: Binding(
-                    get: { onboarding.shouldShowOnboarding },
-                    set: { showing in if !showing { onboarding.markSeen() } }
-                )) {
-                    OnboardingView()
-                        .environment(onboarding)
-                        // The first page picks the language, so the sheet needs
-                        // the settings the rest of the app writes to.
-                        .environment(settings)
-                        .localized(settings.localizer)
+                // Premium has no ads, so a subscriber never started them. The
+                // day a subscription lapses they start here (`start` itself
+                // declines while Premium is active).
+                .onChange(of: store.isPremium) { _, premium in
+                    if !premium, !onboarding.shouldShowOnboarding { Ads.shared.start() }
                 }
         }
     }

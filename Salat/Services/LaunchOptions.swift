@@ -21,6 +21,7 @@ enum LaunchOptions {
     static var startTab: AppTab {
         switch value("-startTab") {
         case "practice": return .practice
+        case "quran":    return .quran
         case "settings": return .settings
         default:         return .learn
         }
@@ -90,4 +91,82 @@ enum LaunchOptions {
     /// gallery instead of falling through into a dealt round — the round is
     /// what every older script expects, so the gallery needs its own switch.
     static var opensDrillPicker: Bool { value("-drillPicker") == "1" }
+
+    /// `-celebrate 1` (with `-openStep`) plays the "step acquired" moment on
+    /// arrival: it only exists for two seconds after a tap, and nobody is here
+    /// to tap.
+    static var celebrates: Bool { value("-celebrate") == "1" }
+
+    /// `-welcomePage 0…2` opens the onboarding on that pitch page,
+    /// `-welcomeBeat N` freezes its animated scene on beat N (99 = the last),
+    /// `-welcomeQuestion 0…1` opens the questions directly. All three need
+    /// `-resetOnboarding 1`: the scenes loop on their own and the questions
+    /// sit behind three taps.
+    static var welcomePage: Int? { value("-welcomePage").flatMap(Int.init) }
+    static var welcomeBeat: Int? { value("-welcomeBeat").flatMap(Int.init) }
+    static var welcomeQuestion: Int? { value("-welcomeQuestion").flatMap(Int.init) }
+
+    /// `-openReciters 1` / `-openAbout 1` open those two sheets of the
+    /// settings, which sit behind a row each.
+    static var opensReciters: Bool { value("-openReciters") == "1" }
+
+    /// `-openWidgetGuide 1` (with `-openTool widget`) opens the "add the
+    /// widget" guide, `-guidePage 0…2` on that page: a sheet behind a button,
+    /// then two swipes.
+    static var opensWidgetGuide: Bool { value("-openWidgetGuide") == "1" }
+    static var guidePage: Int? { value("-guidePage").flatMap(Int.init) }
+    static var opensAbout: Bool { value("-openAbout") == "1" }
+
+    /// `-startTab quran -quranSurah 2 -quranVerse 255` opens the feed on a
+    /// given verse (verse 0, or none, is the surah's opening page);
+    /// `-quranMuted 1` opens it silent, `-openSurahs 1` opens the surah list.
+    /// The feed resumes where it was left, so without these a screenshot
+    /// shows whatever verse the last run stopped on.
+    static var quranStart: (surah: Int, verse: Int)? {
+        guard let surah = value("-quranSurah").flatMap(Int.init) else { return nil }
+        return (surah, value("-quranVerse").flatMap(Int.init) ?? 0)
+    }
+    static var forcesQuranMuted: Bool { value("-quranMuted") == "1" }
+    static var opensSurahs: Bool { value("-openSurahs") == "1" }
+    /// `-openQuranNotes 1` opens the notes of the verse the feed starts on,
+    /// `-openQuranSaved 1` the list of liked and annotated verses.
+    static var opensQuranNotes: Bool { value("-openQuranNotes") == "1" }
+    static var opensQuranSaved: Bool { value("-openQuranSaved") == "1" }
+
+    /// `-premium 1|0` (DEBUG) forces Salat Premium on or off, whatever the
+    /// App Store says: a simulator launched from the command line has bought
+    /// nothing and never will, so the unlocked widget page could not be seen.
+    /// Nil everywhere else, where the App Store is the only one who answers.
+    static var forcedPremium: Bool? {
+        switch value("-premium") {
+        case "1": return true
+        case "0": return false
+        default:  return nil
+        }
+    }
+
+    /// `-openPaywall 1` opens the Premium screen on arrival, and
+    /// `-paywallPrice "1,99 €"` (DEBUG) prints that price on it: without a
+    /// StoreKit session no product loads, and the screen would only ever show
+    /// its "cannot be reached" state.
+    static var opensPaywall: Bool { value("-openPaywall") == "1" }
+    static var paywallPrice: String? { value("-paywallPrice") }
+
+    /// `-paywallReason ads|widget` (with `-openPaywall 1`) opens the paywall
+    /// the way a pause would have offered it, with that argument first.
+    /// `-forceNudge paywall|review` (DEBUG) makes the next pause (a step page
+    /// closed, a round finished) show that, whatever the history says: the
+    /// real thing waits for days of use.
+    static var paywallReason: PaywallReason? { value("-paywallReason").flatMap(PaywallReason.init(rawValue:)) }
+    static var forcedNudge: String? { value("-forceNudge") }
+
+    /// `-widgetScope quran|learning|all|one` (DEBUG) sets what the widget
+    /// shows for this launch, and `-openExcerpts 1` (with `-openTool widget`)
+    /// opens the list of Qur'an excerpts: a menu, then a sheet behind a row.
+    static var widgetScope: String? { value("-widgetScope") }
+    static var opensExcerpts: Bool { value("-openExcerpts") == "1" }
+
+    /// `-widgetLocked 1` (with `-startTab widgetPreview`) draws the widget as
+    /// the home screen shows it without a subscription.
+    static var showsLockedWidget: Bool { value("-widgetLocked") == "1" }
 }

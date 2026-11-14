@@ -66,14 +66,27 @@ Là où elles divergent (formulation du Tashahhud, position des mains, Qunut), l
 **signalée dans le champ `note`, jamais tranchée**. Ne pas « corriger » une étape vers une école
 particulière sans que Sharik l'ait demandé.
 
-## Illustrations
+## Illustrations : une figurine 3D, modélisée en code
 
-Générées par NanoBanana (`/generateImage`), puis détourées et recadrées par
-`tools/cutout.py` (fond → alpha, crop sur la figure, sortie 512×512).
+Depuis la refonte « Jardin » (14/11/2026), les neuf `pos_*.png` sont des **rendus Blender** :
+une figurine en pâte à modeler (thobe crème, calotte verte), écrite en Python dans
+`tools/blender/icons.py` (dictionnaire `FIGURES`) avec les briques du kit
+`~/Documents/tools/icon3d`. C'est la même matière que les icônes 3D de l'app : les postures et
+les objets parlent la même langue.
 
-Contrainte non négociable, rappelée dans le prompt : **aucun trait de visage** (pas d'yeux, pas
-de bouche, pas de nez), silhouette pleine d'un jeune homme en thobe. Toute régénération doit
-repartir du prompt de `tools/generate-positions.py`.
+```bash
+B=/Applications/Blender.app/Contents/MacOS/Blender
+$B -b -P tools/blender/icons.py -- --figures --still ruku   # une image de réglage
+$B -b -P tools/blender/icons.py -- --figures               # les neuf, dans Design/figures-render/
+python3 tools/pack_figures.py                               # ombre nettoyée, 512×512, vers SalatKit/Resources
+```
+
+Contrainte non négociable : **aucun trait de visage** (pas d'yeux, pas de bouche, pas de nez).
+La tête est une boule lisse ; une légère bosse de la même couleur dit seulement de quel côté
+elle regarde, sans quoi le salam (tête tournée) ne se lit pas. Ne rien ajouter dessus.
+
+L'ancienne chaîne (NanoBanana, `tools/generate-positions.py`, `cutout.py`, `pixelate.py`) est
+restée dans `tools/` mais ne sert plus : les silhouettes plates pixellisées ont été remplacées.
 
 **L'assise finale a deux dessins, et c'est voulu.** `pos_tashahhud` (étape 12) montre le poing
 fermé posé sur le genou, `pos_tashahhud_index` (étape 13) le même corps avec l'index tendu :
@@ -89,14 +102,21 @@ Si un `pos_*.png` manque, `PositionMedallion` retombe sur `PostureFigure` — le
 dessinées en `Path`. C'est un vrai plancher, pas un placeholder : l'app reste utilisable et
 conforme sans aucune image.
 
-**L'icône d'app (depuis la 1.1) : une arche dorée traversée par une onde sonore, sur fond
-nuit.** Choisie le 01/10/2026 dans App Store Studio parmi trois concepts : l'étoile khatam en
-or sur fond crème (l'icône 1.0) se perdait à 60 px, et la fiche ne convertissait que 6,4 % de
-ses affichages en visites. `tools/make-appicon.py` porte un prompt NanoBanana qui la **décrit
-après coup** (le studio ne garde pas le sien) et un `--install` qui efface l'étincelle du
-générateur et force 1024×1024 **sans alpha** — iOS refuse une icône transparente. Même
-contrainte de pudeur que les positions si une silhouette y revient, et toute étoile est à
-**huit** branches : à écrire « star » tout court, le modèle rend un hexagramme.
+**L'icône d'app (depuis le 14/11/2026) : la mosquée 3D du bandeau, sur le vert de l'app.**
+C'est Sharik qui l'a désignée (« la mosquée que t'as sur la bannière est pas mal »). L'icône
+est donc le **même objet** que celui qu'on voit en ouvrant *Apprendre*, rendu par le même
+script :
+
+```bash
+$B -b -P tools/blender/icons.py -- --appicon     # Design/appicon-render/mosque.png, 1024 px
+python3 tools/make-appicon.py                    # pose la mosquée sur le fond, écrit AppIcon.png
+```
+
+`make-appicon.py` calcule le fond (dégradé vert, treillis d'étoiles à **huit** branches, halo
+derrière la coupole), retire l'ombre au sol du rendu et sort du 1024×1024 **sans alpha** : iOS
+refuse une icône transparente. Les icônes précédentes (étoile khatam sur crème en 1.0, arche
+dorée sur fond nuit générée par NanoBanana en 1.1) sont dans l'historique git. L'icône de la
+fiche App Store se met à jour avec le prochain binaire, pas avant.
 
 ## *Mémoriser* est un hall, pas un écran
 
@@ -298,9 +318,6 @@ Dans *Apprendre*, le panneau **disparaît** sur les douze étapes sans clip (`ha
 d'afficher « aucune récitation » : sans micro à proposer en face, c'est une phrase sur rien, en
 haut de page. *Mémoriser* la garde, parce qu'elle y explique pourquoi il n'y a pas de modèle.
 
-Le bouton de vitesse n'est **pas** en police pixel : `04b30` n'a pas de « × » et le glyphe sortait
-en bloc vide à côté du chiffre.
-
 Les pastilles vertes sur les numéros de verset (ce qui est déjà enregistré) ne s'allument que
 là où le micro existe : `marksRecordings`. Dans *Apprendre* elles pointeraient vers rien.
 
@@ -439,8 +456,14 @@ aucun état en plus — et `noteStudied` déclenche déjà le `reloadAllTimeline
 **Le sujet du widget est la phonétique, affichée en entier.** C'est elle qu'on essaie
 d'apprendre : jamais de `lineLimit` dessus, jamais une première ligne suivie de points de
 suspension — une demi-formule n'enseigne rien, on préfère la laisser rétrécir (`minimumScaleFactor`
-jusqu'à 0,45). L'illustration est retombée à une pastille de 30–40 pt : elle situe la posture d'un
-coup d'œil, elle n'est pas le contenu. Une étape muette (le niyyah) affiche son geste à la place.
+jusqu'à 0,45). Une étape muette (le niyyah) affiche son geste à la place.
+
+**En couleur, le widget est le bandeau de l'app en petit** (14/11/2026) : un fond vert au
+treillis blanc qui porte la figurine 3D, le nom de l'étape et le compteur, et les paroles sur
+blanc à côté. Le vert court en haut sur le petit et le grand (`banded`), sur le côté sur le
+moyen (`sided`), où les paroles ont besoin de la largeur. Il va **jusqu'au bord** : l'extension
+déclare `contentMarginsDisabled()`, et c'est aussi ce qui rend l'aperçu dans l'app exact (lui
+n'a jamais eu les marges du système autour).
 
 **Le reste vient s'il y a la place, et ce n'est pas nous qui en décidons.** Les trois tailles
 partagent une seule mise en page ; c'est `ViewThatFits` qui essaie la version la plus complète
@@ -455,63 +478,436 @@ réglage doit passer par `AppSettings`, qui déclenche `WidgetCenter.reloadAllTi
 **Un écran d'accueil teinté ne montre pas ce que le widget a peint** : iOS n'en garde que la
 *luminance* et la reteinte. La crème disparaît, l'encre brune avec — le widget se lit comme une
 carte vide, et c'est exactement la panne qu'on a livrée une fois. `CarouselWidgetView` lit donc
-`\.widgetRenderingMode` : en `fullColor` la DA normale (plaques, sable, or), sinon tout est
+`\.widgetRenderingMode` : en `fullColor` la DA normale (plaque blanche, pastille verte), sinon tout est
 redessiné en clair, l'illustration passée en `.template` (le PNG porte la figure dans son alpha)
-et le `containerBackground` laissé vide. La règle : **rien ne doit dépendre d'une couleur sombre
+et le `containerBackground` laissé vide (mise en page `bare`, sans bandeau). La règle : **rien ne doit dépendre d'une couleur sombre
 sur un fond clair pour être visible**. Le simulateur, lui, est en clair — cette panne ne s'y voit
 pas, elle se vérifie par `-startTab widgetPreview`, qui affiche les deux rendus l'un sous l'autre.
 
 Le widget est archivé ici puis **dessiné par un autre processus**, qui ne résout que les polices
-déclarées par le bundle : la police pixel est donc listée dans `UIAppFonts`
-(`SalatWidget/Info.plist`) en plus de l'enregistrement CoreText de `Theme.registerPixelFont()`.
-Sans ça le compteur sort vide (même panne que sur 5min).
+déclarées par le bundle. Il n'utilise plus que des polices système depuis la refonte ; si une
+police embarquée y revient, elle doit être listée dans `UIAppFonts` de `SalatWidget/Info.plist`,
+sinon son texte sort vide.
 
-## Direction artistique
+## Direction artistique « Jardin » (refonte du 14/11/2026)
 
-Crème `#FBF6EC`, sable `#EFE3CC`, or `#C1962C`, encre brune `#2E2A22`. Titres en **serif**
-(ça doit lire comme un livre, pas comme une app), texte courant en système. Pas de noir pur,
-pas de couleur saturée, pas de photo. Le motif de fond est un `Canvas` (étoiles à huit branches)
-— jamais une image, pour rester net à toutes les tailles et ne rien peser dans le widget.
+Demande de Sharik : refaire tout le design en s'inspirant de **SelfTransfer**
+(`~/Documents/IOS/SelfTransfer`), objets 3D, très amical, palette verte et beige, écrans moins
+encombrés. Tout est dans `SalatKit/Theme.swift` :
 
-## Les formes viennent de 5min (`~/Documents/IOS/5min`)
+| Rôle | Couleur |
+|---|---|
+| page | beige `#FAF4E6` |
+| cartes | blanc, contour pastel `#E7DBC1` |
+| tout ce qui se presse, bandeau, onglet actif | vert `#2FA56F` (arête `#1E7A50`) |
+| sélection, médaillon de posture | menthe `#E1F4E8` |
+| accent : le mot récité, une étape en cours, une récompense | or `#DE9A12` |
+| texte | encre verte `#1F3329`, secondaire `#6C7B70` |
 
-Le langage de formes est celui de `5min/Design/Plate.swift` : rectangle arrondi, **contour d'encre
-épais**, et une **face inférieure pleine extrudée vers le bas** — jamais d'ombre portée floue.
-C'est cette face qui fait qu'un bloc se lit comme un objet posé et non comme une zone coloriée.
-Les boutons s'enfoncent dessus (`chunky`), et **c'est le déplacement de la face qui fait sentir
-l'appui**, pas un changement de couleur — que le pouce cache de toute façon.
+Le vert est **la** couleur d'action ; l'or ne sert plus qu'à trois choses (le curseur du
+récitateur, « en cours », la récompense). Un bouton doré est donc un bug, pas une variante.
 
-**Seules les formes sont reprises.** 5min est sur feutre sombre avec des accents saturés ; ici les
-mêmes formes sont taillées dans la crème, le sable et l'or, et le contour est l'encre brune — un
-quasi-noir sur de la crème percerait des trous au lieu de dessiner des arêtes. Contour 2 pt et non
-3 pt, pour la même raison.
+Tout le texte est en **SF Rounded** (`Theme.rounded`), graisses heavy et black : c'est ce qui
+rend l'app amicale. L'arabe reste en Geeza Pro. La police pixel `04b30` a été **retirée**
+(fichier supprimé, plus de `UIAppFonts` dans le widget) ; `Theme.pixel()` existe encore parce
+que tous les compteurs l'appellent, mais rend des chiffres ronds à chasse fixe.
 
-Le retour du geste vient aussi de 5min (`Feedback.swift`) : vibration **à la descente** (c'est le
-seul instant où elle coïncide avec ce que fait le doigt), clic sonore en même temps, gerbe d'or au
-relâchement. Les rôles ne se piochent pas pour décorer — `select` pour un cran de choix, `press`
-pour un geste plein, `win` pour la seule fanfare (marquer une étape acquise).
+## Les formes viennent de SelfTransfer
 
-Les éclats sont des **étoiles à huit branches** (khatam) — le motif du fond, pas un scintillement
-générique. Ce n'est pas une étoile de David : l'hexagramme est le symbole du judaïsme et n'a rien à
-faire dans une app de salat.
+`SalatKit/Plate.swift`. Deux objets, et on ne les mélange pas :
 
-La police pixel `04b30.ttf` vient aussi de 5min, et sert **uniquement aux nombres** : le badge
-d'étape, le compteur du widget, les secondes. Elle n'a ni arabe ni `É` — « ÉTAPE » y retombait
-glyphe par glyphe en un mélange visible de deux fontes, d'où le badge numéral. Jamais pour le texte
-de prière : un texte sacré en fonte d'arcade serait grotesque.
+- **Ce qu'on lit est une carte** : face blanche, contour **pastel** épais (2,5 pt), jamais
+  d'ombre floue. Le contour n'est jamais l'encre : un trait sombre dessine des boîtes, un trait
+  pastel dessine des objets. `.card()` pour une carte, `.card(padding: 0)` pour une carte de
+  lignes (elle est alors rognée, pour qu'une ligne pressée garde les coins).
+- **Ce qu'on presse est une dalle sur son arête** (`ChunkyFace`) : la face descend d'un coup
+  sur l'arête plus sombre, remonte sur un ressort, et un tap éclair reste enfoncé 0,09 s pour
+  être vu. La vibration part **à la descente**. `.chunky(couleur)` pour un bouton libre,
+  `.buttonStyle(.cta(.primary | .secondary | .gold | .danger))` pour **le** bouton de l'écran :
+  un seul par écran, vert, pleine largeur.
 
-Les illustrations sont légèrement pixellisées (`tools/pixelate.py`, grille 72) pour parler la même
-langue, sans aller jusqu'à rendre les postures illisibles en 62 pt.
+Une ligne dans une carte ne s'enfonce pas, elle se teinte (`RowPressStyle`) : la carte est
+l'objet, la ligne n'est qu'un endroit dessus.
 
-Le `FloatingTabBar` reprend la structure de la convention maison mais **recolorée pour un fond
-clair** : encre sur crème, plaque dorée en relief derrière l'onglet actif, pas de glow néon
-(invisible sur du papier). Les onglets inactifs n'ont **aucun contour** — trois boîtes cerclées
-dans une boîte cerclée, et plus rien ne ressort.
+Les rôles du retour haptique n'ont pas changé (`Feedback.swift`) : `select` pour un cran de
+choix, `press` pour un geste plein, `win` pour la seule fanfare (marquer une étape acquise).
+Le motif de fond reste l'étoile à **huit** branches (khatam), jamais un hexagramme.
+
+## Les objets 3D (kit `~/Documents/tools/icon3d`)
+
+27 icônes modélisées en code dans `tools/blender/icons.py` (dictionnaire `ICONS`), sept images
+chacune, rangées dans `Salat/Assets.xcassets/Icons3D` :
+
+```bash
+B=/Applications/Blender.app/Contents/MacOS/Blender
+$B -b -P tools/blender/icons.py -- --still mosque     # régler une icône
+$B -b -P tools/blender/icons.py -- mosque             # ses sept images (environ 1 min)
+python3 ~/Documents/tools/icon3d/pack_icons.py Design/icons-render Salat/Assets.xcassets/Icons3D
+```
+
+`pack_icons.py` **réécrit le dossier entier** : il lui faut tous les rendus dans
+`Design/icons-render/` (git-ignoré, reproductible). Ajouter une icône = une fonction dans
+`ICONS`, un cas dans `enum Icon3D` (`Salat/Components/LofiIcon.swift`), puis rendre et ranger.
+
+Côté app : `LofiIcon(.book, size:, interval:, animated:)` joue l'icône en lofi, `IconTile` la
+pose sur un carré menthe. **L'élément qui compte s'anime, le reste est sage** : l'onglet actif,
+le héros du bandeau, la récompense. Les SF Symbols restent pour les contrôles purs (fermer,
+chevrons, lecture, micro).
+
+## Les écrans : un bandeau, une chose à faire, le reste derrière
+
+La refonte a surtout **rangé**. La règle : chaque onglet ouvre sur un `Banner` vert (titre +
+objet 3D), puis sur l'unique chose à faire, en vert ; tout ce qui se choisit une fois vit dans
+une feuille (`SheetScaffold`).
+
+- *Apprendre* : la pastille du bandeau **est** le bouton de progression ; la carte « à ouvrir
+  maintenant » lit la tête de `StudyPlanner.queue` ; les quatorze étapes sont une seule carte
+  de lignes. Acquise = écusson 3D, en cours = pousse 3D : deux formes, pas seulement deux
+  couleurs.
+- *Mémoriser* : une carte de démarrage (la manche mixte), puis les outils en tuiles.
+- *Réglages* : des lignes qui disent leur valeur ; langues, récitateurs et crédits sont trois
+  feuilles (`LanguagePickerView`, `ReciterPickerView`, `AboutView`).
+- La barre d'onglets (quatre onglets : Apprendre, Coran, Mémoriser, Réglages) est **arrimée** en bas (`NavBar`, ex `FloatingTabBar`), avec les icônes
+  3D ; les inactives sont désaturées. Elle s'efface toujours pendant une manche
+  (`TabBarHiddenKey`).
+- Marquer une étape acquise joue `CelebrationView` (plein écran, objet qui tombe, étincelles,
+  fanfare) puis referme la fiche.
+
+## L'onboarding : trois scènes animées, deux questions
+
+Calqué sur celui de SelfTransfer (`Salat/Views/OnboardingView.swift`). Trois pages de
+présentation, chacune une **scène qui boucle** (`MotionLoop` + `MotionCanvas`) au lieu d'un
+paragraphe : les mots d'une formule qui s'allument, les étapes qui se cochent, puis **le
+widget sur un écran d'accueil**, qui passe d'une étape à l'autre pendant que l'horloge avance.
+Puis deux questions, **une par écran** : la langue, et le rappel quotidien (la permission de
+notification n'est demandée que si l'on tape « Activer »).
+
+La troisième page est celle du widget **exprès** (demande de Sharik, 14/11/2026) : apprendre
+sans ouvrir l'app est ce qui distingue Salat, et c'était une demi-phrase en fin de liste. La
+scène montre le vrai widget (`HomeScreenMock`), à son vrai rythme d'une étape par minute. Ne
+pas la remplacer par un quiz : les exercices se découvrent dans *Mémoriser*.
+
+Il est monté en **surcouche** dans `ContentView`, plus en feuille : une feuille
+`.constant(true)` ne se ferme jamais, c'est la panne qui a déjà été livrée une fois. « Passer »
+est offert dès la première page et termine tout. Les textes sont les clés `welcome.*` et
+`common.continue`, dans les quatorze langues.
+
+## La page du widget : le voir, l'ajouter, le régler
+
+`WidgetToolView` (outil *Widget d'accueil* du hall) tient en un écran :
+
+- **L'aperçu** est le vrai `CarouselWidgetView` posé sur un écran d'accueil dessiné
+  (`Salat/Components/HomeScreenMock.swift`, fond d'écran vert sombre, icônes pastel sans
+  glyphe). Sur le beige de la page il se lisait comme une carte de plus ; sur un fond d'écran
+  il se lit comme ce qu'il est. Les mêmes pièces servent à l'onboarding et au tutoriel.
+- **Un bouton, « Ajouter à l'écran d'accueil »**, ouvre `WidgetGuideView` : trois pages, chacune
+  un petit téléphone qui montre où va le doigt (appui long, Modifier puis Ajouter un widget,
+  chercher Salat). Calqué sur le guide de DoodleNest. Les libellés `guide.edit` et
+  `guide.addWidget` sont **ceux d'iOS dans chaque langue** ; en ourdou et en bengali ils
+  restent en anglais, iOS n'ayant pas d'interface dans ces langues.
+- **Les réglages sont trois lignes à menu** (`MenuRow`) : ce qu'il montre (la prière ou des
+  extraits du Coran, voir plus bas), l'étape (seulement si « une seule étape ») ou « Mes
+  extraits » (seulement si Coran), le texte affiché en premier. Avant, sept choix en boutons radio sur
+  deux écrans, pour une chose qu'on règle une fois.
+
+`-openTool widget -openWidgetGuide 1 -guidePage 0…2` ouvre le tutoriel sur une page.
+
+Le son des clics a été baissé le même jour (`Sound.bank`, 0,34 → 0,13) : avec un clic sur
+chaque ligne et chaque puce, c'était ce qu'on entendait le plus dans l'app.
+
+## L'onglet *Coran* : le livre entier, en fil d'extraits
+
+Demande de Sharik (14/11/2026), en deux temps. D'abord : une page dans la barre d'onglets où
+l'on fait défiler le Coran, l'écriture au milieu, un récitateur, et la possibilité de couper
+le son. Puis, le même jour : « vraiment un style à la TikTok », avec les cœurs sur le côté,
+des commentaires personnels (modèle : `~/Documents/IOS/selfShortVideo/localShort`), des
+extraits courts au lieu de versets entiers, et de vraies images liées à l'islam en fond, sous
+un filtre sombre. C'est le deuxième onglet (`AppTab.quran`, `Salat/Views/QuranView.swift`,
+icône 3D `quran` : un mushaf fermé, pour ne pas se confondre avec le livre ouvert
+d'*Apprendre*).
+
+**Le fil est une seule liste** d'écrans (`Quran.pages`) : pour chaque sourate, sa page
+d'ouverture puis ses versets, un verset long occupant plusieurs écrans (`part` sur `parts`).
+Une seule liste et non une par sourate, pour que le pouce passe du dernier verset d'une
+sourate à la suivante sans rencontrer de bord. Défilement paginé
+(`scrollTargetBehavior(.paging)`), image bord à bord sous la barre d'état, et l'identifiant
+d'un écran **est** son rang.
+
+Quatre règles tiennent l'écran :
+
+- **La basmala a sa page.** Les fichiers des récitateurs coupent le Coran verset par verset.
+  Tanzil colle la basmala au verset 1 de chaque sourate ; les mp3, non (`002001.mp3` ne dit
+  que « Alif Lam Mim »). `tools/fetch-quran.py` la détache donc, et l'app la montre sur la
+  page d'ouverture, où le récitateur la dit (c'est le fichier `001001`). La Fatiha, dont elle
+  *est* le verset 1, et at-Tawba, qui n'en a pas, ouvrent sur une page muette qui tourne seule.
+- **Un verset long est coupé en extraits, et pas n'importe où** (`QuranExcerpt`). Jusqu'à
+  quatorze mots, le verset reste entier. Au-delà il est coupé aux **signes de pause du
+  mushaf** (U+06D6, 06D7, 06D8, 06DA), en morceaux d'une douzaine de mots ; jamais sur
+  U+06D9, qui veut dire « ne t'arrête pas ici ». Rien n'est retiré ni déplacé : les extraits
+  remis bout à bout **sont** le verset, et un test le tient pour les 6236. La traduction est
+  coupée aux mêmes proportions (poids en lettres de chaque extrait arabe), de préférence sur
+  une ponctuation : c'est une **approximation**, elle ne prétend pas que tel mot traduit tel
+  mot. Une traduction trop courte pour être coupée reste entière sur chaque écran.
+- **La voix ne redémarre pas au milieu d'un verset.** Un verset reste **un seul fichier** :
+  chaque écran en joue une portion (`Quran.span`, les mêmes poids en lettres), la fin de la
+  portion tourne la page sans arrêter le son, et `QuranPlayer.carryOn` dit seulement à la
+  lecture où s'arrêter ensuite. La portion est une estimation, pas une mesure : la page peut
+  tourner un mot trop tôt ou trop tard. Ne pas la vendre comme un karaoké.
+  La page tournée par la voix est **échangée, pas défilée** (`advance`) : les mots
+  s'estompent, le fil saute, les mots reviennent. Un défilement animé d'une `LazyVStack`
+  lâche la page quittée avant d'avoir dessiné la suivante, et l'on voyait un écran vert vide
+  au milieu d'un verset. Dans un même verset l'image ne bouge donc pas ; entre deux versets
+  elle change sous un instant de noir. Ne pas remettre de `withAnimation` sur `position`.
+- **La voix suit le pouce.** Arriver sur une page lance son extrait (après 0,35 s, pour ne
+  rien lancer sur une page seulement traversée) ; seul un extrait allé au bout tourne la
+  page. Un tap met la voix en pause, un double tap pose un cœur. Son coupé, rien ne tourne
+  tout seul : c'est de nouveau un livre.
+
+**Ce qu'il faut lire est au milieu, et rien ne lui dispute l'œil.** Le verset est posé sur
+une plaque sombre translucide, en blanc, la traduction dessous ; `ViewThatFits` essaie cinq
+tailles. Autour : la sourate en haut à gauche (elle ouvre la liste), le son en haut à droite,
+la référence, les tirets d'extraits et le récitateur en bas à gauche, la colonne d'actions à
+droite (cœur, notes, partager, mes versets). Tout ce qui n'est pas le verset est en verre
+(`GlassCircle`), jamais en dalle verte : sur une photo, une dalle pleine devient le sujet.
+
+**Les fonds sont des photos, pas des rendus** : 25 images dans
+`Salat/Resources/backgrounds/quranbg_*.jpg` (3,9 Mo), prises sur Pinterest à la demande de
+Sharik (« pas générer »). `QuranBackground.index` en choisit une d'après la sourate et le
+verset, donc un verset garde toujours la sienne et tous ses extraits la partagent.
+`QuranBackdrop` les passe sous une légère désaturation et un voile noir : c'est le filtre
+demandé, « pour ne pas détourner l'œil » et pour que des images de mains différentes aient la
+même tenue. **Les droits ne sont pas réglés** (auteurs inconnus) : tout est dit dans
+`QURAN_BACKGROUNDS.md`, avec les règles de tri (aucun être vivant, aucun texte, aucune étoile
+à six branches). Ajouter ou remplacer une image = déposer un `quranbg_NN.jpg` ; dossier vide,
+le fil retombe sur des dégradés.
+
+**Les cœurs et les notes sont un carnet, pas un réseau** (`Salat/Quran/QuranJournal.swift`,
+feuilles dans `Salat/Views/QuranSheets.swift`). La feuille de notes a la forme d'un fil de
+commentaires parce que c'est le geste qu'un fil a appris, mais elle n'a qu'un auteur : tout
+reste dans les `UserDefaults` du téléphone, rien ne part, et la feuille le dit
+(`quran.notes.hint`). Un cœur ou une note appartient au **verset** (`VerseRef`), jamais à un
+écran : le découpage en extraits peut changer, un cœur doit survivre. « Mes versets »
+(`QuranSavedView`) liste tout ce qui est marqué ; sans elle un cœur est un cul-de-sac.
+`QuranLikes.all()` rend les cœurs lisibles hors du fil (pour le choix d'extraits du widget).
+Rien de tout ça ne va dans la télémétrie : seule l'ouverture de l'onglet est comptée.
+
+**Le texte est de la donnée** (`Salat/Resources/quran.base.json` + `quran.<code>.json`, dans
+l'app seulement, 15 Mo), reproductible par `python3 tools/fetch-quran.py` : texte arabe
+*simple* de Tanzil (le même script que la Fatiha de l'app, lisible en police système) et une
+traduction par langue, via api.alquran.cloud. Le script refuse d'écrire si un compte ne colle
+pas (114 sourates, 6236 versets, 112 basmalas détachées, chaque traduction verset pour
+verset) et `QuranTests` le revérifie côté app. **Ne jamais éditer un verset à la main.** La
+basmala se lit dans la source, elle ne se tape pas : les mêmes lettres peuvent être encodées
+avec leurs signes dans un autre ordre, et une copie tapée ne correspond alors à rien.
+
+Les traductions (Hamidullah en français, Saheeh International en anglais, etc. : la table est
+dans le script) sont créditées dans *À propos* avec le nom du traducteur. **Il n'y a pas de
+phonétique** : aucune translittération du Coran entier n'existe dans les traditions de chaque
+langue, et recopier l'anglaise partout est exactement ce que ce fichier interdit plus haut.
+
+**Le son est téléchargé, pas embarqué** (`Salat/Quran/QuranAudio.swift`) : neuf récitateurs
+fois 6236 versets pèsent plusieurs gigaoctets. Chaque verset vient d'everyayah.com à la
+première écoute (`Reciter.source` + `SSSVVV.mp3`), le suivant est préchargé pendant que
+celui-ci sonne, et tout est gardé dans `Caches/quran-audio/`, plafonné à 250 Mo. Le
+récitateur est celui des réglages. Hors connexion, le verset s'affiche et une ligne le dit
+(`quran.offline`). `QuranPlayer` est distinct de `RecitationPlayer` : il attend un
+téléchargement, et un verset demandé puis dépassé ne doit jamais partir en retard sur le
+suivant (jeton `token`). La session audio est tenue d'un verset à l'autre et rendue à
+l'arrêt.
+
+**C'est le seul endroit où l'app télécharge du contenu**, et ça engage deux déclarations :
+la page de confidentialité (`sharik-dev/salat-support`) dit encore que le réseau se limite
+aux pubs et aux statistiques, elle doit mentionner everyayah.com **avant** la prochaine
+soumission ; et les traductions sont du contenu tiers de plus, dont les licences n'ont pas
+été vérifiées une à une.
+
+Pas de pub sur cet onglet : une interstitielle au milieu d'une récitation est exactement ce
+que `Ads` s'interdit. La place est retenue (`QuranBookmark`, sourate et verset, pas un rang).
+Liens profonds : `-startTab quran -quranSurah 2 -quranVerse 255` (arrive sur le premier extrait
+du verset), `-quranMuted 1`, `-openSurahs 1`, `-openQuranNotes 1`, `-openQuranSaved 1`.
+
+**Le simulateur est partagé** avec les autres sessions et les studios d'agents : une capture
+blanche ou un écran d'une autre app au milieu d'une série, c'est quelqu'un d'autre qui vient
+de lancer la sienne, pas un plantage. Reprendre la capture avant de chercher un bug.
+
+## Salat Premium : le widget et le sans pub, 1,99 par mois
+
+Demande de Sharik (14/11/2026) : le widget devient une fonctionnalité payante, par un
+abonnement bon marché, et l'abonnement retire aussi les pubs. Un seul produit, mensuel,
+auto-renouvelable : `com.salat.premium.monthly` (`Store.productID`). StoreKit 2, aucun
+serveur : c'est l'App Store qui sait qui a payé, et l'app le lui redemande à chaque retour au
+premier plan (`Store.refresh`, plus l'écoute de `Transaction.updates`).
+
+**Ce qui est payant, c'est le widget sur l'écran d'accueil, pas sa page.** `WidgetToolView`
+reste ouverte à tous, aperçu et réglages compris : voir le widget avec son propre contenu
+dessus est ce qui le vend. Seul le bouton change (« Débloquer le widget » au lieu de « Ajouter
+à l'écran d'accueil »). Même règle dans la galerie de widgets d'iOS (`context.isPreview`) : un
+cadenas là, ce serait choisir à l'aveugle.
+
+**Le widget ne peut pas interroger l'App Store**, il a quelques millisecondes pour dessiner.
+`Store` écrit donc la réponse dans la suite partagée (`Premium.isActive`, clé
+`premium.active`) et relance les timelines. C'est un oui ou non, **sans date d'expiration à
+côté** : une date verrouillerait le widget à la fin de chaque mois payé jusqu'à la prochaine
+ouverture de l'app, et c'est celui qui paie qui serait puni. Sans abonnement le widget dessine
+`lockedCard` (le vert de l'app bord à bord, le cadenas 3D, « Ouvre Salat pour débloquer le
+widget »), une seule entrée de timeline, `policy: .never`. Le toucher ouvre l'app sur le
+paywall (`Premium.unlockURL`, `salat://premium`, lu par `onOpenURL` dans `ContentView`).
+
+**Premium n'a pas de pub.** `Ads.start()` et `Ads.breakPoint()` s'arrêtent à
+`Premium.isActive` : un abonné ne voit ni le formulaire de consentement, ni l'invite de suivi,
+et le SDK ne démarre pas. Le test passe **avant** `booted`, pour que `SalatApp` puisse relancer
+`start()` le jour où un abonnement s'éteint.
+
+**Le prix n'est écrit nulle part dans l'app.** `1,99` vit dans App Store Connect (et dans
+`StoreKit/Premium.storekit` pour un lancement depuis Xcode) ; l'écran imprime
+`Product.displayPrice`, dans la monnaie et avec la taxe du lecteur. Sans produit chargé, le
+paywall dit que l'App Store est injoignable et propose de réessayer : il ne vend jamais sans
+prix affiché.
+
+**Le paywall (`PaywallView`) est une seule feuille pour toute l'app**, levée par
+`store.showsPaywall` et présentée par `ContentView`, jamais par-dessus l'onboarding. En haut,
+le **vrai widget du lecteur** sur un écran d'accueil ; dessous, quatre avantages ; en bas, le
+prix, le bouton vert, et tout ce qu'Apple exige d'un écran d'abonnement : la période à côté du
+prix, la phrase sur le renouvellement, « Restaurer mes achats », les liens Conditions
+d'utilisation (la licence standard d'Apple) et Confidentialité. En retirer un pour ranger la
+page, c'est un refus en revue. Une fois abonné, la même feuille dit « Premium est actif » et
+mène à la page de gestion de l'App Store.
+
+**Les raccourcis vers l'offre** (demande de Sharik) sont un seul composant, `PremiumShortcut`,
+posé là où la question se pose : en haut des *Réglages*, dans le hall de *Mémoriser*, sous les
+quatorze étapes d'*Apprendre* (dessous, jamais au-dessus : la page ouvre sur ce qu'il faut
+apprendre). La ligne du widget dans le hall porte une pastille « Premium » (`PremiumBadge`).
+Tout disparaît une fois abonné : proposer d'acheter ce qui est acheté, c'est du bruit. Dans
+les *Réglages*, la ligne reste et dit « Premium est actif ».
+
+Rien dans `DrillLog` ni dans la télémétrie : aucun évènement d'achat ne part vers
+app-metrics, App Store Connect compte les abonnés mieux que nous.
+
+Liens profonds (DEBUG) : `-premium 1|0` force l'abonnement (un simulateur lancé par
+`simctl` n'a rien acheté et n'achètera jamais), `-openPaywall 1` ouvre la feuille,
+`-paywallPrice "1,99 €"` y imprime un prix faute de produit, `-debugAdsNoConsent 1` évite que
+le formulaire des pubs passe devant, `-startTab widgetPreview -widgetLocked 1` dessine le
+widget verrouillé dans ses trois tailles et ses deux rendus.
+
+**Sur un vrai téléphone avant que le produit existe**, rien ne peut être acheté : la carte
+de développement des *Réglages* (builds DEBUG seulement) porte un interrupteur « Salat
+Premium » (`Store.setDebugPremium`, mémorisé d'un lancement à l'autre) qui déverrouille le
+widget sans passer par l'App Store.
+
+`PremiumUITests` garde trois choses : le raccourci des réglages ouvre un paywall qui porte
+le prix, Restaurer et les deux liens légaux, et qui se referme ; la page du widget propose
+« Débloquer » et non « Ajouter » sans abonnement ; un abonné ne voit plus l'offre. Aucun
+achat n'y est fait, l'App Store n'est pas joignable depuis un test d'interface.
+
+### L'offre et la note : proposées seules, rarement, à une pause
+
+Demande de Sharik (14/11/2026) : que le paywall « pop » de temps en temps avec ses arguments
+de vente, et qu'une demande de note sorte aussi, « intelligemment et à des moments bien ».
+`Salat/Services/Nudges.swift`. La décision est une valeur pure (`NudgePlanner.decide`), donc
+« rare » et « au bon moment » sont tenus par `NudgeTests`, pas par l'espoir.
+
+Les deux ne sortent **qu'à une pause**, les deux mêmes que les pubs : une page d'étape
+refermée, une manche terminée. `LearnView` et `DrillSessionView` n'appellent plus
+`Ads.shared.breakPoint()` mais `Nudges.shared.pause(_:)`, qui montre **une chose au plus** :
+la demande de note, ou l'offre, ou (rien n'étant dû) rend la pause aux pubs. Jamais deux
+écrans de suite : rien dans les 120 s qui suivent une pub, et une seule sollicitation par
+tranche de 20 heures, laquelle que ce soit.
+
+- **La note** (`AppStore.requestReview`, la carte d'Apple) ne se demande que sur une
+  victoire : une étape tout juste acquise, ou une manche à trois bonnes réponses sur quatre.
+  Demandée après une manche ratée, c'est la manche qu'on note. Il faut être revenu trois
+  jours différents et avoir ouvert trois étapes ; ensuite une fois par version, jamais à
+  moins de deux mois d'écart. Un abonné est sollicité comme les autres. iOS plafonne de
+  toute façon la carte à trois affichages par an, et elle ne sort jamais sur TestFlight.
+- **L'offre Premium** attend le deuxième jour et la troisième étape, sort à une pause
+  ordinaire (pas sur une étape tout juste acquise, ce moment est à la célébration ; pas après
+  une manche à moins de la moitié), et **l'écart s'élargit à chaque refus** : trois jours,
+  une semaine, deux semaines, puis un mois, pour de bon. Ouvrir le paywall à la main remet
+  aussi le compteur à zéro (`paywallSeen`) : qui est allé voir l'offre ce matin ne la revoit
+  pas ce soir.
+- **L'argument suit ce que le lecteur a vécu** (`PaywallReason`) : `.ads` s'il a déjà vu une
+  pub (`AdTally`), la phrase d'accroche devient « Plus aucune pub… » et « Aucune pub » passe
+  en tête des avantages ; `.widget` sinon. Un paywall ouvert au doigt est `.manual`.
+- Quand les deux sont dus à la même pause, la note passe devant : elle ne coûte rien, et
+  l'offre sera encore due demain.
+
+Une première semaine simulée (`testAFirstWeekIsNotAnAssault`) donne : rien le premier jour,
+une demande de note, deux offres. Changer un seuil sans relire ce test, c'est changer ce
+chiffre à l'aveugle.
+
+`-forceNudge paywall|review` (DEBUG) déclenche la sollicitation peu après le lancement,
+quel que soit l'historique : la vraie attend des jours d'usage et une page refermée au
+doigt. `-openPaywall 1 -paywallReason ads` ouvre le paywall avec l'argument des pubs.
+
+### Côté App Store Connect
+
+```bash
+set -a; source ~/.config/ios-testflight-cicd/config.env; set +a
+ruby scripts/asc_subscription.rb                    # lecture seule : dit ce qui manque
+ruby scripts/asc_subscription.rb --apply            # crée groupe, abonnement, fiches, prix, pays
+ruby scripts/asc_subscription.rb --apply --screenshot fastlane/screenshots_raw/paywall.png
+```
+
+Le script se relance sans rien dupliquer. Prix de base : 1,99 € en France, le palier
+équivalent partout ailleurs, 1,99 $ imposé aux États-Unis. Ce qu'il ne fait pas : **signer le
+contrat « Apps payantes »** (sans lui le produit se crée mais ne se charge jamais) et
+**soumettre** l'abonnement, qui part avec une version de l'app (le cocher sur la page de la
+version). Un identifiant de produit ne se réutilise jamais, même supprimé.
+
+Ce qui bouge avec ce binaire côté déclarations : les descriptions de `fastlane/metadata`
+(en, fr, ar) portent une section « Salat Premium » avec la phrase de renouvellement et les
+liens Conditions d'utilisation et Confidentialité (exigence d'Apple pour un abonnement), et
+disent que le widget fait partie de Premium. La page de confidentialité
+(`~/Documents/Web/salat-support`) a sa section « Salat Premium » écrite **en local, pas
+poussée** : la pousser avec la version qui porte l'abonnement, pas avant.
+
+## Les extraits du Coran dans le widget
+
+Quatrième choix du menu « Ce qu'il montre » (`WidgetScope.quran`) : au lieu des étapes de la
+prière, le widget fait défiler **les versets que le lecteur a choisis**, un par minute, dans
+l'ordre de sa liste, pour qu'un passage se lise du premier verset au dernier
+(`CarouselPlan.verseSlot`, la même horloge que les étapes, rien d'épinglé).
+
+**Le widget n'ouvre jamais le Coran.** Les `quran.*.json` pèsent quinze mégaoctets et vivent
+dans l'app seule ; une extension est tuée au-delà de trente. L'app **résout** donc les
+passages (`WidgetPassage` : une sourate, un verset de début, un de fin) en versets déjà écrits
+(`WidgetVerse` : arabe et traduction du lecteur) et dépose cette petite liste dans la suite
+partagée (`QuranExcerpts`, `SalatKit/WidgetExcerpts.swift`). Ce que lit le widget, c'est du
+texte, pas des références. `QuranExcerpts.resolve` est pur (le Coran lui est passé en
+argument), donc testé sans fixtures : bornes rabotées, sourate inconnue ignorée, un verset
+nommé par deux passages n'apparaît qu'une fois.
+
+La traduction est cuite dans la liste : changer de langue relance la résolution
+(`AppSettings.resolveWidgetVerses`, hors du fil principal, avec un numéro de génération pour
+qu'une résolution lente n'écrase pas une plus récente), et la langue cuite est notée à côté
+(`versesLanguage`) pour rattraper au lancement un téléphone qui a changé de langue app fermée.
+
+Un verset est dessiné par la carte qui dessine déjà une étape (`PrayerStep(verse:)`) : le nom
+de la sourate et la référence à la place du nom de l'étape, le Coran 3D
+(`widget_quran.png`) à la place de la figurine. **Il n'y a pas de phonétique** (voir l'onglet
+Coran) : un lecteur dont le widget ouvrait sur la prononciation lit l'arabe, et ce choix
+quitte le menu tant que le widget est sur le Coran. Liste vide : le widget retombe sur la
+prière, jamais sur une carte vide.
+
+Le choix se fait dans `ExcerptPickerView`, une feuille derrière la ligne « Mes extraits » :
+la liste du lecteur, « Ajouter un extrait » (la liste des sourates de l'onglet Coran, puis
+deux menus, du verset et au verset), et des suggestions en un tap. **Les suggestions et la
+graine sont des références, jamais des titres** : l'app ne nomme aucun passage elle-même, le
+texte et les noms viennent tous des fichiers du Coran. La graine (2:255 et les sourates 112 à
+114) ne sert qu'à ne pas ouvrir sur le vide la première fois.
+
+Les deux objets 3D que le widget dessine hors posture (`widget_quran.png`,
+`widget_lock.png`) sont rangés dans le kit par `python3 tools/pack_widget_art.py`, à partir de
+`Design/icons-render` : le widget ne voit pas le catalogue `Icons3D` de l'app.
+
+Liens profonds (DEBUG) : `-widgetScope quran` met le widget sur le Coran pour ce lancement
+(avec la graine si la liste est vide), `-openTool widget -openExcerpts 1` ouvre la feuille.
 
 ## Tests : ce qu'ils gardent
 
 `SalatTests` est **hébergé par l'app** (`TEST_HOST`), pas une seconde compilation de `SalatKit` —
-sinon `@testable import Salat` ne linke pas. `SalatUITests` traverse l'onboarding en tapant :
+sinon `@testable import Salat` ne linke pas. `SalatUITests` traverse l'onboarding en tapant
+(trois pages, la langue, puis « Plus tard » : le seul chemin qui ne lève pas l'alerte système) :
 c'est la régression qui compte, l'app a déjà été livrée une fois avec un onboarding dont on ne
 pouvait pas sortir.
 
@@ -520,8 +916,11 @@ Cette panne mérite d'être retenue : `@Observable` **ne suit que les propriét�
 vue ne se redessine pas. Toute préférence exposée à l'UI se stocke et se persiste dans `didSet`.
 Et une `sheet(isPresented: .constant(…))` ne peut rien écrire en retour — elle ne se ferme jamais.
 
-`-resetOnboarding 1` (DEBUG) force l'onboarding, `-startTab practice|settings|widgetPreview` et
-`-openStep <id>` ouvrent un écran directement, `-openLanguages 1` ouvre la liste des langues,
+`-resetOnboarding 1` (DEBUG) force l'onboarding (`-welcomePage 0…2` choisit la page,
+`-welcomeBeat N` fige sa scène sur un temps, `-welcomeQuestion 0…1` ouvre les questions),
+`-startTab practice|settings|widgetPreview` et `-openStep <id>` ouvrent un écran directement,
+`-openLanguages 1`, `-openReciters 1` et `-openAbout 1` ouvrent les feuilles des réglages,
+`-celebrate 1` (avec `-openStep`) joue la célébration,
 `-remindersOn 1` allume le rappel quotidien pour
 que son sélecteur d'heure soit visible sans passer par l'alerte système : Sharik pilote depuis son
 téléphone et ne peut pas taper dans le simulateur, donc chaque écran doit être atteignable au
@@ -531,7 +930,9 @@ lancement.
 
 `Salat/Services/Ads.swift` : **une interstitielle toutes les deux pauses** — une page d'étape
 refermée (`LearnView`, `onDismiss` de la feuille) ou une manche d'exercices terminée
-(`DrillSessionView.advance`). Jamais pendant une lecture ou une récitation. Le SDK démarre une
+(`DrillSessionView.advance`). Les deux passent par `Nudges.shared.pause`, qui ne rend la
+pause aux pubs que si ni l'offre Premium ni la demande de note ne sont dues ; un abonné
+Premium n'en voit aucune. Jamais pendant une lecture ou une récitation. Le SDK démarre une
 fois l'onboarding refermé : consentement RGPD (UMP) → invite ATT → SDK → préchargement. Le bouton
 « confidentialité des pubs » (`settings.ad_privacy`) n'apparaît dans les réglages que si le RGPD
 s'applique. `-debugAdsNoConsent 1` (DEBUG) saute RGPD + ATT pour voir les pubs au simulateur.
@@ -610,13 +1011,44 @@ Le support et la confidentialité sont deux pages GitHub Pages —
 et aux statistiques anonymes, et des enregistrements qui ne quittent pas l'appareil : changer ça dans l'app sans
 changer la page transforme la page en déclaration fausse.
 
+### Les captures App Store (`Design/screenshots/`, 14/11/2026)
+
+Demande de Sharik : « aussi beau que SelfTransfer ». Dix écrans 6,9" (1290×2796), EN, FR et AR,
+composés par **shotsmith** dans la DA « Jardin ». L'ensemble forme **une seule bande continue** :
+le vert de l'app, son treillis d'étoiles à huit branches, une guirlande dorée avec des lanternes
+qui traverse tous les écrans, les objets 3D de l'app posés là où l'écran en parle. Deux iPhone 3D
+sont **à cheval sur deux écrans** (3→4 la ligne récitée, 7→8 la ligne aux mots effacés), avec
+une loupe sur l'écran suivant.
+
+```bash
+tools/store_shots.sh [nom …]                 # captures brutes produites par l'app → fastlane/screenshots_raw/<langue>/
+python3 Design/screenshots/make-design.py    # écrit design.json (EN, FR) et design.ar.json
+shotsmith Design/screenshots/design.json    --out fastlane/screenshots --fastlane
+shotsmith Design/screenshots/design.ar.json --out fastlane/screenshots --fastlane
+```
+
+- Ne modifier que `make-design.py`, jamais les JSON générés.
+- **L'arabe a son fichier parce que sa bande est en miroir** : l'App Store arabe range les
+  captures de droite à gauche. Sans le miroir, les deux moitiés d'un iPhone à cheval seraient
+  montrées dans le mauvais ordre. Pour relire la bande arabe, assembler les images de la
+  dixième à la première.
+- Les captures brutes viennent de l'**iPhone 17e** (même rapport d'écran que le 6,9", le
+  simulateur le moins gourmand), avec `-premium 1` : ni offre ni formulaire de pubs à l'écran.
+- La capture du widget dépend de la minute : le widget tourne entre les étapes en cours, et
+  le Tashahhud, long, donne un pavé illisible. La reprendre quand il montre « 1 / 3 » (le Sujud).
+- L'écran du widget dit **« avec Salat Premium »** dans son sous-titre : Apple exige qu'une
+  capture qui montre une fonction payante le dise (règle 2.3.2). Ne pas retirer la mention.
+- Aucune marque tierce ni chiffre promotionnel dans les titres. L'écran Coran montre une des
+  photos de fond dont les droits ne sont pas réglés (`QURAN_BACKGROUNDS.md`).
+
 ### Ce qui reste
 
 Les enregistrements everyayah ne sont **plus** un point ouvert : les sept voix partent
 embarquées sans licence écrite, risque assumé, on avise si quelqu'un réclame (décision du
 6 août 2026, motivée dans `AUDIO_SOURCES.md`). Ne pas rouvrir le sujet ni retirer de voix.
 
-- Captures d'écran App Store (aucune envoyée) — obligatoire pour soumettre.
+- Captures d'écran App Store : refaites le 14/11/2026 (voir « Les captures App Store »), pas
+  encore envoyées à App Store Connect.
 - La confidentialité doit être **publiée** sur ASC : c'est le seul geste que la clé `.p8` ne
   sait pas faire (l'API est celle du site, pas la publique). `fastlane spaceauth -u <apple-id>`
   capture la session, mais réclame mot de passe + code 2FA au terminal — Sharik doit la lancer

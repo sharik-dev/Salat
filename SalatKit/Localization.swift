@@ -121,6 +121,13 @@ public enum SharedStore {
         public static let widgetScope = "widget.scope"
         public static let widgetPinnedStep = "widget.pinnedStep"
         public static let widgetFocus = "widget.focus"
+        /// The Qur'an passages the reader picked for the widget, and the
+        /// verses they resolve to (text included), see `QuranExcerpts`.
+        public static let widgetPassages = "widget.quran.passages"
+        public static let widgetVerses = "widget.quran.verses"
+        public static let widgetVersesLanguage = "widget.quran.language"
+        /// Written by the app's `Store`, read by the widget, see `Premium`.
+        public static let premium = "premium.active"
     }
 
     public static var language: AppLanguage {

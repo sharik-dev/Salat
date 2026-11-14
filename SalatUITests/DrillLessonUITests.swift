@@ -15,7 +15,15 @@ final class DrillLessonUITests: XCTestCase {
     func testARoundCanBePlayedToItsSummary() {
         let app = XCUIApplication()
         app.launchArguments += ["-learnAll", "1", "-startTab", "practice",
-                                "-openTool", "drill"]
+                                "-openTool", "drill",
+                                // The round, and nothing over it: on a device
+                                // that never finished the welcome, or one in a
+                                // region where the ad consent form shows, a
+                                // layer covers the lesson and every tap lands
+                                // on it instead.
+                                "-hasSeenOnboarding", "YES",
+                                "-alwaysShowOnboarding", "NO",
+                                "-debugAdsNoConsent", "1"]
         app.launch()
 
         let check = app.buttons["drill.check"]

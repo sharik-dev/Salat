@@ -51,8 +51,8 @@ struct FlashcardsView: View {
                 ProgressBar(value: Double(dealt - deck.count), total: Double(dealt))
                     .frame(height: 14)
                 Text("\(dealt - deck.count)/\(dealt)")
-                    .font(Theme.pixel(11))
-                    .foregroundStyle(Theme.gold)
+                    .font(Theme.rounded(14, .black).monospacedDigit())
+                    .foregroundStyle(Theme.primaryDeep)
             }
             .padding(.horizontal, 18)
             .padding(.top, 10)
@@ -105,9 +105,7 @@ struct FlashcardsView: View {
                             .fixedSize(horizontal: false, vertical: true)
                     }
                 } else {
-                    Image(systemName: "hand.tap.fill")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(Theme.gold)
+                    LofiIcon(.cards, size: 84, interval: 3)
                 }
             }
             .frame(maxWidth: .infinity, minHeight: 240)
@@ -129,26 +127,16 @@ struct FlashcardsView: View {
                         again()
                     } label: {
                         Text(loc.t("flash.again"))
-                            .font(Theme.label(15))
-                            .textCase(.uppercase)
-                            .foregroundStyle(Theme.ink)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 16)
                     }
-                    .chunky(Theme.sand, radius: 16, haptic: .select, sparks: false)
+                    .buttonStyle(.cta(.secondary, haptic: .select))
                     .accessibilityIdentifier("flash.again")
 
                     Button {
                         knew()
                     } label: {
                         Text(loc.t("flash.know"))
-                            .font(Theme.label(15))
-                            .textCase(.uppercase)
-                            .foregroundStyle(Theme.ink)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 16)
                     }
-                    .chunky(Theme.greenSoft, radius: 16, haptic: .press, sparks: false)
+                    .buttonStyle(.cta(.primary, haptic: .press))
                     .accessibilityIdentifier("flash.know")
                 }
             } else {
@@ -156,13 +144,8 @@ struct FlashcardsView: View {
                     reveal()
                 } label: {
                     Text(loc.t("flash.reveal"))
-                        .font(Theme.label(16))
-                        .textCase(.uppercase)
-                        .foregroundStyle(Theme.ink)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
                 }
-                .chunky(Theme.goldSoft, radius: 16, haptic: .press, sparks: false)
+                .buttonStyle(.cta(.primary, haptic: .press))
                 .accessibilityIdentifier("flash.reveal")
             }
         }
@@ -170,16 +153,8 @@ struct FlashcardsView: View {
         .padding(.top, 14)
         .padding(.bottom, 6)
         .background(alignment: .top) {
-            UnevenRoundedRectangle(topLeadingRadius: Theme.Radius.bar,
-                                   topTrailingRadius: Theme.Radius.bar,
-                                   style: .continuous)
-                .fill(Theme.surface)
-                .overlay(
-                    UnevenRoundedRectangle(topLeadingRadius: Theme.Radius.bar,
-                                           topTrailingRadius: Theme.Radius.bar,
-                                           style: .continuous)
-                        .strokeBorder(Theme.ink, lineWidth: Theme.stroke)
-                )
+            Theme.surface
+                .overlay(alignment: .top) { Theme.line.frame(height: 2.5) }
                 .ignoresSafeArea(edges: .bottom)
         }
     }
@@ -227,13 +202,14 @@ struct FlashcardsView: View {
     private var summary: some View {
         VStack {
             Spacer()
-            VStack(spacing: 14) {
+            VStack(spacing: 12) {
+                LofiIcon(.star, size: 128, interval: 1.6)
                 Text(loc.t("flash.done.title"))
                     .font(Theme.title(24))
                     .foregroundStyle(Theme.ink)
                 Text("\(dealt)")
-                    .font(Theme.pixel(32))
-                    .foregroundStyle(Theme.gold)
+                    .font(Theme.rounded(40, .black).monospacedDigit())
+                    .foregroundStyle(Theme.primary)
                 Text(loc.t("flash.done.body"))
                     .font(Theme.body(14))
                     .foregroundStyle(Theme.inkSoft)
@@ -248,13 +224,8 @@ struct FlashcardsView: View {
                 deal()
             } label: {
                 Text(loc.t("flash.restart"))
-                    .font(Theme.label(16))
-                    .textCase(.uppercase)
-                    .foregroundStyle(Theme.ink)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 16)
             }
-            .chunky(Theme.goldSoft, radius: 16, haptic: .press, sparks: false)
+            .buttonStyle(.cta(.primary, haptic: .press))
             .accessibilityIdentifier("flash.restart")
         }
         .padding(.horizontal, 18)

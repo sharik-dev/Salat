@@ -14,6 +14,10 @@ public enum WidgetScope: String, CaseIterable, Sendable {
     case all
     /// One step, permanently. The pick is the reader's, not the planner's.
     case one
+    /// Not the prayer at all: the verses of the Qur'an the reader picked
+    /// (`QuranExcerpts`). With no verse to show it behaves like `.learning`,
+    /// a widget is never an empty card.
+    case quran
 }
 
 /// Which of the three texts the card leads with. The other two still appear

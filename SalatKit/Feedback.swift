@@ -78,8 +78,10 @@ public final class Sound {
     private var players: [String: [AVAudioPlayer]] = [:]
 
     /// An interface sound plays *under* everything else; at full volume it
-    /// reads as an alert.
-    private static let bank: [String: Float] = ["ui-click": 0.34, "ui-nav": 0.30]
+    /// reads as an alert. Turned down a second time on 14/11/2026 (they were
+    /// 0.34 and 0.30): with a click on every row and chip, even a third of the
+    /// volume was the loudest thing in the app.
+    private static let bank: [String: Float] = ["ui-click": 0.13, "ui-nav": 0.11]
 
     private init() {
         try? AVAudioSession.sharedInstance().setCategory(.ambient, options: [.mixWithOthers])
@@ -99,7 +101,7 @@ public final class Sound {
                   let data = try? Data(contentsOf: url) else { return }
             pool = (0..<2).compactMap { _ in
                 let player = try? AVAudioPlayer(data: data)
-                player?.volume = Self.bank[name] ?? 0.34
+                player?.volume = Self.bank[name] ?? 0.13
                 player?.prepareToPlay()
                 return player
             }
@@ -124,7 +126,7 @@ public final class Sound {
                       let data = try? Data(contentsOf: url) else { continue }
                 self.players[name] = (0..<2).compactMap { _ in
                     let player = try? AVAudioPlayer(data: data)
-                    player?.volume = Self.bank[name] ?? 0.34
+                    player?.volume = Self.bank[name] ?? 0.13
                     player?.prepareToPlay()
                     return player
                 }
@@ -221,12 +223,12 @@ public struct StarBurst: View {
     }
 }
 
-/// One sparkle: a cream face with a beige outline. The same two-part
+/// One sparkle: a light gold face with a deeper gold outline. The same two-part
 /// construction as every other object in the app — a filled shape and the
 /// line that closes it — only very small.
 ///
-/// The outline is what does the work: cream on cream is invisible, so the
-/// spark is legible by its edge, exactly like the plates and the tab bar.
+/// The outline is what does the work: a pale shape on a white card is
+/// invisible, so the spark is legible by its edge, exactly like the plates.
 /// The stroke width is **fixed**, not scaled with the spark: a line that
 /// thickens with the shape turns a 22 pt spark into a ring.
 public struct Spark: View {

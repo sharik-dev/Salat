@@ -24,3 +24,10 @@ tools/.cache/
 # Python
 __pycache__/
 *.pyc
+
+# Rendus Blender des icônes et des figurines : reproductibles par tools/blender/icons.py.
+Design/icons-render/
+Design/figures-render/
+
+# Rendu de la mosquée de l'icône d'app : reproductible par tools/blender/icons.py -- --appicon.
+Design/appicon-render/

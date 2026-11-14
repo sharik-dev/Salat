@@ -56,17 +56,29 @@ def review_contact
     phone_number: ENV.fetch("ASC_REVIEW_PHONE"),
     # Un examinateur qui cherche un écran de connexion inexistant refuse : on
     # lui dit d'emblée qu'il n'y en a pas, et où est le cœur de l'app.
-    notes: "No account, no sign-in, no network — the app works fully offline. " \
-           "Onboarding: tap through the three cards, then Start. " \
+    notes: "No account and no sign-in. Onboarding: three cards, then two " \
+           "questions (language, daily reminder); Skip ends it at any time. " \
            "Learn tab: tap any of the 14 steps to see the Arabic text, its " \
            "phonetic transcription and its translation; a play button under the " \
            "illustration plays a reciter's voice with word-by-word highlighting. " \
-           "Memorise tab: quiz exercises, flashcards and a voice-practice tool. " \
-           "The microphone is only used there, on demand, to record yourself and " \
-           "compare the waveform with the reciter — recordings never leave the " \
-           "device, speech recognition is on-device only. A Home Screen widget " \
-           "shows the current step. Content ships in 14 languages and follows " \
-           "the device language; it can be forced in Settings.",
+           "Quran tab: swipe vertically through the whole Quran, one verse at a " \
+           "time; the recitation of each verse is downloaded from the public " \
+           "repository everyayah.com the first time it is played (the only " \
+           "content the app downloads; mute it with the speaker button). " \
+           "Hearts and notes there are private and stay on the device. " \
+           "Memorise tab: quizzes, flashcards, a fading-recitation tool and a " \
+           "voice-practice tool. The microphone is only used there, on demand, " \
+           "to record yourself and compare the waveform with the reciter; " \
+           "recordings never leave the device, speech recognition is on-device. " \
+           "Salat Premium is an auto-renewable monthly subscription " \
+           "(com.salat.premium.monthly) that unlocks the Home Screen widget and " \
+           "removes ads. To reach the purchase screen: Settings tab, first row " \
+           "'Salat Premium'; or Memorise tab, 'Home screen widget', then " \
+           "'Unlock the widget'. Restore Purchases, Terms of Use and Privacy " \
+           "Policy are on that screen. Without the subscription, a Google AdMob " \
+           "interstitial may appear when a step is closed or a round of " \
+           "exercises ends. Content ships in 14 languages and follows the " \
+           "device language; it can be forced in Settings.",
     demo_account_required: false
   }
 end
@@ -168,7 +180,11 @@ platform :ios do
       # Sans ça, `deliver` tente de créer la version et échoue sur une version
       # déjà ouverte — « version number has been previously used », qui ne dit
       # pas du tout ce qu'elle veut dire.
-      skip_app_version_update: true,
+      # `version:1.4` ouvre une nouvelle version sur App Store Connect (à passer
+      # une seule fois, quand la précédente est en ligne) ; sans lui on écrit
+      # dans la version déjà ouverte.
+      skip_app_version_update: options[:version].nil?,
+      app_version: options[:version],
       app_review_information: review_contact,
       overwrite_screenshots: true,
       metadata_path: "./fastlane/metadata",
@@ -188,8 +204,9 @@ platform :ios do
   #
   # Les déclarations sont celles de Sharik, confirmées le 06/08/2026 :
   #   - 4+ — rien de répréhensible ; l'app enseigne un texte religieux.
-  #   - `export_compliance_uses_encryption: false` — l'app ne chiffre rien et ne
-  #     fait aucune requête réseau.
+  #   - `export_compliance_uses_encryption: false` — l'app ne chiffre rien
+  #     elle-même ; ses requêtes (pubs, statistiques, récitations du Coran)
+  #     passent par le HTTPS du système, exempté.
   #   - `content_rights_contains_third_party_content: true` — les récitations
   #     mp3 (everyayah, Hisn al-Muslim) sont du contenu tiers embarqué dans le
   #     binaire ; voir AUDIO_SOURCES.md. Ne pas rebasculer à false tant qu'un
