@@ -1,0 +1,3 @@
+"CFBundleDisplayName" = "Learn Salah";
+"NSMicrophoneUsageDescription" = "To record you reciting a step, so you can play it back against the reciter. Recordings stay on this iPhone.";
+"NSSpeechRecognitionUsageDescription" = "To light up each word as you recite it, like a karaoke line. Recognition runs on this iPhone only; nothing is sent anywhere.";

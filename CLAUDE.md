@@ -5,6 +5,16 @@ sa prononciation écrite dans la langue du lecteur, et sa traduction. Trois temp
 *Learn*, 14 étapes détaillées), on se fait interroger (onglet *Memorise*, exercices + travail de
 la voix), et ça revient tout seul entre deux (**widget** qui fait défiler les positions).
 
+## Nom : Learn Salah (depuis la 1.5, 17/11/2026)
+
+Rebrand appseo : sous l'icône, l'app s'appelle **Learn Salah** (EN ; sur l'App Store **« Learn Salah: Muslim Prayer »**, « Learn Salah » seul étant pris par un autre compte),
+**Apprendre la Prière** (FR), « Learn Salah: تعلم الصلاة » (AR). Le nom affiché vient de
+`Salat/{en,fr}.lproj/InfoPlist.strings` (avec les trois textes de permission traduits) et doit
+égaler le nom de la fiche dans chaque langue (règle 2.3.8). **Garder `en.lproj` à côté de
+`fr.lproj`** : un bundle qui ne déclare que `fr` sert le français à un téléphone anglais. Le code,
+le bundle, l'abonnement (« Salat Premium ») et les clés i18n gardent « Salat ». Les textes EN/FR de
+la fiche viennent de `appseo/appseo.json`, captures de `appseo/out/redesign/iphone69/`.
+
 ## Le projet est généré — ne pas éditer `Salat.xcodeproj`
 
 `project.yml` (XcodeGen) est la source de vérité. Après avoir ajouté un fichier :
@@ -573,24 +583,42 @@ une feuille (`SheetScaffold`).
 - Marquer une étape acquise joue `CelebrationView` (plein écran, objet qui tombe, étincelles,
   fanfare) puis referme la fiche.
 
-## L'onboarding : trois scènes animées, deux questions
+## L'onboarding : « arrête de scroller, remplace ce temps par le Coran » (22/11/2026)
 
-Calqué sur celui de SelfTransfer (`Salat/Views/OnboardingView.swift`). Trois pages de
-présentation, chacune une **scène qui boucle** (`MotionLoop` + `MotionCanvas`) au lieu d'un
-paragraphe : les mots d'une formule qui s'allument, les étapes qui se cochent, puis **le
-widget sur un écran d'accueil**, qui passe d'une étape à l'autre pendant que l'horloge avance.
-Puis deux questions, **une par écran** : la langue, et le rappel quotidien (la permission de
-notification n'est demandée que si l'on tape « Activer »).
+Réécrit le 22/11/2026 à la demande de Sharik, avec la même mécanique que l'ancien (calqué
+sur SelfTransfer, `Salat/Views/OnboardingView.swift`) : chaque page est une **scène qui
+boucle** (`MotionLoop` + `MotionCanvas`) sur un ciel vert, un titre et une phrase dessous.
+Six pages (`WelcomePage`), une seule histoire :
 
-La troisième page est celle du widget **exprès** (demande de Sharik, 14/11/2026) : apprendre
-sans ouvrir l'app est ce qui distingue Salat, et c'était une demi-phrase en fin de liste. La
-scène montre le vrai widget (`HomeScreenMock`), à son vrai rythme d'une étape par minute. Ne
-pas la remplacer par un quiz : les exercices se découvrent dans *Mémoriser*.
+1. **Le problème.** `scroll` : un fil gris d'un téléphone défile sous le pouce, puis
+   s'efface et laisse la première ligne d'al-Fatiha (lue dans le contenu de l'app, la
+   Basmala à défaut). `hours` : *combien d'heures par jour sur ton téléphone ?*, huit
+   pastilles (`HoursPicker`, `onboarding.hours.1…8`) ; « Continuer » attend une réponse.
+   `reckoning` : cette réponse multipliée, des heures par jour en jours par an
+   (`OnboardingManager.daysPerYear`, 4 h → 61 jours), comptée sur un calendrier, puis
+   « et si dix minutes de ce temps allaient au Coran ? ».
+2. **La réponse.** `words` (une ligne lue de trois façons), `steps` (la prière pas à pas),
+   `widget` (le vrai widget sur un écran d'accueil, là où le scroll commençait — page gardée
+   exprès, demande du 14/11/2026).
+3. **L'engagement.** `WelcomeCommitView` : un moment par jour, l'heure du rappel, un aperçu
+   du vrai rappel. La permission de notification n'est demandée que si l'on tape le bouton
+   qui le dit (`onboarding.reminders`) ; `onboarding.later` termine sans alerte.
+
+Puis, sans Premium, **le paywall prend l'écran** (`ContentView`) : c'est la dernière page de
+l'histoire, pas une surprise. La langue reste une capsule en haut de chaque page (plus une
+question à part), « Passer » aussi, et il termine tout — vers le paywall.
+
+**Ce que ces pages s'interdisent** (règle 5.6 et choix de Sharik) : aucune statistique ni
+aucun avis inventé — le seul chiffre est la réponse du lecteur multipliée par 365/24 ;
+aucune promesse au-delà de ce que fait l'app (ni récompense, ni santé, ni « tu vas
+réussir ») ; rien qui tranche entre les écoles. La réponse (`onboarding.phoneHours`) reste
+dans `UserDefaults` : elle ne part pas dans la télémétrie, le paywall la reprend dans son
+accroche (`premium.pitch.hours`).
 
 Il est monté en **surcouche** dans `ContentView`, plus en feuille : une feuille
-`.constant(true)` ne se ferme jamais, c'est la panne qui a déjà été livrée une fois. « Passer »
-est offert dès la première page et termine tout. Les textes sont les clés `welcome.*` et
-`common.continue`, dans les quatorze langues.
+`.constant(true)` ne se ferme jamais, c'est la panne qui a déjà été livrée une fois. Les
+textes sont les clés `welcome.<page>.title/body`, `welcome.hours.*`, `welcome.reckoning.*`,
+`welcome.commit.*` et `common.continue`, dans les quatorze langues.
 
 ## La page du widget : le voir, l'ajouter, le régler
 
@@ -721,8 +749,7 @@ aux pubs et aux statistiques, elle doit mentionner everyayah.com **avant** la pr
 soumission ; et les traductions sont du contenu tiers de plus, dont les licences n'ont pas
 été vérifiées une à une.
 
-Pas de pub sur cet onglet : une interstitielle au milieu d'une récitation est exactement ce
-que `Ads` s'interdit. La place est retenue (`QuranBookmark`, sourate et verset, pas un rang).
+La place est retenue (`QuranBookmark`, sourate et verset, pas un rang).
 Liens profonds : `-startTab quran -quranSurah 2 -quranVerse 255` (arrive sur le premier extrait
 du verset), `-quranMuted 1`, `-openSurahs 1`, `-openQuranNotes 1`, `-openQuranSaved 1`.
 
@@ -730,136 +757,107 @@ du verset), `-quranMuted 1`, `-openSurahs 1`, `-openQuranNotes 1`, `-openQuranSa
 blanche ou un écran d'une autre app au milieu d'une série, c'est quelqu'un d'autre qui vient
 de lancer la sienne, pas un plantage. Reprendre la capture avant de chercher un bug.
 
-## Salat Premium : le widget et le sans pub, 1,99 par mois
+## Salat Premium : toute l'app, 4,99 par mois, 3 jours d'essai, paywall dur
 
-Demande de Sharik (14/11/2026) : le widget devient une fonctionnalité payante, par un
-abonnement bon marché, et l'abonnement retire aussi les pubs. Un seul produit, mensuel,
-auto-renouvelable : `com.salat.premium.monthly` (`Store.productID`). StoreKit 2, aucun
-serveur : c'est l'App Store qui sait qui a payé, et l'app le lui redemande à chaque retour au
-premier plan (`Store.refresh`, plus l'écoute de `Transaction.updates`).
+**Décision de Sharik du 22/11/2026** (remplace le modèle du 14/11 : app gratuite avec pubs,
+Premium à 1,99 qui débloquait le widget et retirait les pubs). Désormais : **plus aucune
+pub**, et **l'app entière est derrière Salat Premium**, 4,99 €/mois avec **3 jours d'essai
+gratuit** pour les comptes éligibles. Un seul produit, mensuel, auto-renouvelable :
+`com.salat.premium.monthly` (`Store.productID`, inchangé : un identifiant ne se réutilise
+jamais). StoreKit 2, aucun serveur : l'App Store sait qui a payé, et l'app le lui redemande à
+chaque retour au premier plan (`Store.refresh`, plus l'écoute de `Transaction.updates`).
 
-**Ce qui est payant, c'est le widget sur l'écran d'accueil, pas sa page.** `WidgetToolView`
-reste ouverte à tous, aperçu et réglages compris : voir le widget avec son propre contenu
-dessus est ce qui le vend. Seul le bouton change (« Débloquer le widget » au lieu de « Ajouter
-à l'écran d'accueil »). Même règle dans la galerie de widgets d'iOS (`context.isPreview`) : un
-cadenas là, ce serait choisir à l'aveugle.
+**Le paywall dur.** Dans `ContentView`, une fois l'onboarding refermé, tant que
+`!store.isPremium` une surcouche `PaywallView(hard: true)` couvre l'app : **pas de bouton
+fermer** (`SheetScaffold(closable: false)`), le contenu dessous est masqué à VoiceOver. Tant
+que `store.hasChecked` est faux (premier `refresh` pas encore revenu), c'est un simple fond
+`Theme.paper` : un abonné qui réinstalle ne voit jamais un prix clignoter. Un ancien
+utilisateur non abonné tombe dessus **au lancement suivant, sans rejouer l'onboarding**
+(`hasSeenOnboarding` est déjà vrai). Il n'y a plus aucun « pop » de l'offre ailleurs :
+`PremiumShortcut`, `PremiumBadge`, `PaywallReason` et la sollicitation périodique sont
+supprimés. Un abonné ouvre la même vue en feuille (fermable) depuis la ligne « Premium est
+actif » des *Réglages* : elle mène à la page de gestion de l'App Store.
 
-**Le widget ne peut pas interroger l'App Store**, il a quelques millisecondes pour dessiner.
-`Store` écrit donc la réponse dans la suite partagée (`Premium.isActive`, clé
-`premium.active`) et relance les timelines. C'est un oui ou non, **sans date d'expiration à
-côté** : une date verrouillerait le widget à la fin de chaque mois payé jusqu'à la prochaine
-ouverture de l'app, et c'est celui qui paie qui serait puni. Sans abonnement le widget dessine
-`lockedCard` (le vert de l'app bord à bord, le cadenas 3D, « Ouvre Salat pour débloquer le
-widget »), une seule entrée de timeline, `policy: .never`. Le toucher ouvre l'app sur le
-paywall (`Premium.unlockURL`, `salat://premium`, lu par `onOpenURL` dans `ContentView`).
+**L'essai.** `Store.loadTrial()` lit l'offre d'introduction du produit
+(`paymentMode == .freeTrial`, sa période en jours) **et** l'éligibilité du compte
+(`isEligibleForIntroOffer`) ; `offeredTrialDays` n'est non nul que si les deux disent oui.
+Alors le bouton dit « Essayer 3 jours gratuitement » (`premium.subscribe.trial`), une
+pastille annonce l'essai (`paywall.trial`) et la phrase légale devient
+`premium.legal.trial` (« 3 jours gratuits, puis 4,99 €/mois… »). Sinon : « S'abonner »
+et `premium.legal`. Un compte qui a déjà eu l'essai ne se le voit jamais promettre.
 
-**Premium n'a pas de pub.** `Ads.start()` et `Ads.breakPoint()` s'arrêtent à
-`Premium.isActive` : un abonné ne voit ni le formulaire de consentement, ni l'invite de suivi,
-et le SDK ne démarre pas. Le test passe **avant** `booted`, pour que `SalatApp` puisse relancer
-`start()` le jour où un abonnement s'éteint.
+**Le prix n'est écrit nulle part dans l'app.** `4,99` vit dans App Store Connect (et dans
+`StoreKit/Premium.storekit`, avec l'offre `P3D` gratuite, pour un lancement depuis Xcode) ;
+l'écran imprime `Product.displayPrice`, dans la monnaie et avec la taxe du lecteur, glissé
+dans les phrases par `%@` (et la durée d'essai par `%d`). Sans produit chargé, le paywall dit
+que l'App Store est injoignable et propose de réessayer : il ne vend jamais sans prix affiché.
 
-**Le prix n'est écrit nulle part dans l'app.** `1,99` vit dans App Store Connect (et dans
-`StoreKit/Premium.storekit` pour un lancement depuis Xcode) ; l'écran imprime
-`Product.displayPrice`, dans la monnaie et avec la taxe du lecteur. Sans produit chargé, le
-paywall dit que l'App Store est injoignable et propose de réessayer : il ne vend jamais sans
-prix affiché.
+**Ce qu'Apple exige d'un écran d'abonnement**, et qui est sur le paywall : le prix **et la
+période**, la phrase sur le renouvellement automatique (et la fin de l'essai), « Restaurer
+mes achats », les liens Conditions d'utilisation (la licence standard d'Apple) et
+Confidentialité. En retirer un pour ranger la page, c'est un refus en revue. L'accroche
+reprend la réponse de l'onboarding (`premium.pitch.hours`) ; cinq avantages : la prière, le
+Coran, la révision, le widget, les rappels.
 
-**Le paywall (`PaywallView`) est une seule feuille pour toute l'app**, levée par
-`store.showsPaywall` et présentée par `ContentView`, jamais par-dessus l'onboarding. En haut,
-le **vrai widget du lecteur** sur un écran d'accueil ; dessous, quatre avantages ; en bas, le
-prix, le bouton vert, et tout ce qu'Apple exige d'un écran d'abonnement : la période à côté du
-prix, la phrase sur le renouvellement, « Restaurer mes achats », les liens Conditions
-d'utilisation (la licence standard d'Apple) et Confidentialité. En retirer un pour ranger la
-page, c'est un refus en revue. Une fois abonné, la même feuille dit « Premium est actif » et
-mène à la page de gestion de l'App Store.
-
-**Les raccourcis vers l'offre** (demande de Sharik) sont un seul composant, `PremiumShortcut`,
-posé là où la question se pose : en haut des *Réglages*, dans le hall de *Mémoriser*, sous les
-quatorze étapes d'*Apprendre* (dessous, jamais au-dessus : la page ouvre sur ce qu'il faut
-apprendre). La ligne du widget dans le hall porte une pastille « Premium » (`PremiumBadge`).
-Tout disparaît une fois abonné : proposer d'acheter ce qui est acheté, c'est du bruit. Dans
-les *Réglages*, la ligne reste et dit « Premium est actif ».
+**Le widget reste réservé aux abonnés.** `Store` écrit la réponse dans la suite partagée
+(`Premium.isActive`, clé `premium.active`) et relance les timelines ; un oui ou non **sans
+date d'expiration** (une date verrouillerait le widget à la fin de chaque mois payé jusqu'à la
+prochaine ouverture de l'app). Sans abonnement le widget dessine `lockedCard` ; le toucher
+ouvre l'app, qui montre le paywall de toute façon. `WidgetToolView` n'a plus qu'un bouton,
+« Ajouter à l'écran d'accueil » : on n'y arrive qu'abonné.
 
 Rien dans `DrillLog` ni dans la télémétrie : aucun évènement d'achat ne part vers
 app-metrics, App Store Connect compte les abonnés mieux que nous.
 
 Liens profonds (DEBUG) : `-premium 1|0` force l'abonnement (un simulateur lancé par
-`simctl` n'a rien acheté et n'achètera jamais), `-openPaywall 1` ouvre la feuille,
-`-paywallPrice "1,99 €"` y imprime un prix faute de produit, `-debugAdsNoConsent 1` évite que
-le formulaire des pubs passe devant, `-startTab widgetPreview -widgetLocked 1` dessine le
-widget verrouillé dans ses trois tailles et ses deux rendus.
+`simctl` n'a rien acheté), `-paywallPrice "4,99 €"` imprime un prix faute de produit,
+`-paywallTrial N` simule un essai de N jours (`0` = pas d'essai, compte non éligible),
+`-openPaywall 1` ouvre la feuille d'un abonné, `-startTab widgetPreview -widgetLocked 1`
+dessine le widget verrouillé. Sur un vrai téléphone, la carte de développement des
+*Réglages* (DEBUG) garde l'interrupteur « Salat Premium » (`Store.setDebugPremium`).
 
-**Sur un vrai téléphone avant que le produit existe**, rien ne peut être acheté : la carte
-de développement des *Réglages* (builds DEBUG seulement) porte un interrupteur « Salat
-Premium » (`Store.setDebugPremium`, mémorisé d'un lancement à l'autre) qui déverrouille le
-widget sans passer par l'App Store.
+`PremiumUITests` garde : sans abonnement, le paywall dur porte le prix, l'essai dans le
+bouton, Restaurer et les deux liens, **pas** de `sheet.close`, et l'app (`tab.learn`) est
+inaccessible ; sans essai, ni pastille ni promesse d'essai ; un abonné voit « Ajouter » sur
+la page du widget, la ligne active des réglages, et une feuille qui se referme. Aucun achat
+n'y est fait.
 
-`PremiumUITests` garde trois choses : le raccourci des réglages ouvre un paywall qui porte
-le prix, Restaurer et les deux liens légaux, et qui se referme ; la page du widget propose
-« Débloquer » et non « Ajouter » sans abonnement ; un abonné ne voit plus l'offre. Aucun
-achat n'y est fait, l'App Store n'est pas joignable depuis un test d'interface.
+### La note : demandée seule, rarement, sur une victoire
 
-### L'offre et la note : proposées seules, rarement, à une pause
-
-Demande de Sharik (14/11/2026) : que le paywall « pop » de temps en temps avec ses arguments
-de vente, et qu'une demande de note sorte aussi, « intelligemment et à des moments bien ».
-`Salat/Services/Nudges.swift`. La décision est une valeur pure (`NudgePlanner.decide`), donc
-« rare » et « au bon moment » sont tenus par `NudgeTests`, pas par l'espoir.
-
-Les deux ne sortent **qu'à une pause**, les deux mêmes que les pubs : une page d'étape
-refermée, une manche terminée. `LearnView` et `DrillSessionView` n'appellent plus
-`Ads.shared.breakPoint()` mais `Nudges.shared.pause(_:)`, qui montre **une chose au plus** :
-la demande de note, ou l'offre, ou (rien n'étant dû) rend la pause aux pubs. Jamais deux
-écrans de suite : rien dans les 120 s qui suivent une pub, et une seule sollicitation par
-tranche de 20 heures, laquelle que ce soit.
-
-- **La note** (`AppStore.requestReview`, la carte d'Apple) ne se demande que sur une
-  victoire : une étape tout juste acquise, ou une manche à trois bonnes réponses sur quatre.
-  Demandée après une manche ratée, c'est la manche qu'on note. Il faut être revenu trois
-  jours différents et avoir ouvert trois étapes ; ensuite une fois par version, jamais à
-  moins de deux mois d'écart. Un abonné est sollicité comme les autres. iOS plafonne de
-  toute façon la carte à trois affichages par an, et elle ne sort jamais sur TestFlight.
-- **L'offre Premium** attend le deuxième jour et la troisième étape, sort à une pause
-  ordinaire (pas sur une étape tout juste acquise, ce moment est à la célébration ; pas après
-  une manche à moins de la moitié), et **l'écart s'élargit à chaque refus** : trois jours,
-  une semaine, deux semaines, puis un mois, pour de bon. Ouvrir le paywall à la main remet
-  aussi le compteur à zéro (`paywallSeen`) : qui est allé voir l'offre ce matin ne la revoit
-  pas ce soir.
-- **L'argument suit ce que le lecteur a vécu** (`PaywallReason`) : `.ads` s'il a déjà vu une
-  pub (`AdTally`), la phrase d'accroche devient « Plus aucune pub… » et « Aucune pub » passe
-  en tête des avantages ; `.widget` sinon. Un paywall ouvert au doigt est `.manual`.
-- Quand les deux sont dus à la même pause, la note passe devant : elle ne coûte rien, et
-  l'offre sera encore due demain.
-
-Une première semaine simulée (`testAFirstWeekIsNotAnAssault`) donne : rien le premier jour,
-une demande de note, deux offres. Changer un seuil sans relire ce test, c'est changer ce
-chiffre à l'aveugle.
-
-`-forceNudge paywall|review` (DEBUG) déclenche la sollicitation peu après le lancement,
-quel que soit l'historique : la vraie attend des jours d'usage et une page refermée au
-doigt. `-openPaywall 1 -paywallReason ads` ouvre le paywall avec l'argument des pubs.
+`Salat/Services/Nudges.swift`, **réduit à la demande de note** le 22/11/2026 (l'offre ne se
+sollicite plus : le paywall dur s'en charge, et les pubs ont disparu). La décision est une
+valeur pure (`NudgePlanner`), donc « rare » et « au bon moment » sont tenus par
+`NudgeTests`. `AppStore.requestReview` ne se demande que sur une victoire (une étape tout
+juste acquise, `stepAcquired()`, ou une manche à trois bonnes réponses sur quatre,
+`pause(_:)`), après trois jours d'usage différents et trois étapes ouvertes ; une fois par
+version, jamais à moins de deux mois d'écart, et rien dans les 20 h qui suivent une autre
+sollicitation. iOS plafonne la carte à trois par an, et elle ne sort jamais sur TestFlight.
+`-forceNudge review` (DEBUG) la déclenche peu après le lancement.
 
 ### Côté App Store Connect
 
 ```bash
 set -a; source ~/.config/ios-testflight-cicd/config.env; set +a
-ruby scripts/asc_subscription.rb                    # lecture seule : dit ce qui manque
-ruby scripts/asc_subscription.rb --apply            # crée groupe, abonnement, fiches, prix, pays
+ruby scripts/asc_subscription.rb                             # lecture seule : dit ce qui manque
+ruby scripts/asc_subscription.rb --apply --start AAAA-MM-JJ  # prix 4,99 daté + essai 3 jours
 ruby scripts/asc_subscription.rb --apply --screenshot fastlane/screenshots_raw/paywall.png
 ```
 
-Le script se relance sans rien dupliquer. Prix de base : 1,99 € en France, le palier
-équivalent partout ailleurs, 1,99 $ imposé aux États-Unis. Ce qu'il ne fait pas : **signer le
-contrat « Apps payantes »** (sans lui le produit se crée mais ne se charge jamais) et
-**soumettre** l'abonnement, qui part avec une version de l'app (le cocher sur la page de la
-version). Un identifiant de produit ne se réutilise jamais, même supprimé.
+Le script se relance sans rien dupliquer. Prix de base : 4,99 € en France, le palier
+équivalent partout ailleurs, 4,99 $ imposé aux États-Unis ; l'offre d'introduction
+`FREE_TRIAL` / `THREE_DAYS` dans chaque pays. **État au 22/11/2026** : l'abonnement est
+`APPROVED` à 1,99 ; la note de revue a été mise à jour par le script, mais l'API a refusé
+le reste — 409 `UNMODIFIABLE` « Cannot edit SubscriptionLocalization when it is in ACTIVE
+state » (les fiches en/fr/ar se changent dans le site) et 409 `STATE_ERROR` « Initial price
+cannot be created again after subscription is approved » (un abonnement approuvé change de
+prix par un **changement daté**, d'où `--start`, pas encore lancé). Ni prix ni essai n'ont
+été posés. Ce qu'il ne fait pas : **soumettre** l'abonnement (il part avec une version, voir
+« Ce que la 1.4 a appris »).
 
-Ce qui bouge avec ce binaire côté déclarations : les descriptions de `fastlane/metadata`
-(en, fr, ar) portent une section « Salat Premium » avec la phrase de renouvellement et les
-liens Conditions d'utilisation et Confidentialité (exigence d'Apple pour un abonnement), et
-disent que le widget fait partie de Premium. La page de confidentialité
-(`~/Documents/Web/salat-support`) a sa section « Salat Premium » écrite **en local, pas
-poussée** : la pousser avec la version qui porte l'abonnement, pas avant.
+Les descriptions de `fastlane/metadata` (en, fr, ar) disent que l'app fonctionne avec Salat
+Premium, l'essai de 3 jours pour les comptes éligibles, la phrase de renouvellement, « sans
+pub », et gardent les liens Conditions et Confidentialité. La note de revue (`Fastfile`,
+`review_contact`) explique l'onboarding, le paywall dur, l'essai et le compte Sandbox.
 
 ## Les extraits du Coran dans le widget
 
@@ -907,7 +905,9 @@ Liens profonds (DEBUG) : `-widgetScope quran` met le widget sur le Coran pour ce
 
 `SalatTests` est **hébergé par l'app** (`TEST_HOST`), pas une seconde compilation de `SalatKit` —
 sinon `@testable import Salat` ne linke pas. `SalatUITests` traverse l'onboarding en tapant
-(trois pages, la langue, puis « Plus tard » : le seul chemin qui ne lève pas l'alerte système) :
+(les six pages en répondant `onboarding.hours.4`, puis « Plus tard » : le seul chemin qui ne
+lève pas l'alerte système), et vérifie qu'il débouche sur le paywall sans Premium, sur
+`tab.learn` avec :
 c'est la régression qui compte, l'app a déjà été livrée une fois avec un onboarding dont on ne
 pouvait pas sortir.
 
@@ -916,8 +916,9 @@ Cette panne mérite d'être retenue : `@Observable` **ne suit que les propriét�
 vue ne se redessine pas. Toute préférence exposée à l'UI se stocke et se persiste dans `didSet`.
 Et une `sheet(isPresented: .constant(…))` ne peut rien écrire en retour — elle ne se ferme jamais.
 
-`-resetOnboarding 1` (DEBUG) force l'onboarding (`-welcomePage 0…2` choisit la page,
-`-welcomeBeat N` fige sa scène sur un temps, `-welcomeQuestion 0…1` ouvre les questions),
+`-resetOnboarding 1` (DEBUG) force l'onboarding (`-welcomePage 0…5` choisit la page — au-delà
+de la question, la réponse vaut 4 h si elle manque —, `-welcomeBeat N` fige sa scène sur un
+temps, `-welcomeQuestion 0` ouvre l'écran du rappel),
 `-startTab practice|settings|widgetPreview` et `-openStep <id>` ouvrent un écran directement,
 `-openLanguages 1`, `-openReciters 1` et `-openAbout 1` ouvrent les feuilles des réglages,
 `-celebrate 1` (avec `-openStep`) joue la célébration,
@@ -926,32 +927,27 @@ que son sélecteur d'heure soit visible sans passer par l'alerte système : Shar
 téléphone et ne peut pas taper dans le simulateur, donc chaque écran doit être atteignable au
 lancement.
 
-## Les pubs AdMob (depuis le 26/10/2026)
+## Pubs en pause (depuis le 22/11/2026)
 
-`Salat/Services/Ads.swift` : **une interstitielle toutes les deux pauses** — une page d'étape
-refermée (`LearnView`, `onDismiss` de la feuille) ou une manche d'exercices terminée
-(`DrillSessionView.advance`). Les deux passent par `Nudges.shared.pause`, qui ne rend la
-pause aux pubs que si ni l'offre Premium ni la demande de note ne sont dues ; un abonné
-Premium n'en voit aucune. Jamais pendant une lecture ou une récitation. Le SDK démarre une
-fois l'onboarding refermé : consentement RGPD (UMP) → invite ATT → SDK → préchargement. Le bouton
-« confidentialité des pubs » (`settings.ad_privacy`) n'apparaît dans les réglages que si le RGPD
-s'applique. `-debugAdsNoConsent 1` (DEBUG) saute RGPD + ATT pour voir les pubs au simulateur.
+Les interstitielles AdMob (26/10 → 22/11/2026) sont **en pause, pas supprimées** : Sharik
+veut pouvoir les rallumer si le paywall dur ne rapporte pas. Tout est resté en place —
+`Salat/Services/Ads.swift`, `Salat/Info.plist` (`GADApplicationIdentifier`, `SKAdNetworkItems`),
+les paquets GoogleMobileAds et UserMessagingPlatform de `project.yml`,
+`NSUserTrackingUsageDescription`, les appels `Ads.shared.start()` (`SalatApp`) et
+`breakPoint()` (`Nudges.pause`). Seul **`Ads.enabled = false`** coupe tout : ni SDK démarré,
+ni formulaire RGPD, ni invite ATT, ni interstitielle. Ne pas supprimer ce code.
 
-Calqué sur crowd-rush, qui tourne en production (`godotGame/crowd-rush/docs/admob.md`) : le SDK
-démarre **par tous les chemins** du consentement, échecs compris ; un chargement raté retente à la
-pause suivante, jamais en boucle ; 60 s minimum entre deux pubs ; les 50 `SKAdNetworkItems` de
-Google. **En debug, toujours les unités de démonstration** (cliquer une vraie pub chez soi fait
-suspendre le compte) ; en Release, `liveInterstitial`. Console AdMob (compte `pub-3988815743198389`) : app
-`~5768518688`, bloc interstitiel « Pause » `/3222246390`, message RGPD publié.
-`app-ads.txt` est servi par le dépôt `sharik-dev/sharik-dev.github.io` (racine du domaine des
-pages de support, celui qu'AdMob explore) : le supprimer, et AdMob refuse de valider l'app.
-`GADApplicationIdentifier` est dans `Salat/Info.plist` (plist partiel, fusionné avec le plist
-généré). `scripts/build_ios.sh` prévient si l'un des deux est encore de démonstration.
+**Pour les rallumer** : `Ads.enabled = true`, retirer le paywall dur (`ContentView`), remettre
+la publicité et le suivi dans `app_privacy.json`, `age_rating.json` et les étiquettes du site.
 
-`fastlane/metadata/app_privacy.json` (repris de crowd-rush : identifiant d'appareil et données
-pub liés + suivi, interaction et plantages non liés) et `advertising: true` dans
-`age_rating.json` décrivent maintenant un binaire **avec** pub. La page de confidentialité
-(`sharik-dev/salat-support`) décrit les pubs et, depuis la 1.3, les statistiques anonymes.
+`fastlane/metadata/app_privacy.json` ne déclare plus que l'interaction produit (statistiques)
+et les données de plantage, non liées, sans suivi ; `age_rating.json` a `advertising: false`.
+Restent à faire **dans le site** : les étiquettes de confidentialité de l'App Store et la
+question publicité du classement d'âge, la page `sharik-dev/salat-support` (elle décrit
+encore les pubs), et l'app dans la console AdMob (compte `pub-3988815743198389`, app
+`~5768518688`) avec sa ligne d'`app-ads.txt` dans `sharik-dev/sharik-dev.github.io` — à
+retirer une fois la version sans pub en ligne, pas avant (les versions installées en
+affichent encore).
 
 ## Les métriques (app-metrics, depuis la 1.3)
 
@@ -1008,7 +1004,8 @@ reste vrai tant qu'un mp3 d'everyayah est dans le binaire. Ne pas le rebasculer 
 
 Le support et la confidentialité sont deux pages GitHub Pages —
 `sharik-dev/salat-support`, EN + FR sur la même page. Elles décrivent un réseau limité aux pubs
-et aux statistiques anonymes, et des enregistrements qui ne quittent pas l'appareil : changer ça dans l'app sans
+et aux statistiques anonymes (les pubs ont disparu le 22/11/2026 : à retirer de la page avec
+la version qui les retire), et des enregistrements qui ne quittent pas l'appareil : changer ça dans l'app sans
 changer la page transforme la page en déclaration fausse.
 
 ### Les captures App Store (`Design/screenshots/`, 14/11/2026)
@@ -1033,7 +1030,7 @@ shotsmith Design/screenshots/design.ar.json --out fastlane/screenshots --fastlan
   montrées dans le mauvais ordre. Pour relire la bande arabe, assembler les images de la
   dixième à la première.
 - Les captures brutes viennent de l'**iPhone 17e** (même rapport d'écran que le 6,9", le
-  simulateur le moins gourmand), avec `-premium 1` : ni offre ni formulaire de pubs à l'écran.
+  simulateur le moins gourmand), avec `-premium 1` : sans lui, le paywall dur couvre tout.
 - La capture du widget dépend de la minute : le widget tourne entre les étapes en cours, et
   le Tashahhud, long, donne un pavé illisible. La reprendre quand il montre « 1 / 3 » (le Sujud).
 - L'écran du widget dit **« avec Salat Premium »** dans son sous-titre : Apple exige qu'une
@@ -1046,7 +1043,8 @@ shotsmith Design/screenshots/design.ar.json --out fastlane/screenshots --fastlan
 - **Une nouvelle version s'ouvre avec `fastlane ios metadata version:1.4`** : sans l'option,
   la lane écrit dans la version déjà ouverte et échoue s'il n'y en a pas.
 - **L'abonnement existe** : groupe « Salat Premium », `com.salat.premium.monthly`, 1,99 € en
-  France, palier équivalent ailleurs, 1,99 $ aux États-Unis, capture du paywall envoyée
+  France, palier équivalent ailleurs, 1,99 $ aux États-Unis (prix de la 1.4 ; 4,99 + essai
+  de 3 jours décidés le 22/11/2026, voir « Salat Premium »), capture du paywall envoyée
   (`fastlane/screenshots_raw/paywall.png`). Dans `asc_subscription.rb`, la disponibilité se
   pose **avant** les prix : un prix dans un pays où l'abonnement n'est pas encore disponible
   est refusé (409 `UNSUPPORTED_TERRITORY`).

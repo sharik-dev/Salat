@@ -2,18 +2,17 @@ import StoreKit
 import SwiftUI
 import WidgetKit
 
-/// Salat Premium: one auto-renewable subscription, monthly, that unlocks the
-/// home screen widget. StoreKit 2, no server: the App Store is the only one
-/// who knows who has paid, and the app asks it every time it comes forward.
+/// Salat Premium: one auto-renewable subscription, monthly, with a three-day
+/// free trial, and **the whole app is behind it** (Sharik's decision,
+/// 22/11/2026: hard paywall, no ads). StoreKit 2, no server: the App Store is
+/// the only one who knows who has paid, and the app asks it every time it
+/// comes forward.
 ///
-/// What is paid for is **the widget on the home screen**. Its page in the app
-/// stays open to everyone, preview and settings included: seeing the widget
-/// with one's own verses on it is the pitch, and a paywall in front of the
-/// preview would be selling a closed box.
-///
-/// The price is never written in the app. `1.99` lives in App Store Connect
+/// The price is never written in the app. `4.99` lives in App Store Connect
 /// (and in `StoreKit/Premium.storekit` for the simulator); the screen prints
-/// `Product.displayPrice`, which is the reader's own currency and tax.
+/// `Product.displayPrice`, which is the reader's own currency and tax. The
+/// trial is read from the product too (`introductoryOffer`), and only offered
+/// to an account Apple still considers eligible.
 @MainActor
 @Observable
 final class Store {
@@ -42,27 +41,19 @@ final class Store {
     /// What the last attempt has to say, shown under the button.
     private(set) var notice: Notice?
 
-    /// Raised from anywhere (the widget's page, the settings, a tap on the
-    /// locked widget); `ContentView` presents the paywall.
-    var showsPaywall = false {
-        didSet {
-            guard showsPaywall, !oldValue else { return }
-            paywallReason = nextReason ?? .manual
-            nextReason = nil
-        }
-    }
+    /// The subscription sheet for someone who already pays (manage, restore).
+    /// A non-subscriber never needs it: the paywall is the whole screen.
+    var showsPaywall = false
 
-    /// Why the paywall is up, which decides the argument it opens on. Anything
-    /// that just sets `showsPaywall` is the reader's own tap: `.manual`.
-    private(set) var paywallReason: PaywallReason = .manual
-    @ObservationIgnored private var nextReason: PaywallReason?
+    /// False until the App Store's records have been read once. Until then the
+    /// app shows a blank cover rather than the paywall: a subscriber who just
+    /// reinstalled must not see "Subscribe" flash for half a second.
+    private(set) var hasChecked = false
 
-    /// Raises the paywall for a reason other than a tap (`Nudges`).
-    func present(_ reason: PaywallReason) {
-        guard !showsPaywall else { return }
-        nextReason = reason
-        showsPaywall = true
-    }
+    /// Days of free trial this account would get, or nil when there is none
+    /// (no offer on the product, or the account already used it). The button
+    /// promises a trial only when this is set.
+    private(set) var trialDays: Int?
 
     enum Notice: Equatable {
         /// "Restore" found nothing to restore on this Apple account.
@@ -88,6 +79,10 @@ final class Store {
         #endif
         forced = override
         isPremium = forced ?? Premium.isActive
+        // A forced answer needs no App Store, and the stored "active" is
+        // trusted for the first frame: the cover only waits for a reader the
+        // app has never seen pay.
+        hasChecked = forced != nil || isPremium
         // `didSet` does not run from an initializer, and a forced answer has
         // to reach the widget too.
         if let forced { Premium.isActive = forced }
@@ -113,7 +108,8 @@ final class Store {
     /// Where the subscription stands, from the App Store's own records (they
     /// are kept on the device: this answers offline too).
     func refresh() async {
-        guard forced == nil else { return }
+        guard forced == nil else { hasChecked = true; return }
+        defer { hasChecked = true }
         var active = false
         for await entitlement in Transaction.currentEntitlements {
             guard case .verified(let transaction) = entitlement,
@@ -132,8 +128,31 @@ final class Store {
             // An empty answer is a failure too: the product is not on sale
             // where this phone is, or not approved yet.
             loadFailed = product == nil
+            await loadTrial()
         } catch {
             loadFailed = true
+        }
+    }
+
+    /// The free trial, if the product has one and this account may take it.
+    private func loadTrial() async {
+        #if DEBUG
+        if let days = LaunchOptions.paywallTrial { trialDays = days > 0 ? days : nil; return }
+        #endif
+        guard let subscription = product?.subscription,
+              let offer = subscription.introductoryOffer,
+              offer.paymentMode == .freeTrial,
+              await subscription.isEligibleForIntroOffer else {
+            trialDays = nil
+            return
+        }
+        let period = offer.period
+        switch period.unit {
+        case .day: trialDays = period.value
+        case .week: trialDays = period.value * 7
+        case .month: trialDays = period.value * 30
+        case .year: trialDays = period.value * 365
+        @unknown default: trialDays = nil
         }
     }
 
@@ -142,6 +161,13 @@ final class Store {
     /// no product ever loads and the screen could not be photographed.
     var displayPrice: String? {
         product?.displayPrice ?? LaunchOptions.paywallPrice
+    }
+
+    /// The trial as the paywall promises it: the product's, or `-paywallTrial`
+    /// (DEBUG) for the same command-line simulator.
+    var offeredTrialDays: Int? {
+        if product == nil, let days = LaunchOptions.paywallTrial { return days > 0 ? days : nil }
+        return trialDays
     }
 
     func purchase() async {

@@ -1,0 +1,71 @@
+{
+  "bundleId": "com.salat",
+  "orientation": "portrait",
+  "theme": {
+    "bg1": "#22B57A",
+    "bg2": "#0A5A3C",
+    "accent": "#FFD66B",
+    "ink": "#FFFFFF"
+  },
+  "icon": "icon.svg",
+  "shots": {
+    "en": [
+      "../fastlane/screenshots_raw/en-US/1_learn.png",
+      "../fastlane/screenshots_raw/en-US/2_step.png"
+    ],
+    "fr": [
+      "../fastlane/screenshots_raw/fr-FR/1_learn.png",
+      "../fastlane/screenshots_raw/fr-FR/2_step.png"
+    ]
+  },
+  "locales": {
+    "en": {
+      "keyword": "Learn Salah: Muslim Prayer",
+      "name": "Learn Salah: Muslim Prayer",
+      "subtitle": "How to pray, step by step",
+      "keywords": "salat,namaz,islam,muslim,prayer,quran,dua,fatiha,beginner,revert,arabic,transliteration,surah,wudu",
+      "promo": "Learn salah one position at a time: the Arabic, how to say it, and what it means. Learn Salah works offline, no account needed.",
+      "description": "Learn Salah teaches you exactly what to say in every position of the prayer, one step at a time.\n\nThe Arabic, how to pronounce it in your own language, and what it means, side by side. No account needed: just you and the words of the salah.\n\nYou know the movements. Standing, bowing, forehead to the ground, sitting. What you do not know is what to say while you are down there, and nobody teaches it slowly enough. Learn Salah does.\n\nLEARN SALAH IN FOURTEEN STEPS\nEvery position of the prayer, from the opening takbir to the final salam, in the order you perform them. Tap one and you get four things, never mixed together: what your body does, the Arabic text, the pronunciation in your own language, and the meaning.\n\nLINE BY LINE\nLong passages such as Al-Fatiha and the Tashahhud are broken down line by line, with the Arabic, the pronunciation and the meaning for each line.\n\nLISTEN AND REPEAT\nHear each line, repeat it, and drill the passages until they stay.\n\nFOR BEGINNERS AND REVERTS\nWhether you are new to Islam or never learned properly as a child, learn salah at your own pace, offline.\n\nLearn salah once, pray with confidence for life.",
+      "slides": [
+        {
+          "headline": "*LEARN*\nSALAH",
+          "caption": "Every word of the prayer, one position at a time"
+        },
+        {
+          "headline": "LEARN SALAH,\n*STEP BY STEP*",
+          "caption": "The Arabic, how to say it, and what it means"
+        }
+      ]
+    },
+    "fr": {
+      "keyword": "Apprendre la Prière",
+      "name": "Apprendre la Prière",
+      "subtitle": "La salat pas à pas, en arabe",
+      "keywords": "salah,namaz,islam,musulman,coran,dua,fatiha,débutant,converti,phonétique,sourate,ablutions",
+      "promo": "Apprendre la prière position par position : l'arabe, la prononciation et le sens. Fonctionne hors ligne, sans compte.",
+      "description": "Apprendre la Prière vous montre exactement quoi dire dans chaque position de la salat, une étape à la fois.\n\nL'arabe, la prononciation écrite dans votre langue, et le sens, côte à côte. Aucun compte : juste vous et les mots de la prière.\n\nLes mouvements, vous les connaissez. Debout, incliné, front au sol, assis. Ce qui manque, c'est quoi dire à ce moment-là, et personne ne l'enseigne assez lentement. Ici, apprendre la prière se fait à votre rythme.\n\nAPPRENDRE LA PRIÈRE EN QUATORZE ÉTAPES\nChaque position, du takbir d'ouverture au salam final, dans l'ordre où vous les faites. Touchez-en une : ce que fait le corps, le texte arabe, la prononciation et le sens, jamais mélangés.\n\nLIGNE PAR LIGNE\nLes longs passages comme Al-Fatiha et le Tashahhud sont découpés ligne par ligne, avec l'arabe, la prononciation et le sens.\n\nÉCOUTER ET RÉPÉTER\nÉcoutez chaque ligne, répétez-la, et entraînez-vous jusqu'à la retenir.\n\nPOUR LES DÉBUTANTS ET LES CONVERTIS\nNouveau dans l'islam, ou jamais vraiment appris enfant : apprendre la prière devient simple, hors ligne.\n\nApprendre la prière une fois, prier avec confiance toute sa vie.",
+      "slides": [
+        {
+          "headline": "*APPRENDRE*\nLA PRIÈRE",
+          "caption": "Chaque mot de la salat, position par position"
+        },
+        {
+          "headline": "APPRENDRE\nLA PRIÈRE,\n*PAS À PAS*",
+          "caption": "L'arabe, la prononciation et le sens"
+        }
+      ]
+    }
+  },
+  "redesign": {
+    "icon": "gemini/icon.png",
+    "design": "redesign/design.json",
+    "current": {
+      "en": "../fastlane/screenshots/en-US",
+      "fr": "../fastlane/screenshots/fr-FR"
+    },
+    "shots": {
+      "en": "out/redesign/iphone69/en",
+      "fr": "out/redesign/iphone69/fr"
+    }
+  }
+}

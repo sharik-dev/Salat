@@ -58,20 +58,15 @@ struct SettingsView: View {
 
     // MARK: Salat Premium
 
-    /// The offer while it is one; once subscribed, a row that says so and
-    /// leads to the same screen, where the subscription is managed.
-    @ViewBuilder
+    /// Only a subscriber gets this far (hard paywall): a row that says so and
+    /// leads to the Premium sheet, where the subscription is managed.
     private var premiumCard: some View {
-        if store.isPremium {
-            SettingsRow(icon: .sparkle, title: loc.t("premium.title"),
-                        value: loc.t("premium.active"), valueTint: Theme.primaryDeep) {
-                store.showsPaywall = true
-            }
-            .card(padding: 0)
-            .accessibilityIdentifier("settings.premium.active")
-        } else {
-            PremiumShortcut(place: "settings.premium")
+        SettingsRow(icon: .sparkle, title: loc.t("premium.title"),
+                    value: loc.t("premium.active"), valueTint: Theme.primaryDeep) {
+            store.showsPaywall = true
         }
+        .card(padding: 0)
+        .accessibilityIdentifier("settings.premium.active")
     }
 
     // MARK: Language and voice
@@ -215,14 +210,6 @@ struct SettingsView: View {
         VStack(spacing: 0) {
             SettingsRow(icon: .scroll, title: loc.t("settings.about")) { showAbout = true }
                 .accessibilityIdentifier("settings.about.open")
-
-            // GDPR: users in the EU must be able to change their ad consent.
-            if Ads.shared.privacyOptionsNeeded {
-                RowDivider().padding(.leading, 78)
-                SettingsRow(icon: .shield, title: loc.t("settings.ad_privacy")) {
-                    Ads.shared.showPrivacyOptions()
-                }
-            }
 
             RowDivider().padding(.leading, 78)
 

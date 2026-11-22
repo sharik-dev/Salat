@@ -1,11 +1,13 @@
 import XCTest
 
-/// Salat Premium, from the outside: the ways in lead to the paywall, the
-/// paywall carries what a subscription screen must carry, and a subscriber is
-/// no longer offered what they already have.
+/// Salat Premium, from the outside, since the hard paywall (22/11/2026): a
+/// non-subscriber sees the paywall over the whole app with no way to close
+/// it, the paywall carries what a subscription screen must carry (3.1.2), and
+/// a subscriber gets the app, and a sheet to manage the subscription.
 ///
 /// No purchase is made here: the App Store is not reachable from a UI test.
-/// `-premium 0|1` stands in for its answer and `-paywallPrice` for the price.
+/// `-premium 0|1` stands in for its answer, `-paywallPrice` for the price and
+/// `-paywallTrial` for the free trial.
 final class PremiumUITests: XCTestCase {
 
     override func setUp() {
@@ -13,66 +15,65 @@ final class PremiumUITests: XCTestCase {
         continueAfterFailure = false
     }
 
-    private func launch(premium: Bool, _ extra: [String]) -> XCUIApplication {
+    private func launch(premium: Bool, trial: Int = 3, _ extra: [String] = []) -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments += ["-premium", premium ? "1" : "0",
-                                "-paywallPrice", "1,99 €",
-                                // Nothing over the app: no welcome, no ad
-                                // consent form.
+                                "-paywallPrice", "4,99 €",
+                                "-paywallTrial", String(trial),
+                                // An install that finished the welcome long
+                                // ago: the paywall comes straight away.
                                 "-hasSeenOnboarding", "YES",
-                                "-alwaysShowOnboarding", "NO",
-                                "-debugAdsNoConsent", "1"] + extra
+                                "-alwaysShowOnboarding", "NO"] + extra
         app.launch()
         return app
     }
 
-    func testTheSettingsShortcutOpensAPaywallThatSaysEverythingItMust() {
-        let app = launch(premium: false, ["-startTab", "settings"])
+    func testWithoutPremiumThePaywallCoversTheAppAndSaysEverythingItMust() {
+        let app = launch(premium: false)
 
-        let shortcut = app.buttons["settings.premium"]
-        XCTAssertTrue(shortcut.waitForExistence(timeout: 10), "no way in from the settings")
-        shortcut.tap()
-
-        XCTAssertTrue(app.buttons["paywall.subscribe"].waitForExistence(timeout: 5),
-                      "the paywall did not open")
+        let subscribe = app.buttons["paywall.subscribe"]
+        XCTAssertTrue(subscribe.waitForExistence(timeout: 10), "the hard paywall did not show")
         // What Apple asks of a subscription screen: the price with its period,
-        // a way to restore, the terms and the privacy policy.
-        XCTAssertTrue(app.staticTexts["paywall.price"].exists, "no price next to the button")
-        XCTAssertTrue(app.staticTexts["paywall.price"].label.contains("1,99"))
+        // the trial and what follows it, a way to restore, the terms and the
+        // privacy policy.
+        XCTAssertTrue(app.staticTexts["paywall.price"].exists, "no price on the paywall")
+        XCTAssertTrue(app.staticTexts["paywall.price"].label.contains("4,99"))
+        XCTAssertTrue(subscribe.label.contains("3"), "the button does not name the free trial")
+        XCTAssertTrue(subscribe.label.contains("4,99"), "the button does not say what follows the trial")
         XCTAssertTrue(app.buttons["paywall.restore"].exists, "no restore button")
         XCTAssertTrue(app.buttons["paywall.terms"].exists, "no terms of use link")
         XCTAssertTrue(app.buttons["paywall.privacy"].exists, "no privacy link")
 
-        // And it can be left: a paywall with no way out is the onboarding bug
-        // again, with a price on it.
-        app.buttons["sheet.close"].tap()
-        XCTAssertTrue(shortcut.waitForExistence(timeout: 5), "closing did not return to the settings")
-        XCTAssertFalse(app.buttons["paywall.subscribe"].exists)
+        // Hard: no way around it.
+        XCTAssertFalse(app.buttons["sheet.close"].exists, "the hard paywall can be closed")
+        XCTAssertFalse(app.buttons["tab.learn"].exists, "the app is usable without Premium")
     }
 
-    func testTheWidgetPageSellsTheWidgetInsteadOfAddingIt() {
-        let app = launch(premium: false, ["-startTab", "practice", "-openTool", "widget"])
-
-        let unlock = app.buttons["widget.unlock"]
-        XCTAssertTrue(unlock.waitForExistence(timeout: 10), "the widget page has no unlock button")
-        XCTAssertFalse(app.buttons["widget.add"].exists,
-                       "the add button is offered without a subscription")
-        unlock.tap()
-        XCTAssertTrue(app.buttons["paywall.subscribe"].waitForExistence(timeout: 5),
-                      "unlocking did not open the paywall")
+    func testWithoutATrialTheButtonSimplySubscribes() {
+        let app = launch(premium: false, trial: 0)
+        let subscribe = app.buttons["paywall.subscribe"]
+        XCTAssertTrue(subscribe.waitForExistence(timeout: 10))
+        XCTAssertTrue(subscribe.label.contains("4,99"))
+        XCTAssertFalse(app.staticTexts["paywall.trial"].exists,
+                       "a trial is promised to an account that cannot take it")
     }
 
-    func testASubscriberIsNotOfferedWhatTheyHave() {
+    func testASubscriberGetsTheAppAndCanManageTheSubscription() {
         let app = launch(premium: true, ["-startTab", "practice", "-openTool", "widget"])
         XCTAssertTrue(app.buttons["widget.add"].waitForExistence(timeout: 10),
                       "a subscriber cannot add the widget")
-        XCTAssertFalse(app.buttons["widget.unlock"].exists)
+        XCTAssertFalse(app.buttons["paywall.subscribe"].exists, "a subscriber is shown the paywall")
         app.terminate()
 
         let settings = launch(premium: true, ["-startTab", "settings"])
-        XCTAssertTrue(settings.buttons["settings.premium.active"].waitForExistence(timeout: 10),
+        let active = settings.buttons["settings.premium.active"]
+        XCTAssertTrue(active.waitForExistence(timeout: 10),
                       "the settings do not say Premium is active")
-        XCTAssertFalse(settings.buttons["settings.premium"].exists,
-                       "the offer is still shown to a subscriber")
+        active.tap()
+        XCTAssertTrue(settings.buttons["paywall.manage"].waitForExistence(timeout: 5),
+                      "the subscriber's sheet has no way to manage the subscription")
+        // The subscriber's sheet, unlike the paywall, closes.
+        settings.buttons["sheet.close"].tap()
+        XCTAssertTrue(active.waitForExistence(timeout: 5), "closing did not return to the settings")
     }
 }

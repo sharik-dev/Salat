@@ -31,19 +31,23 @@
           "codeOffers" : [
 
           ],
-          "displayPrice" : "1.99",
+          "displayPrice" : "4.99",
           "familyShareable" : false,
           "groupNumber" : 1,
           "internalID" : "21500002",
-          "introductoryOffer" : null,
+          "introductoryOffer" : {
+            "internalID" : "21500003",
+            "paymentMode" : "free",
+            "subscriptionPeriod" : "P3D"
+          },
           "localizations" : [
             {
-              "description" : "The home screen widget, and no ads",
+              "description" : "Full access: prayer, Qur'an, widget",
               "displayName" : "Salat Premium",
               "locale" : "en_US"
             },
             {
-              "description" : "Le widget d'écran d'accueil, sans pub",
+              "description" : "Accès complet : prière, Coran, widget",
               "displayName" : "Salat Premium",
               "locale" : "fr"
             }

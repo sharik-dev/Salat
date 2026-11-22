@@ -1,9 +1,5 @@
-Un tout nouveau Salat.
+Learn Salah tourne désormais autour d'une idée : arrêter de scroller, et offrir ce temps au Coran et à sa prière.
 
-• Un nouveau visage : plus amical, plus vert, avec des objets en 3D et des écrans plus calmes.
-• Nouvel onglet Coran : tout le Coran, un verset à la fois, avec un récitateur, une traduction, les versets que vous aimez et vos notes privées.
-• Salat Premium : un abonnement mensuel facultatif qui débloque le widget de l'écran d'accueil et retire les publicités. Le widget peut aussi afficher les versets du Coran que vous choisissez.
-• Un nouvel accueil, et un guide tout simple pour ajouter le widget.
-• Des sons de clic plus doux.
-
-Le widget de l'écran d'accueil fait désormais partie de Salat Premium. Les récitations de l'onglet Coran sont téléchargées quand vous les écoutez ; le détail est dans la politique de confidentialité.
+• Un nouvel accueil, avec une question honnête sur ton temps d'écran
+• Toute l'app fait désormais partie de Salat Premium, avec 3 jours d'essai gratuit pour les comptes éligibles
+• Plus aucune publicité

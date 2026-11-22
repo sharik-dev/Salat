@@ -1,4 +1,23 @@
 import SwiftUI
+
+// ⏸ **PUBS EN PAUSE depuis le 22/11/2026** (Salat passe en hard paywall,
+// décision de Sharik). Rien n'est supprimé : le SDK reste lié, ce fichier et
+// ses appels restent en place, seul `Ads.enabled` est à `false` — ni SDK, ni
+// formulaire RGPD, ni invite ATT, ni interstitielle. **Pour les rallumer** si
+// l'abonnement ne marche pas : passer `enabled` à `true`, retirer le hard
+// paywall (`ContentView`), remettre les déclarations pub/suivi dans
+// `fastlane/metadata/app_privacy.json` et `age_rating.json`.
+extension Ads {
+    static let enabled = false
+}
+
+/// How many ads this install has shown.
+enum AdTally {
+    private static let key = "ads.shownCount"
+    static var shown: Int { UserDefaults.standard.integer(forKey: key) }
+    static func bump() { UserDefaults.standard.set(shown + 1, forKey: key) }
+}
+
 #if canImport(GoogleMobileAds)
 import GoogleMobileAds
 import UserMessagingPlatform
@@ -61,7 +80,7 @@ final class Ads: NSObject {
     /// Called once onboarding is out of the way: two system dialogs over the
     /// first page would be the app's first impression.
     func start() {
-        guard !Premium.isActive, !booted else { return }
+        guard Self.enabled, !Premium.isActive, !booted else { return }
         booted = true
         #if DEBUG
         // `-debugAdsNoConsent 1`: skips GDPR + ATT, to see ads in the simulator.
@@ -98,7 +117,7 @@ final class Ads: NSObject {
     /// A natural pause just happened. Every second one shows the interstitial
     /// if it is ready — otherwise nothing, and the count waits for the next.
     func breakPoint() {
-        guard initialized, !Premium.isActive else { return }
+        guard Self.enabled, initialized, !Premium.isActive else { return }
         breaks += 1
         guard let ad = interstitial else {
             // A failed load does not retry in a loop (offline, that drains the

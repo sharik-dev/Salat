@@ -17,8 +17,8 @@ settings:
     # déclarer la famille 2 obligerait à livrer un jeu de captures 2048 × 2732
     # d'écrans qui n'ont jamais été pensés pour cette taille.
     TARGETED_DEVICE_FAMILY: "1"
-    MARKETING_VERSION: "1.4"
-    CURRENT_PROJECT_VERSION: "7"
+    MARKETING_VERSION: "1.7"
+    CURRENT_PROJECT_VERSION: "10"
 
 targets:
   Salat:
@@ -40,7 +40,7 @@ targets:
         # qu'accompagné de plein écran : sans lui, Apple exige les quatre
         # orientations pour le multitâche iPad, même sur une app iPhone.
         INFOPLIST_KEY_UIRequiresFullScreen: YES
-        INFOPLIST_KEY_CFBundleDisplayName: Salat
+        INFOPLIST_KEY_CFBundleDisplayName: "Learn Salah"
         # Asked only when the record button is first pressed, never at launch.
         INFOPLIST_KEY_NSMicrophoneUsageDescription: "To record you reciting a step, so you can play it back against the reciter. Recordings stay on this iPhone."
         # On-device only (the recognizer is created with
@@ -60,7 +60,8 @@ targets:
         # ils vivent dans ce plist partiel, fusionné avec le plist généré.
         INFOPLIST_FILE: Salat/Info.plist
         INFOPLIST_KEY_NSUserTrackingUsageDescription: "Your data is used to show you more relevant ads. Ads keep Salat free."
-    # Pubs AdMob (Services/Ads.swift) : une interstitielle toutes les deux pauses.
+    # Pubs AdMob (Services/Ads.swift) EN PAUSE depuis le 22/11/2026 (hard
+    # paywall) : SDK gardé pour pouvoir les rallumer, `Ads.enabled = false`.
     dependencies:
       - target: SalatWidgetExtension
         embed: true

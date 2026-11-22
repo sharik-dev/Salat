@@ -1,59 +1,82 @@
 import SwiftUI
 
-/// First-launch welcome, modelled on SelfTransfer's: three pitch pages — each
-/// one a big animated scene that loops like a video, then a title and a single
-/// sentence — followed by two questions, one per screen.
+/// First-launch welcome (rewritten 22/11/2026, Sharik: « Arrête de scroller,
+/// remplace ce temps par le Coran »). Same machinery as before — big animated
+/// scenes that loop like a video on a green sky, a title and one sentence
+/// under them — but it now tells one story, in order:
 ///
-/// The old onboarding was six pages of text under a still picture. Nobody reads
-/// a paragraph before having seen the app; what the three scenes do instead is
-/// *show* the three things the app does: you read a line three ways, you go
-/// through the prayer step by step, and the widget keeps teaching it from the
-/// home screen without the app being opened. That last page is the widget's
-/// on purpose (Sharik, 14/11/2026): learning passively is what sets the app
-/// apart, and it used to be half a sentence at the end of a list.
+/// 1. **The problem.** A feed scrolls by and turns into a verse. Then one
+///    question, *how many hours a day on your phone?*, and what that answer
+///    adds up to over a year. The number is the reader's own answer
+///    multiplied out, never a statistic: the app invents nothing (5.6), and
+///    the answer stays on the phone.
+/// 2. **The answer.** The three things the app does with that time: a line of
+///    the prayer read three ways, the prayer step by step, and the widget that
+///    puts it on the home screen, where the scroll used to start.
+/// 3. **The commitment.** One daily moment, with a reminder.
+///
+/// Then the welcome ends and, without Premium, the paywall takes the screen
+/// (`ContentView`): it is the last page of the story, not a surprise.
+///
+/// No promise beyond what the app does: no reward, no health claim, nothing
+/// that takes sides between schools.
 struct OnboardingView: View {
     @Environment(OnboardingManager.self) private var onboarding
-    @State private var asking = LaunchOptions.welcomeQuestion != nil
-    /// True once back from the questions: the pitch reopens on its last page.
+    @State private var committing = LaunchOptions.welcomeQuestion != nil
+    /// True once back from the last screen: the pitch reopens on its last page.
     @State private var cameBack = false
+    @State private var hours: Int? = OnboardingManager.phoneHours
 
     var body: some View {
         ZStack {
-            if asking {
-                WelcomeQuestionsView(back: {
+            if committing {
+                WelcomeCommitView(back: {
                     cameBack = true
-                    withAnimation(.spring(duration: 0.45, bounce: 0.15)) { asking = false }
+                    withAnimation(.spring(duration: 0.45, bounce: 0.15)) { committing = false }
                 }, done: finish)
                 .transition(.push(from: .trailing))
             } else {
-                WelcomePitchView(startAtEnd: cameBack, next: {
-                    withAnimation(.spring(duration: 0.45, bounce: 0.15)) { asking = true }
+                WelcomePitchView(startAtEnd: cameBack, hours: $hours, next: {
+                    withAnimation(.spring(duration: 0.45, bounce: 0.15)) { committing = true }
                 }, skip: finish)
                 .transition(.push(from: .leading))
             }
         }
         .background(Theme.surface.ignoresSafeArea())
+        .onChange(of: hours) { _, value in OnboardingManager.phoneHours = value }
     }
 
-    /// Finishing must always get you into the app — by the last button, by
-    /// *Skip*, or by *Not now*.
+    /// Finishing must always get you out of the welcome — by the last button,
+    /// by *Skip*, or by *Not now*.
     private func finish() { onboarding.markSeen() }
 }
 
 // MARK: - Pitch
 
 enum WelcomePage: Int, CaseIterable, Identifiable {
-    case words, steps, widget
+    case scroll, hours, reckoning, words, steps, widget
     var id: Int { rawValue }
 
-    var titleKey: String { "welcome.\(rawValue + 1).title" }
-    var bodyKey: String { "welcome.\(rawValue + 1).body" }
+    private var name: String {
+        switch self {
+        case .scroll:    return "scroll"
+        case .hours:     return "hours"
+        case .reckoning: return "reckoning"
+        case .words:     return "words"
+        case .steps:     return "steps"
+        case .widget:    return "widget"
+        }
+    }
+
+    var titleKey: String { "welcome.\(name).title" }
+    var bodyKey: String { "welcome.\(name).body" }
 }
 
 /// The pitch pages: a tall green sky that carries the animated scene; under it
 /// a centred title and sentence, the dots, the button.
 struct WelcomePitchView: View {
     var startAtEnd: Bool
+    @Binding var hours: Int?
     var next: () -> Void
     var skip: () -> Void
 
@@ -65,13 +88,22 @@ struct WelcomePitchView: View {
     private let pages = WelcomePage.allCases
     private var page: WelcomePage { pages[index] }
     private var isLast: Bool { index == pages.count - 1 }
+    /// The hours question wants an answer before going on: the next page is
+    /// built on it.
+    private var canAdvance: Bool { page != .hours || hours != nil }
 
     var body: some View {
         VStack(spacing: 0) {
             ZStack {
-                WelcomeMotion(page: page)
-                    .id(index)
-                    .transition(slide)
+                Group {
+                    if page == .hours {
+                        HoursPicker(hours: $hours)
+                    } else {
+                        WelcomeMotion(page: page, hours: hours)
+                    }
+                }
+                .id(index)
+                .transition(slide)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .padding(.horizontal, 16)
@@ -87,7 +119,7 @@ struct WelcomePitchView: View {
                 HStack {
                     languageCapsule
                     Spacer()
-                    if !isLast { skipCapsule.transition(.opacity) }
+                    skipCapsule
                 }
                 .padding(.horizontal, 20)
             }
@@ -95,8 +127,8 @@ struct WelcomePitchView: View {
             // Every caption laid out, hidden, so the height does not change
             // from one page to the next (the scene above must not jump).
             ZStack {
-                ForEach(pages) { WelcomeCaption(page: $0).hidden() }
-                WelcomeCaption(page: page)
+                ForEach(pages) { WelcomeCaption(page: $0, hours: hours).hidden() }
+                WelcomeCaption(page: page, hours: hours)
                     .id(index)
                     .transition(slide)
             }
@@ -119,6 +151,8 @@ struct WelcomePitchView: View {
                 Text(loc.t(isLast ? "onboarding.start" : "common.continue"))
             }
             .buttonStyle(.cta(.primary, height: 60))
+            .disabled(!canAdvance)
+            .opacity(canAdvance ? 1 : 0.5)
             .padding(.horizontal, 24)
             .padding(.bottom, 16)
             .accessibilityIdentifier("onboarding.primary")
@@ -132,12 +166,17 @@ struct WelcomePitchView: View {
                 // A swipe follows the reading direction: in Arabic, "next" is
                 // a swipe to the right.
                 let advance = (t.width < 0) != (loc.layoutDirection == .rightToLeft)
+                if advance, !canAdvance { return }
                 if advance, isLast { next() } else { move(advance ? 1 : -1) }
             }
         )
         .onAppear {
             if startAtEnd { index = pages.count - 1 }
-            if let page = LaunchOptions.welcomePage, pages.indices.contains(page) { index = page }
+            if let page = LaunchOptions.welcomePage, pages.indices.contains(page) {
+                index = page
+                // A page photographed past the question needs an answer.
+                if page > WelcomePage.hours.rawValue, hours == nil { hours = 4 }
+            }
         }
         .sheet(isPresented: $showLanguages) {
             LanguagePickerView()
@@ -201,16 +240,27 @@ private extension View {
     }
 }
 
-/// The text of a page: a title and a sentence, nothing else.
+/// The text of a page: a title and a sentence, nothing else. The reckoning
+/// page's title carries the reader's own number.
 private struct WelcomeCaption: View {
     let page: WelcomePage
+    let hours: Int?
     @Environment(\.loc) private var loc
+
+    private var title: String {
+        if page == .reckoning {
+            guard let hours, hours > 0 else { return loc.t("welcome.reckoning.none.title") }
+            return loc.t(page.titleKey, OnboardingManager.daysPerYear(hours: hours))
+        }
+        return loc.t(page.titleKey)
+    }
 
     var body: some View {
         VStack(spacing: 8) {
-            Text(loc.t(page.titleKey))
+            Text(title)
                 .font(Theme.title(28))
                 .foregroundStyle(Theme.ink)
+                .minimumScaleFactor(0.8)
             Text(loc.t(page.bodyKey))
                 .font(Theme.rounded(16, .semibold))
                 .foregroundStyle(Theme.inkSoft)
@@ -219,6 +269,57 @@ private struct WelcomeCaption: View {
         .fixedSize(horizontal: false, vertical: true)
         .frame(maxWidth: .infinity)
         .accessibilityElement(children: .combine)
+    }
+}
+
+// MARK: - The question
+
+/// "How many hours a day on your phone?" — eight answers, one tap. Not drawn
+/// in the scaled scene canvas: these are real buttons, for VoiceOver and the
+/// UI tests alike.
+private struct HoursPicker: View {
+    @Binding var hours: Int?
+    @Environment(\.loc) private var loc
+
+    private let columns = Array(repeating: GridItem(.flexible(), spacing: 10), count: 4)
+
+    var body: some View {
+        VStack(spacing: 18) {
+            LofiIcon(.phone, size: 110, interval: 1.4)
+                .frame(maxHeight: .infinity)
+
+            WelcomeCard(padding: 14) {
+                LazyVGrid(columns: columns, spacing: 10) {
+                    ForEach(1...8, id: \.self) { value in
+                        chip(value)
+                    }
+                }
+            }
+            .frame(maxWidth: 380)
+        }
+    }
+
+    private func chip(_ value: Int) -> some View {
+        let selected = hours == value
+        let shape = RoundedRectangle(cornerRadius: 16, style: .continuous)
+        return Button {
+            withAnimation(.spring(duration: 0.3, bounce: 0.4)) { hours = value }
+            Haptic.select.play()
+        } label: {
+            Text(loc.t(value == 8 ? "welcome.hours.max" : "welcome.hours.option", value))
+                .font(Theme.rounded(18, .black).monospacedDigit())
+                .foregroundStyle(selected ? .white : Theme.primaryDeep)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+                .frame(maxWidth: .infinity, minHeight: 52)
+                .background(selected ? Theme.primary : Theme.primarySoft, in: shape)
+                .overlay(shape.strokeBorder(selected ? Theme.primaryDeep : Theme.primaryBorder, lineWidth: 2.5))
+                .scaleEffect(selected ? 1.06 : 1)
+                .contentShape(shape)
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("onboarding.hours.\(value)")
+        .accessibilityAddTraits(selected ? .isSelected : [])
     }
 }
 
@@ -255,13 +356,17 @@ private let motionCanvas = CGSize(width: 340, height: 430)
 /// The scene of a page, looping like a video.
 private struct WelcomeMotion: View {
     let page: WelcomePage
+    let hours: Int?
 
     var body: some View {
         MotionCanvas {
             switch page {
-            case .words: MotionLoop(durations: WordsMotion.durations) { WordsMotion(beat: $0) }
-            case .steps: MotionLoop(durations: StepsMotion.durations) { StepsMotion(beat: $0) }
-            case .widget: MotionLoop(durations: WidgetMotion.durations) { WidgetMotion(beat: $0) }
+            case .scroll:    MotionLoop(durations: ScrollMotion.durations) { ScrollMotion(beat: $0) }
+            case .hours:     EmptyView()
+            case .reckoning: MotionLoop(durations: ReckoningMotion.durations) { ReckoningMotion(beat: $0, hours: hours) }
+            case .words:     MotionLoop(durations: WordsMotion.durations) { WordsMotion(beat: $0) }
+            case .steps:     MotionLoop(durations: StepsMotion.durations) { StepsMotion(beat: $0) }
+            case .widget:    MotionLoop(durations: WidgetMotion.durations) { WidgetMotion(beat: $0) }
             }
         }
         // The scenes show the app's own left-to-right mock-ups; mirroring them
@@ -349,6 +454,159 @@ private extension PrayerStep {
     var welcomeLines: [String] {
         let lines = phoneticLines.filter { !$0.isEmpty }
         return lines.isEmpty ? arabicLines : lines
+    }
+}
+
+// MARK: Hook — the feed that becomes a verse
+
+/// A phone, and in it a feed of grey posts sliding up, one swipe after the
+/// other, while a thumb keeps flicking. Then the feed fades and one card stays:
+/// the first line of al-Fatiha. No logo, no real app: the feed is drawn as
+/// blank shapes on purpose.
+private struct ScrollMotion: View {
+    let beat: Int
+    @Environment(AppSettings.self) private var settings
+
+    /// 0–3 the feed scrolls · 4 it fades, the verse arrives · 5 held.
+    static let durations: [Double] = [0.75, 0.75, 0.75, 0.9, 1.0, 2.4]
+
+    private var swapped: Bool { beat >= 4 }
+
+    /// The opening of al-Fatiha as the app itself spells it; the Basmala as a
+    /// fallback for a content file that would lack it.
+    private var verse: String {
+        settings.step("fatiha")?.arabicLines.first ?? "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ"
+    }
+
+    var body: some View {
+        let shape = RoundedRectangle(cornerRadius: 42, style: .continuous)
+        ZStack {
+            Theme.paper
+            feed
+                .offset(y: -CGFloat(min(beat, 3)) * 118)
+                .opacity(swapped ? 0 : 1)
+                .blur(radius: swapped ? 6 : 0)
+            if swapped { verseCard.transition(.scale(scale: 0.6).combined(with: .opacity)) }
+        }
+        .frame(width: 260, height: 380, alignment: .top)
+        .clipShape(shape)
+        .overlay(shape.strokeBorder(Theme.ink, lineWidth: 7))
+        .background(shape.fill(Theme.primaryDeep).offset(y: 8))
+        .overlay(alignment: .bottomTrailing) {
+            // The thumb: flicks while the feed runs, a quiet book once it stops.
+            ZStack {
+                LofiIcon(.phone, size: 74, interval: 0.5)
+                    .opacity(swapped ? 0 : 1)
+                    .offset(y: swapped ? 0 : (beat.isMultiple(of: 2) ? 0 : -16))
+                LofiIcon(.quran, size: 86, interval: 1.6)
+                    .scaleEffect(swapped ? 1 : 0.1)
+                    .opacity(swapped ? 1 : 0)
+            }
+            .offset(x: 30, y: 24)
+        }
+        .frame(maxHeight: .infinity)
+    }
+
+    /// Eight blank posts: an avatar, two lines, a picture.
+    private var feed: some View {
+        VStack(spacing: 14) {
+            ForEach(0..<8, id: \.self) { i in
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack(spacing: 8) {
+                        Circle().fill(Theme.border).frame(width: 26, height: 26)
+                        Capsule().fill(Theme.border).frame(width: 90, height: 9)
+                    }
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(i.isMultiple(of: 2) ? Theme.sand : Theme.line)
+                        .frame(height: 64)
+                }
+                .padding(10)
+                .background(.white, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.top, 26)
+    }
+
+    private var verseCard: some View {
+        VStack(spacing: 14) {
+            LofiIcon(.sparkle, size: 54, interval: 1.2)
+            Text(verse)
+                .font(Theme.arabic(28))
+                .foregroundStyle(Theme.ink)
+                .multilineTextAlignment(.center)
+                .environment(\.layoutDirection, .rightToLeft)
+                .lineLimit(3)
+                .minimumScaleFactor(0.6)
+        }
+        .padding(18)
+        .frame(maxWidth: .infinity)
+        .background(.white, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 24, style: .continuous).strokeBorder(Theme.gold, lineWidth: 3))
+        .padding(.horizontal, 18)
+        .frame(maxHeight: .infinity)
+    }
+}
+
+// MARK: The reckoning — the reader's own number
+
+/// The answer to the question, multiplied out: hours a day become days a year,
+/// counted up on a calendar. Then, under it, what ten minutes of that would be.
+/// Both numbers are plain arithmetic on the reader's answer.
+private struct ReckoningMotion: View {
+    let beat: Int
+    let hours: Int?
+    @Environment(\.loc) private var loc
+
+    /// 0 the calendar · 1–3 the count climbs · 4 the swap · 5 held.
+    static let durations: [Double] = [0.7, 0.55, 0.55, 0.8, 1.0, 2.6]
+
+    private var days: Int { OnboardingManager.daysPerYear(hours: hours ?? 0) }
+    /// A third, two thirds, then all of it: the number climbs.
+    private var shown: Int {
+        switch beat {
+        case 0: return 0
+        case 1: return days / 3
+        case 2: return days * 2 / 3
+        default: return days
+        }
+    }
+
+    var body: some View {
+        VStack(spacing: 22) {
+            WelcomeCard(padding: 18) {
+                VStack(spacing: 6) {
+                    LofiIcon(.calendar, size: 84, interval: 1.4)
+                    if hours != nil {
+                        Text(verbatim: "\(shown)")
+                            .font(Theme.title(64).monospacedDigit())
+                            .foregroundStyle(Theme.ink)
+                            .contentTransition(.numericText())
+                        Text(loc.t("welcome.reckoning.unit"))
+                            .font(Theme.rounded(17, .heavy))
+                            .foregroundStyle(Theme.inkSoft)
+                    } else {
+                        LofiIcon(.phone, size: 84, interval: 1.0)
+                    }
+                }
+                .frame(maxWidth: .infinity)
+            }
+
+            WelcomeCard(padding: 14) {
+                HStack(spacing: 12) {
+                    LofiIcon(.quran, size: 58, interval: 1.6)
+                    Text(loc.t("welcome.reckoning.swap"))
+                        .font(Theme.rounded(17, .black))
+                        .foregroundStyle(Theme.primaryDeep)
+                        .multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Spacer(minLength: 0)
+                }
+            }
+            .scaleEffect(beat >= 4 ? 1 : 0.8)
+            .opacity(beat >= 4 ? 1 : 0)
+        }
+        .frame(maxHeight: .infinity)
     }
 }
 
@@ -540,196 +798,113 @@ private struct WidgetMotion: View {
     }
 }
 
-// MARK: - Questions
+// MARK: - The commitment
 
-/// The second half of the welcome: two questions, one per screen, in the same
-/// frame as the rest of the app (banner, bar, one button at the bottom).
-struct WelcomeQuestionsView: View {
+/// The last screen of the welcome: one daily moment, given to the Qur'an
+/// instead of the feed, and the reminder that holds it. In the same frame as
+/// the rest of the app (banner, one button at the bottom).
+struct WelcomeCommitView: View {
     var back: () -> Void
     var done: () -> Void
 
     @Environment(AppSettings.self) private var settings
     @Environment(StudyReminders.self) private var reminders
     @Environment(\.loc) private var loc
-    @State private var index = min(max(LaunchOptions.welcomeQuestion ?? 0, 0), 1)
-    @State private var forward = true
-    /// True while one question slides to the next: a second tap (a double tap
-    /// on *Continue*) does not count.
-    @State private var moving = false
-    @State private var showLanguages = false
-    private let count = 2
-    private var isLast: Bool { index == count - 1 }
+    /// True once a button was pressed: a second tap (a double tap) does not
+    /// count, and no second system alert comes up.
+    @State private var leaving = false
 
     var body: some View {
-        VStack(spacing: 0) {
-            Banner(title: loc.t("welcome.setup"),
-                   subtitle: "\(index + 1) / \(count)", subtitleAction: nil, subtitleID: nil,
-                   back: goBack) {
-                LofiIcon(index == 0 ? .globe : .bell, size: 96, interval: 3)
-                    .id(index)
-                    .transition(.scale.combined(with: .opacity))
-            }
+        @Bindable var settings = settings
 
-            ProgressBar(value: Double(index + 1), total: Double(count))
-                .frame(height: 14)
-                .padding(.horizontal, 24)
-                .padding(.top, 20)
+        VStack(spacing: 0) {
+            Banner(title: loc.t("welcome.setup"), subtitle: nil, subtitleAction: nil, subtitleID: nil,
+                   back: back) {
+                LofiIcon(.bell, size: 96, interval: 3)
+            }
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 14) {
-                    if index == 0 { languageQuestion } else { reminderQuestion }
+                    Text(loc.t("welcome.commit.title"))
+                        .font(Theme.title(26))
+                        .foregroundStyle(Theme.ink)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.bottom, 4)
+
+                    Text(loc.t("welcome.commit.body"))
+                        .font(Theme.rounded(16, .semibold))
+                        .foregroundStyle(Theme.inkSoft)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    HStack {
+                        Text(loc.t("settings.reminders.time"))
+                            .font(Theme.rounded(16.5, .heavy))
+                            .foregroundStyle(Theme.ink)
+                        Spacer()
+                        DatePicker("", selection: $settings.reminderTime, displayedComponents: .hourAndMinute)
+                            .labelsHidden()
+                            .tint(Theme.primary)
+                    }
+                    .card(padding: 14)
+
+                    // What the reminder will actually say: a real one, about a
+                    // real step.
+                    HStack(alignment: .top, spacing: 12) {
+                        IconTile(icon: .bell, size: 46, animated: true)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(loc.t("notif.title"))
+                                .font(Theme.rounded(14, .black))
+                                .foregroundStyle(Theme.ink)
+                            Text(loc.t("notif.body.2", settings.steps.first?.name ?? ""))
+                                .font(Theme.rounded(14.5, .semibold))
+                                .foregroundStyle(Theme.inkSoft)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        Spacer(minLength: 0)
+                    }
+                    .card(padding: 14)
                 }
                 .padding(.horizontal, 24)
                 .padding(.top, 24)
                 .padding(.bottom, 20)
-                .id(index)
-                .transition(.asymmetric(insertion: .move(edge: forward ? .trailing : .leading).combined(with: .opacity),
-                                        removal: .move(edge: forward ? .leading : .trailing).combined(with: .opacity)))
             }
             .scrollBounceBehavior(.basedOnSize)
 
             VStack(spacing: 12) {
-                if isLast {
-                    Button {
-                        // Second tap of a double tap on "Continue": no system alert.
-                        guard !moving else { return }
-                        Task { await turnRemindersOn() }
-                    } label: {
-                        Text(loc.t("welcome.reminder.on"))
-                    }
-                    .buttonStyle(.cta(.primary, height: 60))
-                    .accessibilityIdentifier("onboarding.reminders")
-
-                    Button { if !moving { done() } } label: {
-                        Text(loc.t("welcome.later"))
-                    }
-                    .buttonStyle(.cta(.secondary, height: 52, haptic: .tap))
-                    .accessibilityIdentifier("onboarding.later")
-                } else {
-                    Button { move(1) } label: {
-                        Text(loc.t("common.continue"))
-                    }
-                    .buttonStyle(.cta(.primary, height: 60))
-                    .accessibilityIdentifier("onboarding.primary")
+                Button {
+                    guard !leaving else { return }
+                    Task { await turnRemindersOn() }
+                } label: {
+                    Text(loc.t("welcome.reminder.on"))
                 }
+                .buttonStyle(.cta(.primary, height: 60))
+                .accessibilityIdentifier("onboarding.reminders")
+
+                Button {
+                    guard !leaving else { return }
+                    leaving = true
+                    done()
+                } label: {
+                    Text(loc.t("welcome.later"))
+                }
+                .buttonStyle(.cta(.secondary, height: 52, haptic: .tap))
+                .accessibilityIdentifier("onboarding.later")
             }
             .padding(.horizontal, 24)
             .padding(.top, 12)
             .padding(.bottom, 16)
         }
         .background(Theme.paper.ignoresSafeArea())
-        .sheet(isPresented: $showLanguages) {
-            LanguagePickerView()
-                .localized(settings.localizer)
-                .environment(settings)
-        }
     }
-
-    // MARK: The two questions
-
-    @ViewBuilder
-    private var languageQuestion: some View {
-        title(loc.t("onboarding.language.title"))
-
-        Button { showLanguages = true } label: {
-            HStack(spacing: 14) {
-                LanguageCode(language: settings.resolvedLanguage)
-                    .environment(\.layoutDirection, .leftToRight)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(settings.resolvedLanguage.nativeName)
-                        .font(Theme.rounded(21, .black))
-                        .foregroundStyle(Theme.ink)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.7)
-                    if settings.languagePreference == .system {
-                        Text(loc.t("settings.language.system"))
-                            .font(Theme.rounded(13, .heavy))
-                            .foregroundStyle(Theme.goldDeep)
-                    }
-                }
-                Spacer()
-                Image(systemName: "chevron.down")
-                    .font(.system(size: 15, weight: .black))
-                    .foregroundStyle(Theme.primary)
-            }
-            .padding(.vertical, 16)
-            .padding(.horizontal, 18)
-            .contentShape(Rectangle())
-        }
-        .chunky(Theme.surface, radius: 22, depth: 5, haptic: .select)
-        .accessibilityIdentifier("onboarding.language.open")
-    }
-
-    @ViewBuilder
-    private var reminderQuestion: some View {
-        @Bindable var settings = settings
-
-        title(loc.t("welcome.reminder.title"))
-
-        Text(loc.t("welcome.reminder.body"))
-            .font(Theme.rounded(16, .semibold))
-            .foregroundStyle(Theme.inkSoft)
-            .fixedSize(horizontal: false, vertical: true)
-
-        // What the reminder will actually say: a real one, about a real step.
-        HStack(alignment: .top, spacing: 12) {
-            IconTile(icon: .bell, size: 46, animated: true)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(loc.t("notif.title"))
-                    .font(Theme.rounded(14, .black))
-                    .foregroundStyle(Theme.ink)
-                Text(loc.t("notif.body.2", settings.steps.first?.name ?? ""))
-                    .font(Theme.rounded(14.5, .semibold))
-                    .foregroundStyle(Theme.inkSoft)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            Spacer(minLength: 0)
-        }
-        .card(padding: 14)
-
-        HStack {
-            Text(loc.t("settings.reminders.time"))
-                .font(Theme.rounded(16.5, .heavy))
-                .foregroundStyle(Theme.ink)
-            Spacer()
-            DatePicker("", selection: $settings.reminderTime, displayedComponents: .hourAndMinute)
-                .labelsHidden()
-                .tint(Theme.primary)
-        }
-        .card(padding: 14)
-    }
-
-    private func title(_ text: String) -> some View {
-        Text(text)
-            .font(Theme.title(26))
-            .foregroundStyle(Theme.ink)
-            .fixedSize(horizontal: false, vertical: true)
-            .padding(.bottom, 4)
-    }
-
-    // MARK: Moves
 
     /// The permission is asked here, on the button that says so — never at
     /// launch. A refusal simply leaves the reminder off; either way the
     /// welcome is over.
     private func turnRemindersOn() async {
-        moving = true
+        leaving = true
         let granted = await reminders.requestAuthorization()
         settings.remindersOn = granted
         await reminders.sync(with: settings)
         done()
-    }
-
-    private func goBack() { index == 0 ? back() : move(-1) }
-
-    private func move(_ delta: Int) {
-        guard !moving, (0..<count).contains(index + delta) else { return }
-        moving = true
-        forward = delta > 0
-        DispatchQueue.main.async {
-            withAnimation(.spring(duration: 0.4, bounce: 0.2)) { index += delta }
-        }
-        // The length of the transition (0.4 s) plus a small margin.
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) { moving = false }
     }
 }

@@ -3,28 +3,39 @@ import SwiftUI
 /// The Salat Premium screen: what the subscription gives, what it costs, one
 /// green button.
 ///
-/// The top of the page is the reader's **own widget** on a home screen, the
-/// real `CarouselWidgetView` with what they picked on it: what is sold is
-/// shown, not described. Under it, three lines and the price.
+/// Since 22/11/2026 (Sharik's decision) it is a **hard paywall**: without
+/// Premium the app is not usable, so `ContentView` lays this screen over the
+/// whole app, with no close button (`hard`). The same view, closable, is the
+/// subscriber's sheet in the settings (active, manage).
 ///
-/// Everything Apple asks of a subscription screen is on it and stays on it:
-/// the price and its period next to the button, the sentence about renewal,
-/// "Restore purchases", and the two links (terms of use, privacy). Removing
-/// one of them to tidy the page is a rejection.
+/// The top of the page is the reader's **own widget** on a home screen, the
+/// real `CarouselWidgetView` with what they picked on it. Under it, what the
+/// subscription opens and the price.
+///
+/// Everything Apple asks of a subscription screen is on it and stays on it
+/// (3.1.2): the price and its period, the most visible price on the screen;
+/// the free trial and what follows it, in the button and in the sentence about
+/// renewal; "Restore purchases"; and the two links (terms of use, privacy).
+/// Removing one of them to tidy the page is a rejection.
 struct PaywallView: View {
+    /// The hard paywall: whole screen, no way out but subscribing or
+    /// restoring.
+    var hard = false
+
     @Environment(AppSettings.self) private var settings
     @Environment(Store.self) private var store
     @Environment(\.loc) private var loc
     @Environment(\.openURL) private var openURL
 
     var body: some View {
-        SheetScaffold(title: loc.t("premium.title"), icon: .sparkle) {
+        SheetScaffold(title: loc.t("premium.title"), icon: .sparkle, closable: !hard) {
             VStack(spacing: 14) {
-                Text(loc.t(store.paywallReason == .ads ? "premium.pitch.ads" : "premium.pitch"))
+                Text(pitch)
                     .font(Theme.rounded(15.5, .semibold))
                     .foregroundStyle(Theme.inkSoft)
                     .fixedSize(horizontal: false, vertical: true)
                     .frame(maxWidth: .infinity, alignment: .leading)
+                    .accessibilityIdentifier("paywall.pitch")
 
                 preview
                 benefits
@@ -36,6 +47,16 @@ struct PaywallView: View {
         .safeAreaInset(edge: .bottom, spacing: 0) { actionBar }
         .task { await store.loadProduct() }
         .onDisappear { store.clearNotice() }
+    }
+
+    /// The reader's own answer from the welcome, when there is one: the hours
+    /// they said they spend on their phone. Nothing is invented for whoever
+    /// skipped the question.
+    private var pitch: String {
+        if let hours = OnboardingManager.phoneHours, hours > 0 {
+            return loc.t("premium.pitch.hours", hours)
+        }
+        return loc.t("premium.pitch")
     }
 
     // MARK: What is sold
@@ -53,15 +74,14 @@ struct PaywallView: View {
         }
     }
 
-    /// The sales arguments, in the order that fits why the screen came up:
-    /// someone who has just lived with the ads reads "no ads" first.
-    private var arguments: [(Icon3D, String)] {
-        let ads: (Icon3D, String) = (.shield, "premium.benefit.ads")
-        let rest: [(Icon3D, String)] = [(.phone, "premium.benefit.widget"),
-                                        (.quran, "premium.benefit.quran")]
-        let sizes: (Icon3D, String) = (.lock, "premium.benefit.sizes")
-        return store.paywallReason == .ads ? [ads] + rest + [sizes] : rest + [ads, sizes]
-    }
+    /// What the subscription opens: the whole app.
+    private let arguments: [(Icon3D, String)] = [
+        (.mat, "premium.benefit.prayer"),
+        (.quran, "premium.benefit.quran"),
+        (.cards, "premium.benefit.revise"),
+        (.phone, "premium.benefit.widget"),
+        (.bell, "premium.benefit.reminders"),
+    ]
 
     private var benefits: some View {
         VStack(spacing: 0) {
@@ -143,13 +163,25 @@ struct PaywallView: View {
                 .foregroundStyle(Theme.ink)
                 .accessibilityIdentifier("paywall.price")
 
+            if let days = store.offeredTrialDays {
+                Text(loc.t("premium.trial.badge", days))
+                    .font(Theme.rounded(13, .black))
+                    .foregroundStyle(Theme.goldDeep)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 3)
+                    .background(Theme.goldSoft, in: Capsule())
+                    .accessibilityIdentifier("paywall.trial")
+            }
+
             Button {
                 Task { await store.purchase() }
             } label: {
                 if store.isWorking {
                     ProgressView().tint(.white)
                 } else {
-                    Text(loc.t("premium.subscribe"))
+                    Text(buttonTitle(price: price))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
                 }
             }
             .buttonStyle(.cta(.primary))
@@ -186,11 +218,37 @@ struct PaywallView: View {
                 .accessibilityIdentifier("paywall.notice")
         }
 
-        Text(loc.t("premium.legal"))
+        Text(legal)
             .font(Theme.rounded(11.5, .semibold))
             .foregroundStyle(Theme.inkSoft)
             .multilineTextAlignment(.center)
             .fixedSize(horizontal: false, vertical: true)
+    }
+
+    /// « 3 days free, then 4,99 € / month » for an account that may take the
+    /// trial, « Subscribe — 4,99 € / month » otherwise. The price is always the
+    /// App Store's `displayPrice`.
+    private func buttonTitle(price: String) -> String {
+        if let days = store.offeredTrialDays {
+            return fill("premium.subscribe.trial", days: days, price: price)
+        }
+        return fill("premium.subscribe", days: 0, price: price)
+    }
+
+    private var legal: String {
+        let price = store.displayPrice ?? ""
+        if let days = store.offeredTrialDays {
+            return fill("premium.legal.trial", days: days, price: price)
+        }
+        return fill("premium.legal", days: 0, price: price)
+    }
+
+    /// `%d` and `%@` in one string, filled by hand: `String(format:)` with a
+    /// translated format and two kinds of argument is where a crash hides.
+    private func fill(_ key: String, days: Int, price: String) -> String {
+        loc.t(key)
+            .replacingOccurrences(of: "%d", with: String(days))
+            .replacingOccurrences(of: "%@", with: price)
     }
 
     private func noticeKey(_ notice: Store.Notice) -> String {
@@ -242,67 +300,5 @@ struct PaywallView: View {
         }
         .buttonStyle(.plain)
         .accessibilityIdentifier(id)
-    }
-}
-
-// MARK: - Ways in
-
-/// A shortcut to the Premium screen: one row that names the offer and what it
-/// gives. It sits where the question comes up (the bottom of *Learn*, the hall
-/// of *Memorise*, the top of the settings) and **disappears once subscribed**:
-/// an invitation to buy what is already bought is noise.
-struct PremiumShortcut: View {
-    @Environment(Store.self) private var store
-    @Environment(\.loc) private var loc
-    /// Where the row sits, for the UI tests.
-    var place = "premium.shortcut"
-
-    var body: some View {
-        if !store.isPremium {
-            Button { store.showsPaywall = true } label: {
-                HStack(spacing: 12) {
-                    LofiIcon(.sparkle, size: 50, interval: 5)
-
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(loc.t("premium.title"))
-                            .font(Theme.rounded(16.5, .black))
-                            .foregroundStyle(Theme.primaryDeep)
-                        Text(loc.t("premium.card.body"))
-                            .font(Theme.rounded(13, .semibold))
-                            .foregroundStyle(Theme.inkSoft)
-                            .multilineTextAlignment(.leading)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-
-                    Spacer(minLength: 0)
-
-                    Image(systemName: "chevron.forward")
-                        .font(.system(size: 14, weight: .black))
-                        .foregroundStyle(Theme.primary)
-                }
-                .padding(.horizontal, 14)
-                .padding(.vertical, 12)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .contentShape(Rectangle())
-            }
-            .chunky(Theme.primarySoft, radius: 24, depth: 5)
-            .accessibilityIdentifier(place)
-        }
-    }
-}
-
-/// The small "Premium" mark on something the subscription unlocks.
-struct PremiumBadge: View {
-    @Environment(\.loc) private var loc
-
-    var body: some View {
-        Text(loc.t("premium.badge"))
-            .font(Theme.rounded(11, .black))
-            .textCase(.uppercase)
-            .tracking(0.5)
-            .foregroundStyle(Theme.goldDeep)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 3)
-            .background(Theme.goldSoft, in: Capsule())
     }
 }

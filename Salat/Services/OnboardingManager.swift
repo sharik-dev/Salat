@@ -64,4 +64,22 @@ final class OnboardingManager {
     }
 
     func reset() { hasSeenOnboarding = false }
+
+    // MARK: The welcome's question
+
+    /// The reader's answer to "how many hours a day on your phone?", kept on
+    /// this phone only (never sent with the telemetry). Nil when skipped.
+    static var phoneHours: Int? {
+        get {
+            let value = UserDefaults.standard.integer(forKey: "onboarding.phoneHours")
+            return value > 0 ? value : nil
+        }
+        set { UserDefaults.standard.set(newValue ?? 0, forKey: "onboarding.phoneHours") }
+    }
+
+    /// Hours a day, as full days in a year: plain arithmetic on the answer,
+    /// never a statistic. 4 h a day → 61 days.
+    static func daysPerYear(hours: Int) -> Int {
+        Int((Double(max(hours, 0)) * 365 / 24).rounded())
+    }
 }

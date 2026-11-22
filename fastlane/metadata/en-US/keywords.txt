@@ -1,1 +1,1 @@
-salah,namaz,islam,quran,dua,fatiha,tashahhud,beginner,convert,revert,transliteration,surah,recite
+salat,islam,islamic,quran,dua,fatiha,beginner,revert,arabic,transliteration,surah,guide,tashahhud

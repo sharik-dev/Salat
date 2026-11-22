@@ -58,8 +58,6 @@ struct ReviseHubView: View {
                         .chunky(Theme.surface, radius: 26, depth: 5)
                         .accessibilityIdentifier("revise.tool.widget")
 
-                        PremiumShortcut(place: "revise.premium")
-
                         strengthSection
                     }
                     .padding(.horizontal, 18)
@@ -296,7 +294,6 @@ private struct ToolTile: View {
 private struct ToolRow: View {
     let tool: ReviseTool
     @Environment(\.loc) private var loc
-    @Environment(Store.self) private var store
 
     var body: some View {
         HStack(spacing: 14) {
@@ -306,9 +303,6 @@ private struct ToolRow: View {
                 .foregroundStyle(Theme.ink)
                 .multilineTextAlignment(.leading)
             Spacer(minLength: 0)
-            // The widget is the one tool the subscription unlocks; the mark
-            // goes once it is unlocked.
-            if tool == .widget, !store.isPremium { PremiumBadge() }
             Image(systemName: "chevron.forward")
                 .font(.system(size: 14, weight: .black))
                 .foregroundStyle(Theme.primary)

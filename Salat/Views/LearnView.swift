@@ -60,11 +60,6 @@ struct LearnView: View {
                         }
                     }
                     .card(padding: 0)
-
-                    // Under the steps, never above them: the page opens on
-                    // what to learn, the offer waits at the end of the list.
-                    PremiumShortcut(place: "learn.premium")
-                        .padding(.top, 6)
                 }
                 .padding(.horizontal, 18)
                 .padding(.top, 18)

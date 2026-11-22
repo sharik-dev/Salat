@@ -1,0 +1,3 @@
+"CFBundleDisplayName" = "Apprendre la Prière";
+"NSMicrophoneUsageDescription" = "Pour vous enregistrer pendant que vous récitez une étape, et la réécouter face au récitateur. Les enregistrements restent sur cet iPhone.";
+"NSSpeechRecognitionUsageDescription" = "Pour allumer chaque mot pendant que vous récitez, comme une ligne de karaoké. La reconnaissance se fait uniquement sur cet iPhone ; rien n’est envoyé.";

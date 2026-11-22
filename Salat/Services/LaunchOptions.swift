@@ -97,11 +97,13 @@ enum LaunchOptions {
     /// to tap.
     static var celebrates: Bool { value("-celebrate") == "1" }
 
-    /// `-welcomePage 0…2` opens the onboarding on that pitch page,
-    /// `-welcomeBeat N` freezes its animated scene on beat N (99 = the last),
-    /// `-welcomeQuestion 0…1` opens the questions directly. All three need
-    /// `-resetOnboarding 1`: the scenes loop on their own and the questions
-    /// sit behind three taps.
+    /// `-welcomePage 0…5` opens the onboarding on that pitch page (0 the
+    /// feed, 1 the hours question, 2 the reckoning, 3–5 the app; past the
+    /// question, 4 h is assumed when nothing was answered), `-welcomeBeat N`
+    /// freezes its animated scene on beat N (99 = the last), `-welcomeQuestion
+    /// 0` opens the last screen (the daily moment) directly. All three need
+    /// `-resetOnboarding 1`: the scenes loop on their own and the last screen
+    /// sits behind six taps.
     static var welcomePage: Int? { value("-welcomePage").flatMap(Int.init) }
     static var welcomeBeat: Int? { value("-welcomeBeat").flatMap(Int.init) }
     static var welcomeQuestion: Int? { value("-welcomeQuestion").flatMap(Int.init) }
@@ -145,19 +147,18 @@ enum LaunchOptions {
         }
     }
 
-    /// `-openPaywall 1` opens the Premium screen on arrival, and
-    /// `-paywallPrice "1,99 €"` (DEBUG) prints that price on it: without a
-    /// StoreKit session no product loads, and the screen would only ever show
-    /// its "cannot be reached" state.
+    /// `-openPaywall 1` opens the subscriber's Premium sheet on arrival (a
+    /// non-subscriber sees the paywall anyway), and `-paywallPrice "4,99 €"`
+    /// (DEBUG) prints that price on it: without a StoreKit session no product
+    /// loads, and the screen would only ever show its "cannot be reached"
+    /// state. `-paywallTrial 3` promises that many free days (0 = no trial).
     static var opensPaywall: Bool { value("-openPaywall") == "1" }
     static var paywallPrice: String? { value("-paywallPrice") }
+    static var paywallTrial: Int? { value("-paywallTrial").flatMap(Int.init) }
 
-    /// `-paywallReason ads|widget` (with `-openPaywall 1`) opens the paywall
-    /// the way a pause would have offered it, with that argument first.
-    /// `-forceNudge paywall|review` (DEBUG) makes the next pause (a step page
-    /// closed, a round finished) show that, whatever the history says: the
-    /// real thing waits for days of use.
-    static var paywallReason: PaywallReason? { value("-paywallReason").flatMap(PaywallReason.init(rawValue:)) }
+    /// `-forceNudge review` (DEBUG) makes the next pause (a step page closed,
+    /// a round finished) ask for a rating, whatever the history says: the real
+    /// thing waits for days of use.
     static var forcedNudge: String? { value("-forceNudge") }
 
     /// `-widgetScope quran|learning|all|one` (DEBUG) sets what the widget

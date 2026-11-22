@@ -3,6 +3,7 @@
 #   ruby scripts/asc_subscription.rb            # lit et dit ce qui manque, n'écrit rien
 #   ruby scripts/asc_subscription.rb --apply    # crée ce qui manque
 #   ruby scripts/asc_subscription.rb --apply --screenshot chemin/paywall.png
+#   ruby scripts/asc_subscription.rb --apply --start 2026-11-23   # changement de prix daté
 #
 # Ce que ça pose, dans l'ordre, et chaque étape regarde d'abord si c'est déjà
 # fait (le script se relance sans rien dupliquer) :
@@ -11,10 +12,16 @@
 #   2. l'abonnement mensuel `com.salat.premium.monthly` : l'identifiant est
 #      celui de `Store.productID` dans l'app, à la lettre près ;
 #   3. son nom et sa description par langue (30 et 45 caractères au plus) ;
-#   4. son prix : 1,99 € en France, qui sert de base, le palier équivalent
-#      qu'Apple en déduit partout ailleurs, et 1,99 $ imposé aux États-Unis ;
-#   5. sa disponibilité dans tous les pays, nouveaux pays compris ;
+#   4. sa disponibilité dans tous les pays, nouveaux pays compris ;
+#   5. son prix : 4,99 € en France, qui sert de base, le palier équivalent
+#      qu'Apple en déduit partout ailleurs, et 4,99 $ imposé aux États-Unis.
+#      Un pays qui avait déjà un prix reçoit le nouveau avec
+#      `preserveCurrentPrice: true` : les abonnés en cours gardent le leur ;
+#   5 bis. l'offre d'introduction, 3 jours gratuits, dans chaque pays ;
 #   6. avec `--screenshot`, la capture du paywall que la revue exige.
+#
+# Les fiches par langue et la note de revue sont aussi remises à jour
+# (PATCH) quand le texte du script a changé.
 #
 # Ce que le script NE fait PAS, parce que l'API ne le sait pas ou que ce n'est
 # pas à lui de le décider :
@@ -42,25 +49,39 @@ require "digest"
 BASE = "https://api.appstoreconnect.apple.com/v1"
 APPLY = ARGV.include?("--apply")
 SHOT = (i = ARGV.index("--screenshot")) ? ARGV[i + 1] : nil
+# Date d'effet d'un CHANGEMENT de prix (AAAA-MM-JJ). Un abonnement déjà
+# approuvé refuse un prix sans date (409 STATE_ERROR « Initial price cannot be
+# created again after subscription is approved », vu le 22/11/2026) : un
+# changement est toujours programmé à une date.
+START = (i = ARGV.index("--start")) ? ARGV[i + 1] : nil
 
 GROUP_NAME   = "Salat Premium"
 PRODUCT_NAME = "Salat Premium mensuel"
 PERIOD       = "ONE_MONTH"
 BASE_TERRITORY = "FRA"
-PRICE          = 1.99
+# 4,99 € depuis le 22/11/2026 (décision de Sharik : hard paywall, plus de pub).
+# C'était 1,99 € du 14/11 au 22/11/2026 ; les abonnés de cette période gardent
+# leur prix (preserveCurrentPrice, voir l'étape 5).
+PRICE          = 4.99
 # Les pays où le palier est imposé au lieu d'être déduit de la France.
-FORCED = { "USA" => 1.99 }
+FORCED = { "USA" => 4.99 }
+# L'offre d'introduction : gratuite, une période de cette durée.
+TRIAL = "THREE_DAYS"
 
 # Nom (30 max) et description (45 max) de l'abonnement, par langue de la fiche.
 LOCALES = {
-  "en-US" => ["Salat Premium", "Home Screen widget, and no ads"],
-  "fr-FR" => ["Salat Premium", "Widget d'écran d'accueil, sans pub"],
-  "ar-SA" => ["Salat Premium", "أداة الشاشة الرئيسية، بلا إعلانات"]
+  "en-US" => ["Salat Premium", "Full access: prayer, Qur'an, widget"],
+  "fr-FR" => ["Salat Premium", "Accès complet : prière, Coran, widget"],
+  "ar-SA" => ["Salat Premium", "وصول كامل: الصلاة والقرآن والأداة"]
 }
 
-REVIEW_NOTE = "Salat Premium unlocks the Home Screen widget (prayer steps or the " \
-              "user's own Qur'an verses) and removes ads. The paywall opens from " \
-              "Settings > Salat Premium, or Memorise > Home screen widget > Unlock."
+REVIEW_NOTE = "Salat Premium is required to use the app (hard paywall, no ads). " \
+              "It unlocks every feature: the prayer lessons, the Qur'an feed, the " \
+              "memorisation exercises and the Home Screen widget. New subscribers " \
+              "get a 3-day free trial (introductory offer), then the monthly price. " \
+              "The paywall is the last screen of the onboarding and opens at every " \
+              "launch until a subscription is active; it carries the price, Restore " \
+              "Purchases, Terms of Use (Apple standard EULA) and Privacy Policy."
 
 def b64(s) = Base64.urlsafe_encode64(s).delete("=")
 
@@ -170,13 +191,35 @@ unless sub
   exit
 end
 
+# La note de revue suit ce que l'abonnement vend (depuis le 22/11/2026, l'app
+# entière : plus de pub, hard paywall).
+if step("  note de revue à jour", sub.dig("attributes", "reviewNote") != REVIEW_NOTE)
+  call(:patch, "subscriptions/#{sub['id']}",
+       { data: { type: "subscriptions", id: sub["id"], attributes: { reviewNote: REVIEW_NOTE } } })
+end
+
 # 3. Nom et description par langue
 have = all("subscriptions/#{sub['id']}/subscriptionLocalizations?limit=200")
-       .map { |l| l.dig("attributes", "locale") }
+       .to_h { |l| [l.dig("attributes", "locale"), l] }
 LOCALES.each do |locale, (name, description)|
   abort("#{locale} : nom trop long") if name.length > 30
   abort("#{locale} : description trop longue (#{description.length})") if description.length > 45
-  next unless step("  fiche de l'abonnement en #{locale}", !have.include?(locale))
+  if (current = have[locale])
+    stale = current.dig("attributes", "name") != name || current.dig("attributes", "description") != description
+    # Une fiche déjà approuvée (ACTIVE) ne s'édite pas par l'API (409
+    # ENTITY_ERROR.ATTRIBUTE.INVALID.UNMODIFIABLE, vu le 22/11/2026) : c'est
+    # dans le site, page de l'abonnement, que le texte se change.
+    if stale && %w[ACTIVE APPROVED].include?(current.dig("attributes", "state"))
+      puts "!   fiche #{locale} approuvée, texte périmé : à changer dans le site → « #{description} »"
+      next
+    end
+    next unless step("  fiche de l'abonnement en #{locale} à jour", stale)
+    call(:patch, "subscriptionLocalizations/#{current['id']}",
+         { data: { type: "subscriptionLocalizations", id: current["id"],
+                   attributes: { name: name, description: description } } })
+    next
+  end
+  next unless step("  fiche de l'abonnement en #{locale}", true)
   call(:post, "subscriptionLocalizations",
        { data: { type: "subscriptionLocalizations",
                  attributes: { name: name, description: description, locale: locale },
@@ -193,14 +236,22 @@ rescue SystemExit
 end
 if step("disponible dans tous les pays", available.nil?)
   territories = all("territories?limit=200").map { |t| { type: "territories", id: t["id"] } }
-  call(:post, "subscriptionAvailabilities",
+  available = call(:post, "subscriptionAvailabilities",
        { data: { type: "subscriptionAvailabilities",
                  attributes: { availableInNewTerritories: true },
                  relationships: { subscription: rel("subscriptions", sub["id"]),
-                                  availableTerritories: { data: territories } } } })
+                                  availableTerritories: { data: territories } } } })["data"]
 end
 
 # 5. Le prix
+#
+# Le prix VISÉ est celui de `PRICE` (base France) et de `FORCED` ; chaque pays
+# compare le palier qu'il a (en cours ou déjà programmé) au palier visé, par
+# identifiant de palier, jamais par chaîne. Un pays qui n'a pas le bon palier
+# en reçoit un nouveau. Quand le pays avait déjà un prix, le nouveau est posé
+# avec `preserveCurrentPrice: true` : les abonnés en cours gardent leur prix
+# (décision de Sharik, 22/11/2026, passage de 1,99 à 4,99), seuls les nouveaux
+# paient le nouveau.
 def point_at(sub_id, territory, price)
   points = all("subscriptions/#{sub_id}/pricePoints?filter[territory]=#{territory}&limit=8000")
   # En nombre, jamais en chaîne : l'API rend « 1.99 » ici et « 1.990 » ailleurs.
@@ -208,40 +259,69 @@ def point_at(sub_id, territory, price)
     abort("Pas de palier à #{price} pour #{territory}")
 end
 
-def set_price(sub_id, point_id)
+def set_price(sub_id, point_id, preserve)
+  attributes = { preserveCurrentPrice: preserve }
+  attributes[:startDate] = START if preserve && START
   call(:post, "subscriptionPrices",
        { data: { type: "subscriptionPrices",
-                 attributes: { preserveCurrentPrice: false },
+                 attributes: attributes,
                  relationships: { subscription: rel("subscriptions", sub_id),
                                   subscriptionPricePoint: rel("subscriptionPricePoints", point_id) } } })
 end
 
-priced = all("subscriptions/#{sub['id']}/prices?include=territory&limit=200")
-         .map { |p| p.dig("relationships", "territory", "data", "id") }.compact
+# territoire → paliers qu'il porte (le courant et ceux déjà programmés).
+held = Hash.new { |h, k| h[k] = [] }
+all("subscriptions/#{sub['id']}/prices?include=territory&limit=200").each do |p|
+  territory = p.dig("relationships", "territory", "data", "id") or next
+  held[territory] << p.dig("relationships", "subscriptionPricePoint", "data", "id")
+end
+
 base = point_at(sub["id"], BASE_TERRITORY, PRICE)
-
-if step("prix de base : #{PRICE} en #{BASE_TERRITORY}", !priced.include?(BASE_TERRITORY))
-  set_price(sub["id"], base["id"])
-end
-
-# Le palier équivalent dans chaque autre pays, tel qu'Apple le déduit du prix
-# de base. Un par pays, donc autant d'appels : c'est long une fois, et une fois.
-equal = all("subscriptionPricePoints/#{base['id']}/equalizations?include=territory&limit=8000")
-todo = equal.reject do |p|
+# Le palier visé, pays par pays : la France, ce qu'Apple en déduit ailleurs,
+# et les pays imposés.
+target = { BASE_TERRITORY => base["id"] }
+all("subscriptionPricePoints/#{base['id']}/equalizations?include=territory&limit=8000").each do |p|
   territory = p.dig("relationships", "territory", "data", "id")
-  territory.nil? || territory == BASE_TERRITORY || FORCED.key?(territory) || priced.include?(territory)
+  next if territory.nil? || territory == BASE_TERRITORY || FORCED.key?(territory)
+  target[territory] = p["id"]
 end
-if step("prix déduits dans #{todo.size} autres pays", !todo.empty?)
-  todo.each_with_index do |p, i|
-    set_price(sub["id"], p["id"])
+FORCED.each { |territory, price| target[territory] = point_at(sub["id"], territory, price)["id"] }
+
+todo = target.reject { |territory, point| held[territory].include?(point) }
+changes = todo.count { |territory, _| !held[territory].empty? }
+label = "prix #{PRICE} (#{BASE_TERRITORY}) + équivalents, #{FORCED.map { |t, v| "#{v} #{t}" }.join(', ')} : " \
+        "#{todo.size} pays à poser (#{changes} changements, prix des abonnés actuels préservé)"
+if changes.positive? && APPLY && START.nil?
+  abort("#{changes} pays ont déjà un prix : un changement se programme à une date. " \
+        "Relancer avec --start AAAA-MM-JJ (par exemple demain).")
+end
+if step(label, !todo.empty?)
+  todo.each_with_index do |(territory, point), i|
+    set_price(sub["id"], point, !held[territory].empty?)
     print "\r  #{i + 1}/#{todo.size}"
   end
   puts
 end
 
-FORCED.each do |territory, price|
-  next unless step("prix imposé : #{price} en #{territory}", !priced.include?(territory))
-  set_price(sub["id"], point_at(sub["id"], territory, price)["id"])
+# 5 bis. L'offre d'introduction : trois jours gratuits, une fois par compte
+# Apple, dans chaque pays où l'abonnement est en vente. L'app la lit dans
+# `product.subscription.introductoryOffer` et ne l'affiche que si le lecteur y a
+# droit (`isEligibleForIntroOffer`). Une offre par pays : l'API la rattache à
+# un territoire.
+offered = all("subscriptions/#{sub['id']}/introductoryOffers?include=territory&limit=200")
+          .map { |o| o.dig("relationships", "territory", "data", "id") }.compact
+territories = available ? all("subscriptionAvailabilities/#{available['id']}/availableTerritories?limit=200").map { |t| t["id"] } : []
+missing = territories - offered
+if step("offre d'introduction #{TRIAL} gratuite : #{missing.size} pays sur #{territories.size}", !missing.empty?)
+  missing.each_with_index do |territory, i|
+    call(:post, "subscriptionIntroductoryOffers",
+         { data: { type: "subscriptionIntroductoryOffers",
+                   attributes: { duration: TRIAL, offerMode: "FREE_TRIAL", numberOfPeriods: 1 },
+                   relationships: { subscription: rel("subscriptions", sub["id"]),
+                                    territory: rel("territories", territory) } } })
+    print "\r  #{i + 1}/#{missing.size}"
+  end
+  puts
 end
 
 # 6. La capture pour la revue

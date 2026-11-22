@@ -6,6 +6,9 @@ import SwiftUI
 struct SheetScaffold<Content: View>: View {
     let title: String
     var icon: Icon3D?
+    /// False for a screen that must not be dismissed (the hard paywall): no
+    /// close button, and no room kept for one.
+    var closable = true
     @ViewBuilder var content: () -> Content
     @Environment(\.dismiss) private var dismiss
 
@@ -19,7 +22,7 @@ struct SheetScaffold<Content: View>: View {
                         .foregroundStyle(Theme.ink)
                         .lineLimit(2)
                         .minimumScaleFactor(0.7)
-                    Spacer(minLength: 50) // room for the close button
+                    Spacer(minLength: closable ? 50 : 0) // room for the close button
                 }
                 .padding(.bottom, 6)
 
@@ -32,16 +35,20 @@ struct SheetScaffold<Content: View>: View {
         .scrollIndicators(.hidden)
         .background(Theme.paper.ignoresSafeArea())
         .overlay(alignment: .topTrailing) {
-            Button { dismiss() } label: {
-                Image(systemName: "xmark")
-                    .font(.system(size: 14, weight: .black))
-                    .foregroundStyle(Theme.primaryDeep)
-                    .frame(width: 38, height: 38)
-            }
-            .chunky(Theme.surface, radius: 19, depth: 3)
-            .padding(16)
-            .accessibilityIdentifier("sheet.close")
+            if closable { closeButton }
         }
+    }
+
+    private var closeButton: some View {
+        Button { dismiss() } label: {
+            Image(systemName: "xmark")
+                .font(.system(size: 14, weight: .black))
+                .foregroundStyle(Theme.primaryDeep)
+                .frame(width: 38, height: 38)
+        }
+        .chunky(Theme.surface, radius: 19, depth: 3)
+        .padding(16)
+        .accessibilityIdentifier("sheet.close")
     }
 }
 

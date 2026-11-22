@@ -17,13 +17,12 @@ final class DrillLessonUITests: XCTestCase {
         app.launchArguments += ["-learnAll", "1", "-startTab", "practice",
                                 "-openTool", "drill",
                                 // The round, and nothing over it: on a device
-                                // that never finished the welcome, or one in a
-                                // region where the ad consent form shows, a
-                                // layer covers the lesson and every tap lands
-                                // on it instead.
+                                // that never finished the welcome, or without
+                                // Premium (hard paywall), a layer covers the
+                                // lesson and every tap lands on it instead.
                                 "-hasSeenOnboarding", "YES",
                                 "-alwaysShowOnboarding", "NO",
-                                "-debugAdsNoConsent", "1"]
+                                "-premium", "1"]
         app.launch()
 
         let check = app.buttons["drill.check"]

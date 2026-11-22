@@ -138,16 +138,23 @@ final class WidgetExcerptTests: XCTestCase {
 
     // MARK: Premium
 
-    /// Everything the paywall, the shortcuts and the locked widget say exists
-    /// in the fourteen languages: a missing key prints its own name on screen.
+    /// Everything the paywall, the welcome and the locked widget say exists in
+    /// the fourteen languages: a missing key prints its own name on screen.
     func testEveryPremiumAndExcerptStringIsTranslated() {
-        let keys = ["premium.title", "premium.pitch", "premium.pitch.ads", "premium.benefit.widget",
-                    "premium.benefit.quran", "premium.benefit.ads", "premium.benefit.sizes",
-                    "premium.price", "premium.subscribe", "premium.restore", "premium.legal",
+        let keys = ["premium.title", "premium.pitch", "premium.pitch.hours",
+                    "premium.benefit.prayer", "premium.benefit.quran", "premium.benefit.revise",
+                    "premium.benefit.widget", "premium.benefit.reminders",
+                    "premium.price", "premium.subscribe", "premium.subscribe.trial",
+                    "premium.trial.badge", "premium.restore", "premium.legal", "premium.legal.trial",
                     "premium.terms", "premium.privacy", "premium.active", "premium.active.body",
                     "premium.manage", "premium.unavailable", "premium.retry",
                     "premium.notice.none", "premium.notice.pending", "premium.notice.failed",
-                    "premium.badge", "premium.card.body", "widget.unlock", "widget.locked.body",
+                    "welcome.scroll.title", "welcome.scroll.body", "welcome.hours.title",
+                    "welcome.hours.body", "welcome.reckoning.title", "welcome.reckoning.none.title",
+                    "welcome.reckoning.body", "welcome.reckoning.unit", "welcome.reckoning.swap",
+                    "welcome.words.title", "welcome.words.body", "welcome.steps.title",
+                    "welcome.steps.body", "welcome.widget.title", "welcome.widget.body",
+                    "welcome.commit.title", "welcome.commit.body", "widget.locked.body",
                     "widget.show.quran", "widget.quran.title", "widget.quran.add",
                     "widget.quran.suggested", "widget.quran.from", "widget.quran.to",
                     "widget.quran.confirm", "widget.quran.empty", "widget.quran.how",
@@ -162,13 +169,26 @@ final class WidgetExcerptTests: XCTestCase {
                 // for the names that are the same everywhere, and "Suggestions",
                 // which French happens to spell like English.
                 if language != .en,
-                   !["premium.title", "premium.badge", "widget.quran.suggested"].contains(key) {
+                   !["premium.title", "widget.quran.suggested"].contains(key) {
                     XCTAssertNotEqual(text, english.t(key),
                                       "\(key) is still English in \(language.rawValue)")
                 }
             }
             XCTAssertTrue(localizer.t("premium.price").contains("%@"),
                           "premium.price has lost its price in \(language.rawValue)")
+            // The price and the trial's length are filled by hand: each
+            // placeholder must survive the translation.
+            for key in ["premium.subscribe", "premium.legal"] {
+                XCTAssertTrue(localizer.t(key).contains("%@"), "\(key) has lost its price in \(language.rawValue)")
+            }
+            for key in ["premium.subscribe.trial", "premium.legal.trial"] {
+                XCTAssertTrue(localizer.t(key).contains("%@") && localizer.t(key).contains("%d"),
+                              "\(key) has lost a placeholder in \(language.rawValue)")
+            }
+            for key in ["premium.trial.badge", "premium.pitch.hours", "welcome.reckoning.title",
+                        "welcome.hours.option", "welcome.hours.max"] {
+                XCTAssertTrue(localizer.t(key).contains("%d"), "\(key) has lost its number in \(language.rawValue)")
+            }
         }
     }
 

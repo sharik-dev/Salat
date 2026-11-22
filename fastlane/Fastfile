@@ -56,8 +56,17 @@ def review_contact
     phone_number: ENV.fetch("ASC_REVIEW_PHONE"),
     # Un examinateur qui cherche un écran de connexion inexistant refuse : on
     # lui dit d'emblée qu'il n'y en a pas, et où est le cœur de l'app.
-    notes: "No account and no sign-in. Onboarding: three cards, then two " \
-           "questions (language, daily reminder); Skip ends it at any time. " \
+    notes: "No account and no sign-in. Onboarding: a short story (a feed " \
+           "turning into a verse, one question about daily phone hours whose " \
+           "answer stays on the device, the reader's own answer multiplied " \
+           "into days a year, three pages about the app, a daily reminder); " \
+           "Skip ends it at any time. The app then requires Salat Premium " \
+           "(hard paywall, no ads anywhere): an auto-renewable monthly " \
+           "subscription (com.salat.premium.monthly) with a 3-day free trial " \
+           "for eligible accounts. The paywall shows the price per month, the " \
+           "trial, the renewal terms, Restore Purchases, Terms of Use and " \
+           "Privacy Policy. Please use a Sandbox account to start the trial; " \
+           "the whole app opens right after. " \
            "Learn tab: tap any of the 14 steps to see the Arabic text, its " \
            "phonetic transcription and its translation; a play button under the " \
            "illustration plays a reciter's voice with word-by-word highlighting. " \
@@ -70,14 +79,8 @@ def review_contact
            "voice-practice tool. The microphone is only used there, on demand, " \
            "to record yourself and compare the waveform with the reciter; " \
            "recordings never leave the device, speech recognition is on-device. " \
-           "Salat Premium is an auto-renewable monthly subscription " \
-           "(com.salat.premium.monthly) that unlocks the Home Screen widget and " \
-           "removes ads. To reach the purchase screen: Settings tab, first row " \
-           "'Salat Premium'; or Memorise tab, 'Home screen widget', then " \
-           "'Unlock the widget'. Restore Purchases, Terms of Use and Privacy " \
-           "Policy are on that screen. Without the subscription, a Google AdMob " \
-           "interstitial may appear when a step is closed or a round of " \
-           "exercises ends. Content ships in 14 languages and follows the " \
+           "Subscribers can manage the subscription from Settings, first " \
+           "row 'Salat Premium'. Content ships in 14 languages and follows the " \
            "device language; it can be forced in Settings.",
     demo_account_required: false
   }

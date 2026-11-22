@@ -14,7 +14,6 @@ import WidgetKit
 /// will draw, not a mockup of it.
 struct WidgetToolView: View {
     @Environment(AppSettings.self) private var settings
-    @Environment(Store.self) private var store
     @Environment(\.loc) private var loc
     @State private var showsGuide = false
     @State private var showsExcerpts = false
@@ -24,30 +23,17 @@ struct WidgetToolView: View {
             VStack(alignment: .leading, spacing: 16) {
                 preview
 
-                // The widget on the home screen is Salat Premium. This page is
-                // not: the preview and the settings stay open to everyone,
-                // because seeing the widget with one's own content on it is
-                // what makes it worth a subscription. Only the button changes.
-                if store.isPremium {
-                    Button { showsGuide = true } label: {
-                        HStack(spacing: 8) {
-                            Image(systemName: "plus")
-                                .font(.system(size: 17, weight: .black))
-                            Text(loc.t("widget.add"))
-                        }
+                // Only a subscriber reaches this page (hard paywall since
+                // 22/11/2026): the button is always the one that adds it.
+                Button { showsGuide = true } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: "plus")
+                            .font(.system(size: 17, weight: .black))
+                        Text(loc.t("widget.add"))
                     }
-                    .buttonStyle(.cta(.primary, height: 58))
-                    .accessibilityIdentifier("widget.add")
-                } else {
-                    Button { store.showsPaywall = true } label: {
-                        HStack(spacing: 8) {
-                            LofiIcon(.lock, size: 30, animated: false)
-                            Text(loc.t("widget.unlock"))
-                        }
-                    }
-                    .buttonStyle(.cta(.primary, height: 58))
-                    .accessibilityIdentifier("widget.unlock")
                 }
+                .buttonStyle(.cta(.primary, height: 58))
+                .accessibilityIdentifier("widget.add")
 
                 settingsCard
 
