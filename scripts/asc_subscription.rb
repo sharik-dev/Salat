@@ -13,8 +13,8 @@
 #      celui de `Store.productID` dans l'app, à la lettre près ;
 #   3. son nom et sa description par langue (30 et 45 caractères au plus) ;
 #   4. sa disponibilité dans tous les pays, nouveaux pays compris ;
-#   5. son prix : 4,99 € en France, qui sert de base, le palier équivalent
-#      qu'Apple en déduit partout ailleurs, et 4,99 $ imposé aux États-Unis.
+#   5. son prix : 0,99 € en France, qui sert de base, le palier équivalent
+#      qu'Apple en déduit partout ailleurs, et 0,99 $ imposé aux États-Unis.
 #      Un pays qui avait déjà un prix reçoit le nouveau avec
 #      `preserveCurrentPrice: true` : les abonnés en cours gardent le leur ;
 #   5 bis. l'offre d'introduction, 3 jours gratuits, dans chaque pays ;
@@ -49,7 +49,8 @@ require "digest"
 BASE = "https://api.appstoreconnect.apple.com/v1"
 APPLY = ARGV.include?("--apply")
 SHOT = (i = ARGV.index("--screenshot")) ? ARGV[i + 1] : nil
-# Date d'effet d'un CHANGEMENT de prix (AAAA-MM-JJ). Un abonnement déjà
+# Date d'effet d'un CHANGEMENT de prix (AAAA-MM-JJ), au moins deux jours plus
+# tard : le 25/11, Apple a refusé le 26 (« must be on or after 2026-11-27 »). Un abonnement déjà
 # approuvé refuse un prix sans date (409 STATE_ERROR « Initial price cannot be
 # created again after subscription is approved », vu le 22/11/2026) : un
 # changement est toujours programmé à une date.
@@ -59,12 +60,13 @@ GROUP_NAME   = "Salat Premium"
 PRODUCT_NAME = "Salat Premium mensuel"
 PERIOD       = "ONE_MONTH"
 BASE_TERRITORY = "FRA"
-# 4,99 € depuis le 22/11/2026 (décision de Sharik : hard paywall, plus de pub).
-# C'était 1,99 € du 14/11 au 22/11/2026 ; les abonnés de cette période gardent
-# leur prix (preserveCurrentPrice, voir l'étape 5).
-PRICE          = 4.99
+# 0,99 € à partir du 27/11/2026 (décision de Sharik du 25/11). Avant : 1,99 €
+# (14/11), puis 4,99 € (en vigueur le 23/11). Une BAISSE
+# s'applique aussi aux abonnés en cours : Apple ne garde jamais un prix plus
+# haut pour eux, preserveCurrentPrice n'y change rien.
+PRICE          = 0.99
 # Les pays où le palier est imposé au lieu d'être déduit de la France.
-FORCED = { "USA" => 4.99 }
+FORCED = { "USA" => 0.99 }
 # L'offre d'introduction : gratuite, une période de cette durée.
 TRIAL = "THREE_DAYS"
 
@@ -250,8 +252,8 @@ end
 # identifiant de palier, jamais par chaîne. Un pays qui n'a pas le bon palier
 # en reçoit un nouveau. Quand le pays avait déjà un prix, le nouveau est posé
 # avec `preserveCurrentPrice: true` : les abonnés en cours gardent leur prix
-# (décision de Sharik, 22/11/2026, passage de 1,99 à 4,99), seuls les nouveaux
-# paient le nouveau.
+# (décision de Sharik, 22/11/2026) quand le prix monte ; une baisse (0,99 le
+# 25/11/2026) profite à tout le monde.
 def point_at(sub_id, territory, price)
   points = all("subscriptions/#{sub_id}/pricePoints?filter[territory]=#{territory}&limit=8000")
   # En nombre, jamais en chaîne : l'API rend « 1.99 » ici et « 1.990 » ailleurs.
@@ -271,7 +273,7 @@ end
 
 # territoire → paliers qu'il porte (le courant et ceux déjà programmés).
 held = Hash.new { |h, k| h[k] = [] }
-all("subscriptions/#{sub['id']}/prices?include=territory&limit=200").each do |p|
+all("subscriptions/#{sub['id']}/prices?include=territory,subscriptionPricePoint&limit=200").each do |p|
   territory = p.dig("relationships", "territory", "data", "id") or next
   held[territory] << p.dig("relationships", "subscriptionPricePoint", "data", "id")
 end

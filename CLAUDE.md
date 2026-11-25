@@ -757,11 +757,12 @@ du verset), `-quranMuted 1`, `-openSurahs 1`, `-openQuranNotes 1`, `-openQuranSa
 blanche ou un écran d'une autre app au milieu d'une série, c'est quelqu'un d'autre qui vient
 de lancer la sienne, pas un plantage. Reprendre la capture avant de chercher un bug.
 
-## Salat Premium : toute l'app, 4,99 par mois, 3 jours d'essai, paywall dur
+## Salat Premium : toute l'app, 0,99 par mois, 3 jours d'essai, paywall dur
 
 **Décision de Sharik du 22/11/2026** (remplace le modèle du 14/11 : app gratuite avec pubs,
 Premium à 1,99 qui débloquait le widget et retirait les pubs). Désormais : **plus aucune
-pub**, et **l'app entière est derrière Salat Premium**, 4,99 €/mois avec **3 jours d'essai
+pub**, et **l'app entière est derrière Salat Premium**, 0,99 €/mois (4,99 du 23 au 26/11, baissé à
+0,99 le 25/11/2026 par Sharik, effectif le 27/11) avec **3 jours d'essai
 gratuit** pour les comptes éligibles. Un seul produit, mensuel, auto-renouvelable :
 `com.salat.premium.monthly` (`Store.productID`, inchangé : un identifiant ne se réutilise
 jamais). StoreKit 2, aucun serveur : l'App Store sait qui a payé, et l'app le lui redemande à
@@ -783,10 +784,10 @@ actif » des *Réglages* : elle mène à la page de gestion de l'App Store.
 (`isEligibleForIntroOffer`) ; `offeredTrialDays` n'est non nul que si les deux disent oui.
 Alors le bouton dit « Essayer 3 jours gratuitement » (`premium.subscribe.trial`), une
 pastille annonce l'essai (`paywall.trial`) et la phrase légale devient
-`premium.legal.trial` (« 3 jours gratuits, puis 4,99 €/mois… »). Sinon : « S'abonner »
+`premium.legal.trial` (« 3 jours gratuits, puis 0,99 €/mois… »). Sinon : « S'abonner »
 et `premium.legal`. Un compte qui a déjà eu l'essai ne se le voit jamais promettre.
 
-**Le prix n'est écrit nulle part dans l'app.** `4,99` vit dans App Store Connect (et dans
+**Le prix n'est écrit nulle part dans l'app.** `0,99` vit dans App Store Connect (et dans
 `StoreKit/Premium.storekit`, avec l'offre `P3D` gratuite, pour un lancement depuis Xcode) ;
 l'écran imprime `Product.displayPrice`, dans la monnaie et avec la taxe du lecteur, glissé
 dans les phrases par `%@` (et la durée d'essai par `%d`). Sans produit chargé, le paywall dit
@@ -810,7 +811,7 @@ Rien dans `DrillLog` ni dans la télémétrie : aucun évènement d'achat ne par
 app-metrics, App Store Connect compte les abonnés mieux que nous.
 
 Liens profonds (DEBUG) : `-premium 1|0` force l'abonnement (un simulateur lancé par
-`simctl` n'a rien acheté), `-paywallPrice "4,99 €"` imprime un prix faute de produit,
+`simctl` n'a rien acheté), `-paywallPrice "0,99 €"` imprime un prix faute de produit,
 `-paywallTrial N` simule un essai de N jours (`0` = pas d'essai, compte non éligible),
 `-openPaywall 1` ouvre la feuille d'un abonné, `-startTab widgetPreview -widgetLocked 1`
 dessine le widget verrouillé. Sur un vrai téléphone, la carte de développement des
@@ -839,19 +840,17 @@ sollicitation. iOS plafonne la carte à trois par an, et elle ne sort jamais sur
 ```bash
 set -a; source ~/.config/ios-testflight-cicd/config.env; set +a
 ruby scripts/asc_subscription.rb                             # lecture seule : dit ce qui manque
-ruby scripts/asc_subscription.rb --apply --start AAAA-MM-JJ  # prix 4,99 daté + essai 3 jours
+ruby scripts/asc_subscription.rb --apply --start AAAA-MM-JJ  # prix 0,99 daté + essai 3 jours
 ruby scripts/asc_subscription.rb --apply --screenshot fastlane/screenshots_raw/paywall.png
 ```
 
-Le script se relance sans rien dupliquer. Prix de base : 4,99 € en France, le palier
-équivalent partout ailleurs, 4,99 $ imposé aux États-Unis ; l'offre d'introduction
-`FREE_TRIAL` / `THREE_DAYS` dans chaque pays. **État au 22/11/2026** : l'abonnement est
-`APPROVED` à 1,99 ; la note de revue a été mise à jour par le script, mais l'API a refusé
-le reste — 409 `UNMODIFIABLE` « Cannot edit SubscriptionLocalization when it is in ACTIVE
-state » (les fiches en/fr/ar se changent dans le site) et 409 `STATE_ERROR` « Initial price
-cannot be created again after subscription is approved » (un abonnement approuvé change de
-prix par un **changement daté**, d'où `--start`, pas encore lancé). Ni prix ni essai n'ont
-été posés. Ce qu'il ne fait pas : **soumettre** l'abonnement (il part avec une version, voir
+Le script se relance sans rien dupliquer. Prix de base : 0,99 € en France, le palier
+équivalent partout ailleurs, 0,99 $ imposé aux États-Unis ; l'offre d'introduction
+`FREE_TRIAL` / `THREE_DAYS` dans chaque pays. **État au 25/11/2026** : l'abonnement est `APPROVED` ; 4,99 € en
+vigueur depuis le 23/11, **0,99 € programmé au 27/11** dans les 175 pays (`--start 2026-11-27` :
+Apple refuse une date à moins de deux jours), essai de 3 jours posé partout. Une baisse
+s'applique aussi aux abonnés en cours. Les fiches en/fr/ar de l'abonnement restent à changer
+dans le site (409 `UNMODIFIABLE` en état ACTIVE). Ce qu'il ne fait pas : **soumettre** l'abonnement (il part avec une version, voir
 « Ce que la 1.4 a appris »).
 
 Les descriptions de `fastlane/metadata` (en, fr, ar) disent que l'app fonctionne avec Salat

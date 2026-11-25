@@ -225,8 +225,8 @@ struct PaywallView: View {
             .fixedSize(horizontal: false, vertical: true)
     }
 
-    /// « 3 days free, then 4,99 € / month » for an account that may take the
-    /// trial, « Subscribe — 4,99 € / month » otherwise. The price is always the
+    /// « 3 days free, then 0,99 € / month » for an account that may take the
+    /// trial, « Subscribe — 0,99 € / month » otherwise. The price is always the
     /// App Store's `displayPrice`.
     private func buttonTitle(price: String) -> String {
         if let days = store.offeredTrialDays {

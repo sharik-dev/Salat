@@ -148,7 +148,7 @@ enum LaunchOptions {
     }
 
     /// `-openPaywall 1` opens the subscriber's Premium sheet on arrival (a
-    /// non-subscriber sees the paywall anyway), and `-paywallPrice "4,99 €"`
+    /// non-subscriber sees the paywall anyway), and `-paywallPrice "0,99 €"`
     /// (DEBUG) prints that price on it: without a StoreKit session no product
     /// loads, and the screen would only ever show its "cannot be reached"
     /// state. `-paywallTrial 3` promises that many free days (0 = no trial).

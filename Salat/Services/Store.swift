@@ -8,7 +8,7 @@ import WidgetKit
 /// the only one who knows who has paid, and the app asks it every time it
 /// comes forward.
 ///
-/// The price is never written in the app. `4.99` lives in App Store Connect
+/// The price is never written in the app. `0.99` lives in App Store Connect
 /// (and in `StoreKit/Premium.storekit` for the simulator); the screen prints
 /// `Product.displayPrice`, which is the reader's own currency and tax. The
 /// trial is read from the product too (`introductoryOffer`), and only offered
