@@ -97,9 +97,10 @@ enum LaunchOptions {
     /// to tap.
     static var celebrates: Bool { value("-celebrate") == "1" }
 
-    /// `-welcomePage 0…5` opens the onboarding on that pitch page (0 the
-    /// feed, 1 the hours question, 2 the reckoning, 3–5 the app; past the
-    /// question, 4 h is assumed when nothing was answered), `-welcomeBeat N`
+    /// `-welcomePage 0…7` opens the onboarding on that pitch page (0 the
+    /// hook, 1 the goal, 2 the hours, 3 the reckoning, 4 the feed to swipe,
+    /// 5 the words, 6 the widget, 7 the plan; past a question, « the Qur'an
+    /// every day » and 4 h are assumed when nothing was answered), `-welcomeBeat N`
     /// freezes its animated scene on beat N (99 = the last), `-welcomeQuestion
     /// 0` opens the last screen (the daily moment) directly. All three need
     /// `-resetOnboarding 1`: the scenes loop on their own and the last screen

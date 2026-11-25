@@ -8,9 +8,13 @@ import SwiftUI
 /// whole app, with no close button (`hard`). The same view, closable, is the
 /// subscriber's sheet in the settings (active, manage).
 ///
-/// The top of the page is the reader's **own widget** on a home screen, the
-/// real `CarouselWidgetView` with what they picked on it. Under it, what the
-/// subscription opens and the price.
+/// Since 25/11/2026 (conversion pass) the page opens on the welcome's own
+/// promise: a headline, the reader's answers echoed back, and the Qur'an feed
+/// in small (the gesture they just tried). Then, when the account may take
+/// the free trial, a **timeline** of it (today, the reminder the day before
+/// it ends, the day it turns paid) — the reminder is real, scheduled on
+/// purchase (`TrialReminder`). Then what the subscription opens, and the
+/// price.
 ///
 /// Everything Apple asks of a subscription screen is on it and stays on it
 /// (3.1.2): the price and its period, the most visible price on the screen;
@@ -30,6 +34,12 @@ struct PaywallView: View {
     var body: some View {
         SheetScaffold(title: loc.t("premium.title"), icon: .sparkle, closable: !hard) {
             VStack(spacing: 14) {
+                Text(loc.t("paywall.headline"))
+                    .font(Theme.title(26))
+                    .foregroundStyle(Theme.ink)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
                 Text(pitch)
                     .font(Theme.rounded(15.5, .semibold))
                     .foregroundStyle(Theme.inkSoft)
@@ -38,6 +48,7 @@ struct PaywallView: View {
                     .accessibilityIdentifier("paywall.pitch")
 
                 preview
+                if !store.isPremium, let days = store.offeredTrialDays { timeline(days) }
                 benefits
                 // Room for the bar pinned below: the last line of the card
                 // must be able to scroll clear of it.
@@ -46,6 +57,7 @@ struct PaywallView: View {
         }
         .safeAreaInset(edge: .bottom, spacing: 0) { actionBar }
         .task { await store.loadProduct() }
+        .onAppear { if hard { Telemetry.shared.track("paywall_view") } }
         .onDisappear { store.clearNotice() }
     }
 
@@ -53,25 +65,74 @@ struct PaywallView: View {
     /// they said they spend on their phone. Nothing is invented for whoever
     /// skipped the question.
     private var pitch: String {
-        if let hours = OnboardingManager.phoneHours, hours > 0 {
-            return loc.t("premium.pitch.hours", hours)
+        var parts: [String] = []
+        if let goal = OnboardingManager.goal {
+            parts.append(loc.t("welcome.plan.goal", loc.t(goal.key)) + ".")
         }
-        return loc.t("premium.pitch")
+        if let hours = OnboardingManager.phoneHours, hours > 0 {
+            parts.append(loc.t("premium.pitch.hours", hours))
+        } else {
+            parts.append(loc.t("premium.pitch"))
+        }
+        return parts.joined(separator: " ")
     }
 
     // MARK: What is sold
 
-    @ViewBuilder
+    /// The Qur'an feed in small: the swipe the welcome promised to redirect.
     private var preview: some View {
-        if let entry = settings.widgetPreviewEntry() {
-            let shape = RoundedRectangle(cornerRadius: 28, style: .continuous)
-            HomeScreenMock(entry: entry, rows: 0)
-                .aspectRatio(1.72, contentMode: .fit)
-                .clipShape(shape)
-                .overlay(shape.strokeBorder(Theme.primaryDeep, lineWidth: 3))
-                .background(shape.fill(Theme.primaryDeep).offset(y: 6))
-                .padding(.bottom, 6)
+        let shape = RoundedRectangle(cornerRadius: 28, style: .continuous)
+        let lines = settings.feedSampleLines
+        let line = lines.count > 1 ? lines[1] : lines[0]
+        return QuranFeedCard(arabic: line.0, translation: line.1, picture: 4, liked: true, scale: 0.72)
+            .aspectRatio(2.2, contentMode: .fit)
+            .clipShape(shape)
+            .overlay(shape.strokeBorder(Theme.primaryDeep, lineWidth: 3))
+            .background(shape.fill(Theme.primaryDeep).offset(y: 6))
+            .padding(.bottom, 6)
+            .environment(\.layoutDirection, .leftToRight)
+    }
+
+    /// How the trial goes, step by step: what happens today, the reminder
+    /// before it ends, the day it turns paid. Saying when the money starts
+    /// is what makes "free" believable.
+    private func timeline(_ days: Int) -> some View {
+        var rows: [(Icon3D, String, String)] = [
+            (.sparkle, loc.t("paywall.timeline.today"), loc.t("paywall.timeline.today.body")),
+        ]
+        if days >= 2 {
+            rows.append((.bell, loc.t("paywall.timeline.in", days - 1), loc.t("paywall.timeline.reminder.body")))
         }
+        rows.append((.star, loc.t("paywall.timeline.in", days), loc.t("paywall.timeline.charge.body")))
+        return VStack(alignment: .leading, spacing: 0) {
+            ForEach(Array(rows.enumerated()), id: \.offset) { i, row in
+                HStack(alignment: .top, spacing: 12) {
+                    VStack(spacing: 0) {
+                        IconTile(icon: row.0, size: 40, animated: i == 0)
+                        if i < rows.count - 1 {
+                            Capsule().fill(Theme.primary.opacity(0.35)).frame(width: 4).frame(minHeight: 14)
+                        }
+                    }
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(row.1)
+                            .font(Theme.rounded(15.5, .black))
+                            .foregroundStyle(i == 0 ? Theme.primaryDeep : Theme.ink)
+                        Text(row.2)
+                            .font(Theme.rounded(14, .semibold))
+                            .foregroundStyle(Theme.inkSoft)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .padding(.top, 2)
+                    .padding(.bottom, 10)
+                    Spacer(minLength: 0)
+                }
+            }
+        }
+        .padding(.horizontal, 14)
+        .padding(.top, 14)
+        .padding(.bottom, 4)
+        .card(padding: 0)
+        .accessibilityIdentifier("paywall.timeline")
     }
 
     /// What the subscription opens: the whole app.
@@ -174,7 +235,13 @@ struct PaywallView: View {
             }
 
             Button {
-                Task { await store.purchase() }
+                let trial = store.offeredTrialDays
+                Telemetry.shared.track("purchase_tap", props: ["trial": trial == nil ? "no" : "yes"])
+                let localizer = settings.localizer
+                Task {
+                    await store.purchase()
+                    if store.isPremium, let trial { await TrialReminder.schedule(days: trial, localizer: localizer) }
+                }
             } label: {
                 if store.isWorking {
                     ProgressView().tint(.white)
@@ -187,6 +254,13 @@ struct PaywallView: View {
             .buttonStyle(.cta(.primary))
             .disabled(store.isWorking)
             .accessibilityIdentifier("paywall.subscribe")
+
+            if store.offeredTrialDays != nil {
+                Label(loc.t("paywall.nopay"), systemImage: "checkmark.shield.fill")
+                    .font(Theme.rounded(13.5, .heavy))
+                    .foregroundStyle(Theme.primaryDeep)
+                    .accessibilityIdentifier("paywall.nopay")
+            }
         } else if store.loadFailed {
             // No product, no price: nothing can be sold, and a button that
             // pretends otherwise would be the first thing to fail.

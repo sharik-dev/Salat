@@ -40,6 +40,10 @@ final class OnboardingManager {
         if LaunchOptions.resetsOnboarding {
             hasSeenOnboarding = false
             alwaysShowOnboarding = false
+            // A fresh install has no answers yet: the questions must hold
+            // their button again, as they would on a new phone.
+            Self.phoneHours = nil
+            Self.goal = nil
         }
         #endif
     }
@@ -77,9 +81,32 @@ final class OnboardingManager {
         set { UserDefaults.standard.set(newValue ?? 0, forKey: "onboarding.phoneHours") }
     }
 
+    /// The reader's answer to "what do you want most?". Same rule as the
+    /// hours: on this phone only, nil when skipped.
+    static var goal: WelcomeGoal? {
+        get { UserDefaults.standard.string(forKey: "onboarding.goal").flatMap(WelcomeGoal.init) }
+        set { UserDefaults.standard.set(newValue?.rawValue, forKey: "onboarding.goal") }
+    }
+
     /// Hours a day, as full days in a year: plain arithmetic on the answer,
     /// never a statistic. 4 h a day → 61 days.
     static func daysPerYear(hours: Int) -> Int {
         Int((Double(max(hours, 0)) * 365 / 24).rounded())
+    }
+}
+
+/// What the reader wants most from the app: asked in the welcome, echoed by
+/// the plan and the paywall. The label is `welcome.goal.<rawValue>`.
+enum WelcomeGoal: String, CaseIterable, Identifiable {
+    case scroll, quran, prayer, memorize
+    var id: String { rawValue }
+    var key: String { "welcome.goal.\(rawValue)" }
+    var icon: Icon3D {
+        switch self {
+        case .scroll:   return .phone
+        case .quran:    return .quran
+        case .prayer:   return .mat
+        case .memorize: return .cards
+        }
     }
 }

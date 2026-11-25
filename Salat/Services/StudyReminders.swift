@@ -73,7 +73,7 @@ final class StudyReminders {
     func sync(with settings: AppSettings, now: Date = Date()) async {
         await refreshAuthorization()
 
-        center.removeAllPendingNotificationRequests()
+        await clearOwn()
 
         guard settings.remindersOn, authorization == .authorized else { return }
 
@@ -108,7 +108,16 @@ final class StudyReminders {
     }
 
     func cancelAll() {
-        center.removeAllPendingNotificationRequests()
+        Task { await clearOwn() }
+    }
+
+    /// Only the study reminders: the trial reminder (`TrialReminder`) shares
+    /// the notification center and must survive every rewrite of the plan.
+    private func clearOwn() async {
+        let ids = await center.pendingNotificationRequests()
+            .map(\.identifier)
+            .filter { $0.hasPrefix(Self.identifierPrefix) }
+        center.removePendingNotificationRequests(withIdentifiers: ids)
     }
 
     // MARK: - The plan itself

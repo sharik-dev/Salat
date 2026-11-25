@@ -1,5 +1,6 @@
-Learn Salah is now built around one idea: stop scrolling, and give that time to the Qur'an and your prayer.
+Scroll less, scroll the Quran.
 
-• A new welcome, with one honest question about your screen time
-• The whole app is now part of Salat Premium, with a 3-day free trial for eligible accounts
-• No more ads, anywhere
+• A new welcome: tell us what you want most, and see where your screen time goes
+• Your plan, built around ten minutes a day instead of the feed
+• A clear trial timeline: we remind you the day before it ends
+• Softer, lower button sounds

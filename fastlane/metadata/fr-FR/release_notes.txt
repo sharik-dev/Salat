@@ -1,5 +1,6 @@
-Learn Salah tourne désormais autour d'une idée : arrêter de scroller, et offrir ce temps au Coran et à sa prière.
+Scrolle moins, scrolle le Coran.
 
-• Un nouvel accueil, avec une question honnête sur ton temps d'écran
-• Toute l'app fait désormais partie de Salat Premium, avec 3 jours d'essai gratuit pour les comptes éligibles
-• Plus aucune publicité
+• Un nouvel accueil : dis ce que tu veux le plus, et vois où part ton temps d'écran
+• Ton plan, bâti sur dix minutes par jour à la place du fil
+• Une frise d'essai claire : on te prévient la veille de la fin
+• Des sons de boutons plus doux et plus graves

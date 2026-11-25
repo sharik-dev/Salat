@@ -15,20 +15,27 @@ final class OnboardingFlowUITests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments += ["-resetOnboarding", "1",
                                 "-premium", premium ? "1" : "0",
-                                "-paywallPrice", "4,99 €", "-paywallTrial", "3"]
+                                "-paywallPrice", "0,99 €", "-paywallTrial", "3"]
         app.launch()
         return app
     }
 
-    /// Taps through the whole story: the feed, the hours question (which
-    /// wants an answer), the reckoning, the three pages about the app, and the
-    /// daily moment, left by "Not now".
+    /// Taps through the whole story: the hook, the goal and the hours (both
+    /// want an answer), the reckoning, the feed to swipe, the words, the
+    /// widget, the plan (which waits for its build), and the daily moment,
+    /// left by "Not now".
     private func tapThrough(_ app: XCUIApplication) -> XCUIElement {
         let primary = app.buttons["onboarding.primary"]
         XCTAssertTrue(primary.waitForExistence(timeout: 10),
                       "a fresh install should open on the onboarding")
 
-        primary.tap() // the feed → the question
+        primary.tap() // the hook → the goal
+
+        let goal = app.buttons["onboarding.goal.quran"]
+        XCTAssertTrue(goal.waitForExistence(timeout: 5), "the goal question never showed")
+        XCTAssertFalse(primary.isEnabled, "the goal can be passed without an answer")
+        goal.tap()
+        primary.tap()
 
         // The question holds the button until it is answered.
         let fourHours = app.buttons["onboarding.hours.4"]
@@ -36,12 +43,20 @@ final class OnboardingFlowUITests: XCTestCase {
         XCTAssertFalse(primary.isEnabled, "the question can be passed without an answer")
         fourHours.tap()
 
-        // The question, the reckoning, then three pages about the app.
+        // The hours, the reckoning, the feed, the words, the widget.
         for page in 2...6 {
             XCTAssertTrue(primary.waitForExistence(timeout: 5),
                           "the onboarding button vanished on page \(page)")
             primary.tap()
         }
+
+        // The plan builds, then lets you through.
+        XCTAssertTrue(app.otherElements["onboarding.plan.ready"].waitForExistence(timeout: 10)
+                      || primary.isEnabled, "the plan never finished building")
+        let enabled = NSPredicate(format: "isEnabled == true")
+        expectation(for: enabled, evaluatedWith: primary)
+        waitForExpectations(timeout: 10)
+        primary.tap()
 
         // The last screen offers the daily reminder. "Not now" is the way
         // through that never raises the system alert, which a UI test cannot

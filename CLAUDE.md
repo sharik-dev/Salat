@@ -583,42 +583,57 @@ une feuille (`SheetScaffold`).
 - Marquer une étape acquise joue `CelebrationView` (plein écran, objet qui tombe, étincelles,
   fanfare) puis referme la fiche.
 
-## L'onboarding : « arrête de scroller, remplace ce temps par le Coran » (22/11/2026)
+## L'onboarding : « continue de scroller, mais scrolle le Coran » (25/11/2026)
 
-Réécrit le 22/11/2026 à la demande de Sharik, avec la même mécanique que l'ancien (calqué
-sur SelfTransfer, `Salat/Views/OnboardingView.swift`) : chaque page est une **scène qui
-boucle** (`MotionLoop` + `MotionCanvas`) sur un ciel vert, un titre et une phrase dessous.
-Six pages (`WelcomePage`), une seule histoire :
+Réécrit le 22/11, puis **retourné le 25/11/2026** à la demande de Sharik (zéro vente) : on ne
+reproche plus le scroll, on le **redirige**. Même mécanique (calqué sur SelfTransfer,
+`Salat/Views/OnboardingView.swift`) : chaque page est une scène qui boucle (`MotionLoop` +
+`MotionCanvas`) sur un ciel vert, un titre et une phrase dessous. Huit pages (`WelcomePage`),
+une seule histoire, chacune tenue par une technique de conversion :
 
-1. **Le problème.** `scroll` : un fil gris d'un téléphone défile sous le pouce, puis
-   s'efface et laisse la première ligne d'al-Fatiha (lue dans le contenu de l'app, la
-   Basmala à défaut). `hours` : *combien d'heures par jour sur ton téléphone ?*, huit
-   pastilles (`HoursPicker`, `onboarding.hours.1…8`) ; « Continuer » attend une réponse.
-   `reckoning` : cette réponse multipliée, des heures par jour en jours par an
-   (`OnboardingManager.daysPerYear`, 4 h → 61 jours), comptée sur un calendrier, puis
-   « et si dix minutes de ce temps allaient au Coran ? ».
-2. **La réponse.** `words` (une ligne lue de trois façons), `steps` (la prière pas à pas),
-   `widget` (le vrai widget sur un écran d'accueil, là où le scroll commençait — page gardée
-   exprès, demande du 14/11/2026).
-3. **L'engagement.** `WelcomeCommitView` : un moment par jour, l'heure du rappel, un aperçu
-   du vrai rappel. La permission de notification n'est demandée que si l'on tape le bouton
-   qui le dit (`onboarding.reminders`) ; `onboarding.later` termine sans alerte.
+1. **L'accroche.** `scroll` : un fil gris défile sous le pouce, puis le même geste fait
+   monter une carte du fil du Coran (`QuranFeedCard` : photo, verset, sens, cœur qui
+   s'allume). Titre : « Continue de scroller. Mais scrolle le Coran. »
+2. **La personnalisation.** `goal` : *qu'est-ce que tu veux le plus ?* (`WelcomeGoal` :
+   moins scroller, lire le Coran chaque jour, apprendre ma prière, l'apprendre par cœur ;
+   `GoalPicker`, `onboarding.goal.<cas>`). `hours` : les heures par jour (`HoursPicker`).
+   « Continuer » attend une réponse sur les deux.
+3. **Le coût.** `reckoning` : les heures multipliées en jours par an
+   (`OnboardingManager.daysPerYear`, 4 h → 61 jours), puis « et si dix minutes allaient au
+   Coran ? ».
+4. **Le produit en main.** `feed` : un vrai petit fil (`FeedDemo`) qu'on fait défiler au
+   doigt, cinq lignes de la Fatiha sur photo, double tap = cœur. Puis `words` et `widget`.
+5. **Le plan.** `plan` (`PlanBuild`) : quatre lignes qui se remplissent (langue, fil du
+   Coran, prière, widget), puis une carte « Ton objectif : … / 10 minutes par jour, à la
+   place du fil ». « Continuer » attend la fin (instantané avec Réduire les animations).
+6. **L'engagement.** `WelcomeCommitView` : l'heure du rappel, comme avant.
 
-Puis, sans Premium, **le paywall prend l'écran** (`ContentView`) : c'est la dernière page de
-l'histoire, pas une surprise. La langue reste une capsule en haut de chaque page (plus une
-question à part), « Passer » aussi, et il termine tout — vers le paywall.
+Puis, sans Premium, **le paywall prend l'écran**. Il reprend la réponse (`paywall.headline`
+« Échange ton fil contre le Coran », l'objectif en tête de l'accroche), montre une carte du
+fil au lieu d'un aperçu générique, et, quand l'essai est offert, une **frise d'essai**
+(aujourd'hui / rappel la veille / début de l'abonnement) et « Rien à payer maintenant ». Le
+rappel de la frise est **vrai** : `TrialReminder` pose la notification `trial.end` la veille
+de la fin d'essai après un achat réussi. `StudyReminders` ne retire plus que ses propres
+`study.reminder.*` (avant, il effaçait toutes les notifications en attente, rappel d'essai
+compris).
 
 **Ce que ces pages s'interdisent** (règle 5.6 et choix de Sharik) : aucune statistique ni
-aucun avis inventé — le seul chiffre est la réponse du lecteur multipliée par 365/24 ;
-aucune promesse au-delà de ce que fait l'app (ni récompense, ni santé, ni « tu vas
-réussir ») ; rien qui tranche entre les écoles. La réponse (`onboarding.phoneHours`) reste
-dans `UserDefaults` : elle ne part pas dans la télémétrie, le paywall la reprend dans son
-accroche (`premium.pitch.hours`).
+aucun avis inventé, le seul chiffre est la réponse du lecteur multipliée par 365/24 ; aucune
+promesse au-delà de ce que fait l'app ; rien qui tranche entre les écoles. Les heures
+(`onboarding.phoneHours`) restent dans `UserDefaults` et ne partent jamais ; l'objectif
+(`onboarding.goal`) aussi, et seul son identifiant part dans la télémétrie
+(`onboarding_goal`).
+
+**Entonnoir mesuré** (app-metrics) : `onboarding_step` (valeur = rang, `page` = nom) à chaque
+page, `onboarding_goal`, `onboarding_done`, `paywall_view`, `purchase_tap` (`trial` oui/non).
+C'est ce qui dit où l'on perd les gens avant de toucher au prix.
 
 Il est monté en **surcouche** dans `ContentView`, plus en feuille : une feuille
 `.constant(true)` ne se ferme jamais, c'est la panne qui a déjà été livrée une fois. Les
-textes sont les clés `welcome.<page>.title/body`, `welcome.hours.*`, `welcome.reckoning.*`,
-`welcome.commit.*` et `common.continue`, dans les quatorze langues.
+textes sont les clés `welcome.<page>.title/body`, `welcome.goal.*`, `welcome.feed.*`,
+`welcome.plan.*`, `welcome.hours.*`, `welcome.reckoning.*`, `welcome.commit.*`,
+`paywall.timeline.*`, `paywall.nopay`, `notif.trial.*` et `common.continue`, dans les quatorze
+langues.
 
 ## La page du widget : le voir, l'ajouter, le régler
 
@@ -642,6 +657,10 @@ textes sont les clés `welcome.<page>.title/body`, `welcome.hours.*`, `welcome.r
 
 Le son des clics a été baissé le même jour (`Sound.bank`, 0,34 → 0,13) : avec un clic sur
 chaque ligne et chaque puce, c'était ce qu'on entendait le plus dans l'app.
+Le 25/11/2026, Sharik l'a trouvé **trop aigu** : l'ancien clic de clavier avait sa brillance à
+7 kHz. `ui-click.mp3` est désormais un **coup de bois sourd en ré grave** (banque earshot
+`knock/wood --pitch D4`, son fabriqué en code, aucune licence), brillance ~770 Hz, le registre de
+`ui-nav`. Rendu : `earshot sfx render knock/wood --pitch D4`, puis −8 dB et un fondu de 30 ms.
 
 ## L'onglet *Coran* : le livre entier, en fil d'extraits
 
@@ -807,7 +826,8 @@ prochaine ouverture de l'app). Sans abonnement le widget dessine `lockedCard` ; 
 ouvre l'app, qui montre le paywall de toute façon. `WidgetToolView` n'a plus qu'un bouton,
 « Ajouter à l'écran d'accueil » : on n'y arrive qu'abonné.
 
-Rien dans `DrillLog` ni dans la télémétrie : aucun évènement d'achat ne part vers
+Rien dans `DrillLog`. La télémétrie ne compte que l'entonnoir (`paywall_view`, `purchase_tap`,
+voir l'onboarding), jamais un montant ni un reçu ; pour le reste, aucun évènement d'achat ne part vers
 app-metrics, App Store Connect compte les abonnés mieux que nous.
 
 Liens profonds (DEBUG) : `-premium 1|0` force l'abonnement (un simulateur lancé par
@@ -904,7 +924,7 @@ Liens profonds (DEBUG) : `-widgetScope quran` met le widget sur le Coran pour ce
 
 `SalatTests` est **hébergé par l'app** (`TEST_HOST`), pas une seconde compilation de `SalatKit` —
 sinon `@testable import Salat` ne linke pas. `SalatUITests` traverse l'onboarding en tapant
-(les six pages en répondant `onboarding.hours.4`, puis « Plus tard » : le seul chemin qui ne
+(les huit pages en répondant `onboarding.goal.quran` et `onboarding.hours.4`, en attendant le plan, puis « Plus tard » : le seul chemin qui ne
 lève pas l'alerte système), et vérifie qu'il débouche sur le paywall sans Premium, sur
 `tab.learn` avec :
 c'est la régression qui compte, l'app a déjà été livrée une fois avec un onboarding dont on ne
@@ -915,7 +935,7 @@ Cette panne mérite d'être retenue : `@Observable` **ne suit que les propriét�
 vue ne se redessine pas. Toute préférence exposée à l'UI se stocke et se persiste dans `didSet`.
 Et une `sheet(isPresented: .constant(…))` ne peut rien écrire en retour — elle ne se ferme jamais.
 
-`-resetOnboarding 1` (DEBUG) force l'onboarding (`-welcomePage 0…5` choisit la page — au-delà
+`-resetOnboarding 1` (DEBUG) force l'onboarding (`-welcomePage 0…7` choisit la page — au-delà
 de la question, la réponse vaut 4 h si elle manque —, `-welcomeBeat N` fige sa scène sur un
 temps, `-welcomeQuestion 0` ouvre l'écran du rappel),
 `-startTab practice|settings|widgetPreview` et `-openStep <id>` ouvrent un écran directement,

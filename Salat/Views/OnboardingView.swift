@@ -1,19 +1,22 @@
 import SwiftUI
 
-/// First-launch welcome (rewritten 22/11/2026, Sharik: « Arrête de scroller,
-/// remplace ce temps par le Coran »). Same machinery as before — big animated
-/// scenes that loop like a video on a green sky, a title and one sentence
-/// under them — but it now tells one story, in order:
+/// First-launch welcome (rewritten 22/11/2026, sharpened for conversion on
+/// 25/11/2026 — Sharik: « parle du gain : plus de scroll, mais scroll le
+/// Coran »). Big animated scenes that loop like a video on a green sky, a
+/// title and one sentence under them, telling one story, in order:
 ///
-/// 1. **The problem.** A feed scrolls by and turns into a verse. Then one
-///    question, *how many hours a day on your phone?*, and what that answer
-///    adds up to over a year. The number is the reader's own answer
-///    multiplied out, never a statistic: the app invents nothing (5.6), and
-///    the answer stays on the phone.
-/// 2. **The answer.** The three things the app does with that time: a line of
-///    the prayer read three ways, the prayer step by step, and the widget that
-///    puts it on the home screen, where the scroll used to start.
-/// 3. **The commitment.** One daily moment, with a reminder.
+/// 1. **The hook.** A feed scrolls by and, with the same swipe, becomes the
+///    Qur'an feed: the habit is not fought, it is redirected.
+/// 2. **Two questions** (what do you want most? how many hours a day on your
+///    phone?) and what the second adds up to over a year. The number is the
+///    reader's own answer multiplied out, never a statistic: the app invents
+///    nothing (5.6), and both answers stay on the phone.
+/// 3. **The proof.** The reader swipes a few real verses themselves (the
+///    Qur'an tab in small), then the prayer line read three ways, then the
+///    widget where the scroll used to start.
+/// 4. **The plan.** It assembles under the reader's eyes, then sums up their
+///    own answers: the goal, ten minutes a day.
+/// 5. **The commitment.** One daily moment, with a reminder.
 ///
 /// Then the welcome ends and, without Premium, the paywall takes the screen
 /// (`ContentView`): it is the last page of the story, not a surprise.
@@ -26,6 +29,7 @@ struct OnboardingView: View {
     /// True once back from the last screen: the pitch reopens on its last page.
     @State private var cameBack = false
     @State private var hours: Int? = OnboardingManager.phoneHours
+    @State private var goal: WelcomeGoal? = OnboardingManager.goal
 
     var body: some View {
         ZStack {
@@ -36,7 +40,7 @@ struct OnboardingView: View {
                 }, done: finish)
                 .transition(.push(from: .trailing))
             } else {
-                WelcomePitchView(startAtEnd: cameBack, hours: $hours, next: {
+                WelcomePitchView(startAtEnd: cameBack, hours: $hours, goal: $goal, next: {
                     withAnimation(.spring(duration: 0.45, bounce: 0.15)) { committing = true }
                 }, skip: finish)
                 .transition(.push(from: .leading))
@@ -44,6 +48,10 @@ struct OnboardingView: View {
         }
         .background(Theme.surface.ignoresSafeArea())
         .onChange(of: hours) { _, value in OnboardingManager.phoneHours = value }
+        .onChange(of: goal) { _, value in
+            OnboardingManager.goal = value
+            if let value { Telemetry.shared.track("onboarding_goal", props: ["goal": value.rawValue]) }
+        }
     }
 
     /// Finishing must always get you out of the welcome — by the last button,
@@ -54,17 +62,19 @@ struct OnboardingView: View {
 // MARK: - Pitch
 
 enum WelcomePage: Int, CaseIterable, Identifiable {
-    case scroll, hours, reckoning, words, steps, widget
+    case scroll, goal, hours, reckoning, feed, words, widget, plan
     var id: Int { rawValue }
 
-    private var name: String {
+    var name: String {
         switch self {
         case .scroll:    return "scroll"
+        case .goal:      return "goal"
         case .hours:     return "hours"
         case .reckoning: return "reckoning"
+        case .feed:      return "feed"
         case .words:     return "words"
-        case .steps:     return "steps"
         case .widget:    return "widget"
+        case .plan:      return "plan"
         }
     }
 
@@ -77,6 +87,7 @@ enum WelcomePage: Int, CaseIterable, Identifiable {
 struct WelcomePitchView: View {
     var startAtEnd: Bool
     @Binding var hours: Int?
+    @Binding var goal: WelcomeGoal?
     var next: () -> Void
     var skip: () -> Void
 
@@ -85,21 +96,32 @@ struct WelcomePitchView: View {
     @State private var index = 0
     @State private var forward = true
     @State private var showLanguages = false
+    /// The plan page holds its button until the plan has finished building.
+    @State private var planReady = false
     private let pages = WelcomePage.allCases
     private var page: WelcomePage { pages[index] }
     private var isLast: Bool { index == pages.count - 1 }
-    /// The hours question wants an answer before going on: the next page is
-    /// built on it.
-    private var canAdvance: Bool { page != .hours || hours != nil }
+    /// The questions want an answer before going on: the pages after them are
+    /// built on it. The plan waits for its own build.
+    private var canAdvance: Bool {
+        switch page {
+        case .goal:  return goal != nil
+        case .hours: return hours != nil
+        case .plan:  return planReady
+        default:     return true
+        }
+    }
 
     var body: some View {
         VStack(spacing: 0) {
             ZStack {
                 Group {
-                    if page == .hours {
-                        HoursPicker(hours: $hours)
-                    } else {
-                        WelcomeMotion(page: page, hours: hours)
+                    switch page {
+                    case .hours: HoursPicker(hours: $hours)
+                    case .goal:  GoalPicker(goal: $goal)
+                    case .feed:  FeedDemo()
+                    case .plan:  PlanBuild(goal: goal, ready: $planReady)
+                    default:     WelcomeMotion(page: page, hours: hours)
                     }
                 }
                 .id(index)
@@ -127,8 +149,8 @@ struct WelcomePitchView: View {
             // Every caption laid out, hidden, so the height does not change
             // from one page to the next (the scene above must not jump).
             ZStack {
-                ForEach(pages) { WelcomeCaption(page: $0, hours: hours).hidden() }
-                WelcomeCaption(page: page, hours: hours)
+                ForEach(pages) { WelcomeCaption(page: $0, hours: hours, goal: goal).hidden() }
+                WelcomeCaption(page: page, hours: hours, goal: goal)
                     .id(index)
                     .transition(slide)
             }
@@ -174,10 +196,13 @@ struct WelcomePitchView: View {
             if startAtEnd { index = pages.count - 1 }
             if let page = LaunchOptions.welcomePage, pages.indices.contains(page) {
                 index = page
-                // A page photographed past the question needs an answer.
+                // A page photographed past a question needs its answer.
+                if page > WelcomePage.goal.rawValue, goal == nil { goal = .quran }
                 if page > WelcomePage.hours.rawValue, hours == nil { hours = 4 }
             }
+            trackPage()
         }
+        .onChange(of: index) { trackPage() }
         .sheet(isPresented: $showLanguages) {
             LanguagePickerView()
                 .localized(settings.localizer)
@@ -215,6 +240,11 @@ struct WelcomePitchView: View {
                     removal: .move(edge: forward ? .leading : .trailing).combined(with: .opacity))
     }
 
+    /// The funnel: which page each install reached. A page id, nothing else.
+    private func trackPage() {
+        Telemetry.shared.track("onboarding_step", value: Double(index), props: ["page": page.name])
+    }
+
     private func move(_ delta: Int) {
         let target = index + delta
         guard pages.indices.contains(target) else { return }
@@ -245,6 +275,7 @@ private extension View {
 private struct WelcomeCaption: View {
     let page: WelcomePage
     let hours: Int?
+    let goal: WelcomeGoal?
     @Environment(\.loc) private var loc
 
     private var title: String {
@@ -323,6 +354,233 @@ private struct HoursPicker: View {
     }
 }
 
+// MARK: - The goal
+
+/// "What do you want most?": four answers, one tap. The answer comes back on
+/// the plan and the paywall, so the reader hears their own words again.
+private struct GoalPicker: View {
+    @Binding var goal: WelcomeGoal?
+    @Environment(\.loc) private var loc
+
+    var body: some View {
+        VStack(spacing: 10) {
+            ForEach(WelcomeGoal.allCases) { option in row(option) }
+        }
+        .frame(maxWidth: 400)
+        .frame(maxHeight: .infinity)
+    }
+
+    private func row(_ option: WelcomeGoal) -> some View {
+        let selected = goal == option
+        let shape = RoundedRectangle(cornerRadius: 20, style: .continuous)
+        return Button {
+            withAnimation(.spring(duration: 0.3, bounce: 0.4)) { goal = option }
+            Haptic.select.play()
+        } label: {
+            HStack(spacing: 12) {
+                LofiIcon(option.icon, size: 52, interval: 1.4, animated: selected)
+                Text(loc.t(option.key))
+                    .font(Theme.rounded(18, .black))
+                    .foregroundStyle(selected ? .white : Theme.ink)
+                    .multilineTextAlignment(.leading)
+                    .minimumScaleFactor(0.75)
+                Spacer(minLength: 0)
+                Image(systemName: selected ? "checkmark.circle.fill" : "circle")
+                    .font(.system(size: 22, weight: .bold))
+                    .foregroundStyle(selected ? .white : Theme.border)
+            }
+            .padding(.horizontal, 12)
+            .frame(maxWidth: .infinity, minHeight: 70)
+            .background(selected ? Theme.primary : .white, in: shape)
+            .background(shape.fill(Theme.primaryDeep).offset(y: 5))
+            .scaleEffect(selected ? 1.03 : 1)
+            .contentShape(shape)
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("onboarding.goal.\(option.rawValue)")
+        .accessibilityAddTraits(selected ? .isSelected : [])
+    }
+}
+
+// MARK: - The proof: the reader swipes it
+
+/// The Qur'an tab in small, and the reader's own thumb on it: a phone frame
+/// with a real paged feed of al-Fatiha, swipe up for the next verse, double
+/// tap for a heart. Trying the gesture is worth more than any sentence about
+/// it, and it is the very gesture the welcome promised to redirect.
+private struct FeedDemo: View {
+    @Environment(AppSettings.self) private var settings
+    @Environment(\.loc) private var loc
+    @State private var position: Int? = 0
+    @State private var liked: Set<Int> = []
+    @State private var hintUp = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    private var lines: [(String, String)] { Array(settings.feedSampleLines.prefix(5)) }
+    private var swiped: Bool { (position ?? 0) > 0 }
+
+    var body: some View {
+        let shape = RoundedRectangle(cornerRadius: 40, style: .continuous)
+        GeometryReader { geo in
+            let height = min(geo.size.height, geo.size.width * 1.55)
+            let width = height / 1.55
+            ScrollView(.vertical, showsIndicators: false) {
+                LazyVStack(spacing: 0) {
+                    ForEach(Array(lines.enumerated()), id: \.offset) { i, line in
+                        QuranFeedCard(arabic: line.0, translation: line.1, picture: i * 3 + 1,
+                                      liked: liked.contains(i), scale: width / 330)
+                            .frame(width: width, height: height)
+                            .contentShape(Rectangle())
+                            .onTapGesture(count: 2) {
+                                withAnimation(.spring(duration: 0.3, bounce: 0.5)) { _ = liked.insert(i) }
+                                Haptic.select.play()
+                            }
+                            .id(i)
+                    }
+                }
+                .scrollTargetLayout()
+            }
+            .scrollTargetBehavior(.paging)
+            .scrollPosition(id: $position)
+            .frame(width: width, height: height)
+            .clipShape(shape)
+            .overlay(shape.strokeBorder(Theme.ink, lineWidth: 7))
+            .background(shape.fill(Theme.primaryDeep).offset(y: 8))
+            .overlay(alignment: .bottom) {
+                if !swiped {
+                    Label(loc.t("welcome.feed.hint"), systemImage: "chevron.up")
+                        .font(Theme.rounded(15, .black))
+                        .foregroundStyle(Theme.primaryDeep)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 8)
+                        .background(.white, in: Capsule())
+                        .offset(y: hintUp ? -26 : -14)
+                        .allowsHitTesting(false)
+                        .transition(.opacity)
+                }
+            }
+            .position(x: geo.size.width / 2, y: geo.size.height / 2)
+        }
+        .environment(\.layoutDirection, .leftToRight)
+        .animation(.easeInOut(duration: 0.25), value: swiped)
+        .onChange(of: position) { _, value in
+            if let value, value > 0 { Haptic.select.play() }
+        }
+        .onAppear {
+            guard !reduceMotion else { return }
+            withAnimation(.easeInOut(duration: 0.7).repeatForever(autoreverses: true)) { hintUp = true }
+        }
+        .accessibilityIdentifier("onboarding.feed")
+    }
+}
+
+// MARK: - The plan
+
+/// The plan builds itself under the reader's eyes: four lines tick one after
+/// the other, then the summary of their own answers. Nothing here is
+/// computed for show: each line is a thing the app has just set up (the
+/// language, the feed, the prayer, the widget), and the summary only repeats
+/// the reader's goal. The button waits for the last tick.
+private struct PlanBuild: View {
+    let goal: WelcomeGoal?
+    @Binding var ready: Bool
+    @Environment(\.loc) private var loc
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var done = 0
+
+    private let items: [(Icon3D, String)] = [
+        (.globe, "welcome.plan.item.language"),
+        (.quran, "welcome.plan.item.feed"),
+        (.mat, "welcome.plan.item.prayer"),
+        (.phone, "welcome.plan.item.widget"),
+    ]
+
+    var body: some View {
+        VStack(spacing: 14) {
+            WelcomeCard(padding: 14) {
+                VStack(spacing: 8) {
+                    HStack(spacing: 10) {
+                        ProgressBar(value: Double(done), total: Double(items.count))
+                            .frame(height: 14)
+                        Text(verbatim: "\(done * 100 / items.count) %")
+                            .font(Theme.rounded(15, .black).monospacedDigit())
+                            .foregroundStyle(Theme.primaryDeep)
+                            .contentTransition(.numericText())
+                    }
+                    .padding(.horizontal, 4)
+                    .padding(.bottom, 2)
+                    ForEach(Array(items.enumerated()), id: \.offset) { i, item in
+                        HStack(spacing: 12) {
+                            LofiIcon(item.0, size: 40, interval: 1.6, animated: done == i)
+                                .saturation(done > i ? 1 : 0.3)
+                            Text(loc.t(item.1))
+                                .font(Theme.rounded(15.5, .heavy))
+                                .foregroundStyle(done > i ? Theme.ink : Theme.inkSoft)
+                                .multilineTextAlignment(.leading)
+                                .minimumScaleFactor(0.75)
+                            Spacer(minLength: 0)
+                            ZStack {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .foregroundStyle(Theme.primary)
+                                    .scaleEffect(done > i ? 1 : 0.1)
+                                    .opacity(done > i ? 1 : 0)
+                                if done == i { ProgressView().tint(Theme.gold) }
+                            }
+                            .font(.system(size: 24, weight: .bold))
+                            .frame(width: 28)
+                        }
+                        .frame(minHeight: 46)
+                    }
+                }
+            }
+
+            if ready {
+                WelcomeCard(padding: 14) {
+                    HStack(spacing: 12) {
+                        LofiIcon((goal ?? .quran).icon, size: 56, interval: 1.4)
+                        VStack(alignment: .leading, spacing: 3) {
+                            if let goal {
+                                Text(loc.t("welcome.plan.goal", loc.t(goal.key)))
+                                    .font(Theme.rounded(16, .black))
+                                    .foregroundStyle(Theme.ink)
+                            }
+                            Text(loc.t("welcome.plan.daily"))
+                                .font(Theme.rounded(15, .heavy))
+                                .foregroundStyle(Theme.primaryDeep)
+                        }
+                        .multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
+                        Spacer(minLength: 0)
+                    }
+                }
+                .transition(.scale(scale: 0.85).combined(with: .opacity))
+                .accessibilityIdentifier("onboarding.plan.ready")
+            }
+        }
+        .frame(maxWidth: 420)
+        .frame(maxHeight: .infinity)
+        .task { await build() }
+    }
+
+    private func build() async {
+        if ready || reduceMotion || LaunchOptions.welcomeBeat != nil {
+            done = items.count
+            ready = true
+            return
+        }
+        try? await Task.sleep(for: .seconds(0.5))
+        for i in 1...items.count {
+            try? await Task.sleep(for: .seconds(0.65))
+            if Task.isCancelled { return }
+            withAnimation(.spring(duration: 0.4, bounce: 0.4)) { done = i }
+            Haptic.select.play()
+        }
+        try? await Task.sleep(for: .seconds(0.3))
+        withAnimation(.spring(duration: 0.5, bounce: 0.3)) { ready = true }
+        Haptic.press.play()
+    }
+}
+
 // MARK: - Sky
 
 /// The banner's green, tall: the house lattice, a crescent, gold sparks.
@@ -362,10 +620,9 @@ private struct WelcomeMotion: View {
         MotionCanvas {
             switch page {
             case .scroll:    MotionLoop(durations: ScrollMotion.durations) { ScrollMotion(beat: $0) }
-            case .hours:     EmptyView()
+            case .goal, .hours, .feed, .plan: EmptyView()
             case .reckoning: MotionLoop(durations: ReckoningMotion.durations) { ReckoningMotion(beat: $0, hours: hours) }
             case .words:     MotionLoop(durations: WordsMotion.durations) { WordsMotion(beat: $0) }
-            case .steps:     MotionLoop(durations: StepsMotion.durations) { StepsMotion(beat: $0) }
             case .widget:    MotionLoop(durations: WidgetMotion.durations) { WidgetMotion(beat: $0) }
             }
         }
@@ -460,9 +717,10 @@ private extension PrayerStep {
 // MARK: Hook — the feed that becomes a verse
 
 /// A phone, and in it a feed of grey posts sliding up, one swipe after the
-/// other, while a thumb keeps flicking. Then the feed fades and one card stays:
-/// the first line of al-Fatiha. No logo, no real app: the feed is drawn as
-/// blank shapes on purpose.
+/// other, while a thumb keeps flicking. Then, with the same swipe, the feed
+/// becomes the Qur'an feed: a photograph, a verse, its meaning, a heart. The
+/// habit is not taken away, it is pointed somewhere else. No logo, no real
+/// app: the grey feed is drawn as blank shapes on purpose.
 private struct ScrollMotion: View {
     let beat: Int
     @Environment(AppSettings.self) private var settings
@@ -472,21 +730,29 @@ private struct ScrollMotion: View {
 
     private var swapped: Bool { beat >= 4 }
 
-    /// The opening of al-Fatiha as the app itself spells it; the Basmala as a
-    /// fallback for a content file that would lack it.
-    private var verse: String {
-        settings.step("fatiha")?.arabicLines.first ?? "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ"
+    /// The second line of al-Fatiha as the app itself spells it (the first,
+    /// the Basmala, is too familiar to surprise anyone).
+    private var verse: (String, String) {
+        let lines = settings.feedSampleLines
+        return lines.count > 1 ? lines[1] : lines[0]
     }
 
     var body: some View {
         let shape = RoundedRectangle(cornerRadius: 42, style: .continuous)
-        ZStack {
+        ZStack(alignment: .top) {
             Theme.paper
             feed
                 .offset(y: -CGFloat(min(beat, 3)) * 118)
                 .opacity(swapped ? 0 : 1)
                 .blur(radius: swapped ? 6 : 0)
-            if swapped { verseCard.transition(.scale(scale: 0.6).combined(with: .opacity)) }
+            if swapped {
+                QuranFeedCard(arabic: verse.0, translation: verse.1, picture: 3,
+                              liked: beat >= 5, scale: 0.82)
+                    // Its own size, pinned to the top: the feed under it is
+                    // taller than the phone, and the card would centre on it.
+                    .frame(width: 260, height: 380)
+                    .transition(.move(edge: .bottom))
+            }
         }
         .frame(width: 260, height: 380, alignment: .top)
         .clipShape(shape)
@@ -528,24 +794,6 @@ private struct ScrollMotion: View {
         .padding(.top, 26)
     }
 
-    private var verseCard: some View {
-        VStack(spacing: 14) {
-            LofiIcon(.sparkle, size: 54, interval: 1.2)
-            Text(verse)
-                .font(Theme.arabic(28))
-                .foregroundStyle(Theme.ink)
-                .multilineTextAlignment(.center)
-                .environment(\.layoutDirection, .rightToLeft)
-                .lineLimit(3)
-                .minimumScaleFactor(0.6)
-        }
-        .padding(18)
-        .frame(maxWidth: .infinity)
-        .background(.white, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 24, style: .continuous).strokeBorder(Theme.gold, lineWidth: 3))
-        .padding(.horizontal, 18)
-        .frame(maxHeight: .infinity)
-    }
 }
 
 // MARK: The reckoning — the reader's own number
@@ -680,79 +928,6 @@ private struct WordsMotion: View {
             }
             .frame(maxHeight: .infinity)
         }
-    }
-}
-
-// MARK: Page 2 — step by step
-
-/// The prayer as a short list that fills in: each beat, one more posture is
-/// acquired, the badge pops and the bar moves.
-private struct StepsMotion: View {
-    let beat: Int
-    @Environment(AppSettings.self) private var settings
-
-    /// 0 nothing yet · 1–4 one more step acquired · 5 held, with the trophy.
-    static let durations: [Double] = [0.9, 0.85, 0.85, 0.85, 0.85, 2.2]
-
-    private static let ids = ["takbir", "ruku", "sujud", "tashahhud"]
-    private var steps: [PrayerStep] { Self.ids.compactMap { settings.step($0) } }
-
-    var body: some View {
-        WelcomeCard(padding: 14) {
-            VStack(spacing: 10) {
-                HStack(spacing: 10) {
-                    ProgressBar(value: Double(min(beat, 4)), total: 4)
-                        .frame(height: 14)
-                    Text(verbatim: "\(min(beat, 4))/4")
-                        .font(Theme.rounded(15, .black).monospacedDigit())
-                        .foregroundStyle(Theme.primaryDeep)
-                        .contentTransition(.numericText())
-                }
-                .padding(.horizontal, 4)
-                .padding(.bottom, 2)
-
-                ForEach(Array(steps.enumerated()), id: \.offset) { i, step in
-                    row(step, done: beat > i, active: beat == i)
-                }
-            }
-        }
-        .overlay(alignment: .topTrailing) {
-            LofiIcon(.trophy, size: 86, interval: 1.2)
-                .scaleEffect(beat >= 5 ? 1 : 0.1)
-                .opacity(beat >= 5 ? 1 : 0)
-                .rotationEffect(.degrees(beat >= 5 ? 8 : -30))
-                .offset(x: 18, y: -70)
-        }
-        .frame(maxHeight: .infinity)
-    }
-
-    private func row(_ step: PrayerStep, done: Bool, active: Bool) -> some View {
-        let shape = RoundedRectangle(cornerRadius: 18, style: .continuous)
-        return HStack(spacing: 12) {
-            PositionMedallion(step: step, size: 58)
-                .saturation(done || active ? 1 : 0.2)
-                .opacity(done || active ? 1 : 0.6)
-            Text(step.name)
-                .font(Theme.rounded(16, .black))
-                .foregroundStyle(done || active ? Theme.ink : Theme.inkSoft)
-                .lineLimit(2)
-                .minimumScaleFactor(0.75)
-            Spacer(minLength: 4)
-            ZStack {
-                LofiIcon(.check, size: 38, interval: 1.6, animated: done)
-                    .scaleEffect(done ? 1 : 0.1)
-                    .opacity(done ? 1 : 0)
-                LofiIcon(.sprout, size: 38, interval: 1.2)
-                    .scaleEffect(active ? 1 : 0.1)
-                    .opacity(active ? 1 : 0)
-            }
-        }
-        .padding(.leading, 6)
-        .padding(.trailing, 10)
-        .frame(height: 70)
-        .background(done ? Theme.primarySoft : .white, in: shape)
-        .overlay(shape.strokeBorder(done ? Theme.primary : (active ? Theme.gold : Theme.border), lineWidth: 2.5))
-        .scaleEffect(active ? 1.03 : 1)
     }
 }
 

@@ -62,8 +62,13 @@ public enum Haptic {
 
 // MARK: - Sound
 
-/// Two sounds, no more: the key click for a button that sinks, the blip for a
+/// Two sounds, no more: the click for a button that sinks, the blip for a
 /// change of screen.
+///
+/// The click is a muted wooden tap in D4 (earshot bank `knock/wood`, made in
+/// code, no licence), since 25/11/2026: the old key click had its energy at
+/// 4–8 kHz (brightness 7 kHz) and, played on every button, read as shrill.
+/// The new one sits around 770 Hz, the register of the blip.
 ///
 /// Category `ambient`: the iPhone's silent switch mutes the app, and the
 /// user's own music keeps playing over it. An app that cuts someone's Qur'an
