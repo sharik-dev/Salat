@@ -17,6 +17,8 @@ final class PremiumUITests: XCTestCase {
 
     private func launch(premium: Bool, trial: Int = 3, _ extra: [String] = []) -> XCUIApplication {
         let app = XCUIApplication()
+        // The control arm of every paywall A/B test (`PaywallLab`).
+        app.launchArguments += ["-lab.cta", "a", "-lab.pre", "a", "-lab.exit", "a", "-lab.weekly", "a"]
         app.launchArguments += ["-premium", premium ? "1" : "0",
                                 "-paywallPrice", "4,99 €",
                                 "-paywallTrial", String(trial),

@@ -1,4 +1,5 @@
 import SwiftUI
+import UserNotifications
 
 /// The Salat Premium screen: what the subscription gives, what it costs, one
 /// green button.
@@ -16,6 +17,15 @@ import SwiftUI
 /// purchase (`TrialReminder`). Then what the subscription opens, and the
 /// price.
 ///
+/// Since 27/11/2026 (Marvin's paywall research), laurels with the App
+/// Store's **real** rating sit under the feed preview — hidden until it rests on
+/// enough ratings (`StoreRating`). Nothing else on the page is social proof.
+///
+/// Since 28/11/2026, four A/B tests ride on it (`PaywallLab`): the button
+/// says "Continue" (cta), two screens come first (pre), backing out of the
+/// App Store sheet offers the year (exit), the weekly plan replaces the
+/// monthly one (weekly). The exit sheet carries the full legal text too.
+///
 /// Everything Apple asks of a subscription screen is on it and stays on it
 /// (3.1.2): the price and its period, the most visible price on the screen;
 /// the free trial and what follows it, in the button and in the sentence about
@@ -30,6 +40,16 @@ struct PaywallView: View {
     @Environment(Store.self) private var store
     @Environment(\.loc) private var loc
     @Environment(\.openURL) private var openURL
+    @State private var rating = StoreRating.shared
+    /// The pre-screen shown over the paywall (test "pre"), nil once through.
+    @State private var preStep: Int?
+    /// The plan offered on the way out (test "exit").
+    @State private var exitPlan: Store.Plan?
+
+    /// The plan this paywall sells: the weekly one in arm B of "weekly".
+    private var plan: Store.Plan { PaywallLab.sellsWeekly ? .week : .month }
+    private var price: String? { store.displayPrice(plan) }
+    private var trialDays: Int? { store.offeredTrialDays(plan) }
 
     var body: some View {
         SheetScaffold(title: loc.t("premium.title"), icon: .sparkle, closable: !hard) {
@@ -48,7 +68,8 @@ struct PaywallView: View {
                     .accessibilityIdentifier("paywall.pitch")
 
                 preview
-                if !store.isPremium, let days = store.offeredTrialDays { timeline(days) }
+                if !store.isPremium, rating.showable { laurels }
+                if !store.isPremium, let days = trialDays { timeline(days) }
                 benefits
                 // Room for the bar pinned below: the last line of the card
                 // must be able to scroll clear of it.
@@ -56,8 +77,29 @@ struct PaywallView: View {
             }
         }
         .safeAreaInset(edge: .bottom, spacing: 0) { actionBar }
-        .task { await store.loadProduct() }
-        .onAppear { if hard { Telemetry.shared.track("paywall_view") } }
+        .task {
+            await store.loadProduct()
+            if hard {
+                PaywallLab.track("paywall_view")
+                if PaywallLab.isB(.pre), PaywallLab.trialOffered, !store.isPremium,
+                   !UserDefaults.standard.bool(forKey: "lab.preSeen") {
+                    preStep = 0
+                    PaywallLab.track("pre_step", ["step": "0"])
+                }
+            }
+            await rating.refresh()
+            #if DEBUG
+            // `-debugExit YES`: act out a refused purchase, for the capture.
+            if UserDefaults.standard.bool(forKey: "debugExit") {
+                try? await Task.sleep(for: .seconds(1))
+                store.noteCancel(plan)
+            }
+            #endif
+        }
+        .overlay { if let step = preStep { preScreen(step) } }
+        .animation(Theme.spring, value: preStep)
+        .onChange(of: store.cancelled) { offerExit() }
+        .sheet(item: $exitPlan) { exitSheet($0) }
         .onDisappear { store.clearNotice() }
     }
 
@@ -133,6 +175,41 @@ struct PaywallView: View {
         .padding(.bottom, 4)
         .card(padding: 0)
         .accessibilityIdentifier("paywall.timeline")
+    }
+
+    /// The App Store's real rating, between two laurels — only once it rests
+    /// on enough ratings (`StoreRating`).
+    private var laurels: some View {
+        let avg = rating.average ?? 0
+        // Kept to one short band: the bar pinned below must never cut it.
+        return HStack(spacing: 8) {
+            Image(systemName: "laurel.leading")
+                .font(.system(size: 26, weight: .semibold))
+            VStack(spacing: 0) {
+                HStack(spacing: 6) {
+                    Text(avg.formatted(.number.precision(.fractionLength(1))))
+                        .font(Theme.rounded(18, .black))
+                    HStack(spacing: 1) {
+                        ForEach(0..<5, id: \.self) { i in
+                            Image(systemName: Double(i) + 0.75 <= avg ? "star.fill"
+                                  : Double(i) + 0.25 <= avg ? "star.leadinghalf.filled" : "star")
+                                .font(.system(size: 11, weight: .bold))
+                                .foregroundStyle(Theme.goldDeep)
+                        }
+                    }
+                }
+                Text(loc.t("paywall.rating.count", rating.count))
+                    .font(Theme.rounded(12, .semibold))
+                    .foregroundStyle(Theme.inkSoft)
+            }
+            Image(systemName: "laurel.trailing")
+                .font(.system(size: 26, weight: .semibold))
+        }
+        .foregroundStyle(Theme.ink)
+        .frame(maxWidth: .infinity)
+        .environment(\.layoutDirection, .leftToRight)
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("paywall.rating")
     }
 
     /// What the subscription opens: the whole app.
@@ -218,13 +295,13 @@ struct PaywallView: View {
 
     @ViewBuilder
     private var offer: some View {
-        if let price = store.displayPrice {
-            Text(loc.t("premium.price", price))
+        if let price {
+            Text(loc.t(key("premium.price", plan), price))
                 .font(Theme.rounded(22, .black))
                 .foregroundStyle(Theme.ink)
                 .accessibilityIdentifier("paywall.price")
 
-            if let days = store.offeredTrialDays {
+            if let days = trialDays {
                 Text(loc.t("premium.trial.badge", days))
                     .font(Theme.rounded(13, .black))
                     .foregroundStyle(Theme.goldDeep)
@@ -234,28 +311,9 @@ struct PaywallView: View {
                     .accessibilityIdentifier("paywall.trial")
             }
 
-            Button {
-                let trial = store.offeredTrialDays
-                Telemetry.shared.track("purchase_tap", props: ["trial": trial == nil ? "no" : "yes"])
-                let localizer = settings.localizer
-                Task {
-                    await store.purchase()
-                    if store.isPremium, let trial { await TrialReminder.schedule(days: trial, localizer: localizer) }
-                }
-            } label: {
-                if store.isWorking {
-                    ProgressView().tint(.white)
-                } else {
-                    Text(buttonTitle(price: price))
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.7)
-                }
-            }
-            .buttonStyle(.cta(.primary))
-            .disabled(store.isWorking)
-            .accessibilityIdentifier("paywall.subscribe")
+            ctaButton(plan, from: "paywall")
 
-            if store.offeredTrialDays != nil {
+            if trialDays != nil {
                 Label(loc.t("paywall.nopay"), systemImage: "checkmark.shield.fill")
                     .font(Theme.rounded(13.5, .heavy))
                     .foregroundStyle(Theme.primaryDeep)
@@ -292,7 +350,11 @@ struct PaywallView: View {
                 .accessibilityIdentifier("paywall.notice")
         }
 
-        Text(legal)
+        legalText(plan)
+    }
+
+    private func legalText(_ plan: Store.Plan) -> some View {
+        Text(legal(plan))
             .font(Theme.rounded(11.5, .semibold))
             .foregroundStyle(Theme.inkSoft)
             .multilineTextAlignment(.center)
@@ -302,19 +364,170 @@ struct PaywallView: View {
     /// « 3 days free, then 0,99 € / month » for an account that may take the
     /// trial, « Subscribe — 0,99 € / month » otherwise. The price is always the
     /// App Store's `displayPrice`.
-    private func buttonTitle(price: String) -> String {
-        if let days = store.offeredTrialDays {
-            return fill("premium.subscribe.trial", days: days, price: price)
+    /// Arm B of the "cta" test: just "Continue" — the price and the trial
+    /// stay right above it and in the legal sentence.
+    private func buttonTitle(_ plan: Store.Plan) -> String {
+        if PaywallLab.isB(.cta) { return loc.t("common.continue") }
+        let price = store.displayPrice(plan) ?? ""
+        if let days = store.offeredTrialDays(plan) {
+            return fill(key("premium.subscribe.trial", plan), days: days, price: price)
         }
-        return fill("premium.subscribe", days: 0, price: price)
+        return fill(key("premium.subscribe", plan), days: 0, price: price)
     }
 
-    private var legal: String {
-        let price = store.displayPrice ?? ""
-        if let days = store.offeredTrialDays {
-            return fill("premium.legal.trial", days: days, price: price)
+    private func legal(_ plan: Store.Plan) -> String {
+        let price = store.displayPrice(plan) ?? ""
+        if let days = store.offeredTrialDays(plan) {
+            return fill(key("premium.legal.trial", plan), days: days, price: price)
         }
-        return fill("premium.legal", days: 0, price: price)
+        return fill(key("premium.legal", plan), days: 0, price: price)
+    }
+
+    /// `premium.price` for the month, `premium.price.week` / `.year` otherwise.
+    private func key(_ base: String, _ plan: Store.Plan) -> String {
+        plan == .month ? base : base + "." + plan.rawValue
+    }
+
+    private func ctaButton(_ plan: Store.Plan, from: String) -> some View {
+        Button { buy(plan, from: from) } label: {
+            if store.isWorking {
+                ProgressView().tint(.white)
+            } else {
+                Text(buttonTitle(plan))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+            }
+        }
+        .buttonStyle(.cta(.primary))
+        .disabled(store.isWorking)
+        .accessibilityIdentifier(from == "exit" ? "paywall.exit.subscribe" : "paywall.subscribe")
+    }
+
+    private func buy(_ plan: Store.Plan, from: String) {
+        let trial = store.offeredTrialDays(plan)
+        PaywallLab.track("purchase_tap", ["plan": plan.rawValue, "from": from,
+                                          "trial": trial == nil ? "no" : "yes"])
+        let localizer = settings.localizer
+        Task {
+            await store.purchase(plan)
+            if store.isPremium {
+                exitPlan = nil
+                if let trial { await TrialReminder.schedule(days: trial, localizer: localizer) }
+            }
+        }
+    }
+
+    // MARK: Test "pre": two screens before the paywall
+
+    private func preScreen(_ step: Int) -> some View {
+        let days = trialDays ?? 3
+        return VStack(spacing: 18) {
+            Spacer()
+            IconTile(icon: step == 0 ? .sparkle : .bell, size: 96, animated: true)
+            Text(loc.t(step == 0 ? "paywall.pre.free.title" : "paywall.pre.remind.title"))
+                .font(Theme.title(28))
+                .foregroundStyle(Theme.ink)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+            Text(step == 0 ? loc.t("paywall.pre.free.body", days) : loc.t("paywall.pre.remind.body"))
+                .font(Theme.rounded(16, .semibold))
+                .foregroundStyle(Theme.inkSoft)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+            Spacer()
+            HStack(spacing: 8) {
+                ForEach(0..<3, id: \.self) { i in
+                    Capsule().fill(i == step ? Theme.primary : Theme.border)
+                        .frame(width: i == step ? 22 : 8, height: 8)
+                }
+            }
+            Button {
+                if step == 0 {
+                    preStep = 1
+                    PaywallLab.track("pre_step", ["step": "1"])
+                } else {
+                    Task {
+                        _ = try? await UNUserNotificationCenter.current()
+                            .requestAuthorization(options: [.alert, .sound])
+                        UserDefaults.standard.set(true, forKey: "lab.preSeen")
+                        preStep = nil
+                        PaywallLab.track("pre_step", ["step": "2"])
+                    }
+                }
+            } label: {
+                Text(loc.t(step == 0 ? "common.continue" : "paywall.pre.remind.button"))
+            }
+            .buttonStyle(.cta(.primary))
+            .accessibilityIdentifier("paywall.pre.next")
+        }
+        .padding(.horizontal, 28)
+        .padding(.bottom, 16)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Theme.paper.ignoresSafeArea())
+        .transition(.opacity)
+        .id(step)
+    }
+
+    // MARK: Test "exit": the year, once, when the App Store sheet is dismissed
+
+    private func offerExit() {
+        guard PaywallLab.isB(.exit), PaywallLab.yearlyAvailable, !store.isPremium,
+              store.cancelledPlan != .year,
+              !UserDefaults.standard.bool(forKey: "lab.exitSeen") else { return }
+        UserDefaults.standard.set(true, forKey: "lab.exitSeen")
+        exitPlan = .year
+        PaywallLab.track("exit_view", ["from": store.cancelledPlan?.rawValue ?? ""])
+    }
+
+    private func exitSheet(_ plan: Store.Plan) -> some View {
+        let price = store.displayPrice(plan) ?? ""
+        return VStack(spacing: 12) {
+            IconTile(icon: .star, size: 64, animated: true)
+                .padding(.top, 22)
+            Text(loc.t("paywall.exit.title"))
+                .font(Theme.title(26))
+                .foregroundStyle(Theme.ink)
+                .multilineTextAlignment(.center)
+            if let saving = store.yearlySaving {
+                Text(fill("paywall.exit.body", days: saving, price: price))
+                    .font(Theme.rounded(15.5, .semibold))
+                    .foregroundStyle(Theme.inkSoft)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Text(loc.t(key("premium.price", plan), price))
+                .font(Theme.rounded(22, .black))
+                .foregroundStyle(Theme.ink)
+                .accessibilityIdentifier("paywall.exit.price")
+            if let days = store.offeredTrialDays(plan) {
+                Text(loc.t("premium.trial.badge", days))
+                    .font(Theme.rounded(13, .black))
+                    .foregroundStyle(Theme.goldDeep)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 3)
+                    .background(Theme.goldSoft, in: Capsule())
+            }
+            ctaButton(plan, from: "exit")
+            Button {
+                PaywallLab.track("exit_dismiss")
+                exitPlan = nil
+            } label: {
+                Text(loc.t("paywall.exit.nothanks"))
+                    .font(Theme.rounded(15, .heavy))
+                    .foregroundStyle(Theme.inkSoft)
+                    .frame(maxWidth: .infinity, minHeight: 44)
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("paywall.exit.dismiss")
+            legalText(plan)
+            links
+        }
+        .padding(.horizontal, 22)
+        .padding(.bottom, 8)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .background(Theme.paper.ignoresSafeArea())
+        .presentationDetents([.large])
+        .environment(\.layoutDirection, loc.layoutDirection)
     }
 
     /// `%d` and `%@` in one string, filled by hand: `String(format:)` with a

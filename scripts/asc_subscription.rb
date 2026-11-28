@@ -57,16 +57,28 @@ SHOT = (i = ARGV.index("--screenshot")) ? ARGV[i + 1] : nil
 START = (i = ARGV.index("--start")) ? ARGV[i + 1] : nil
 
 GROUP_NAME   = "Salat Premium"
-PRODUCT_NAME = "Salat Premium mensuel"
-PERIOD       = "ONE_MONTH"
+# `PLAN=weekly|yearly` (28/11/2026) : les formules des tests A/B du paywall
+# (veille de Marvin). Hebdo 0,49 € = bras B du test « weekly » ; annuel
+# 5,99 € = l'offre de sortie (bras B du test « exit »), montrée quand on
+# renonce au mensuel. Prix modifiables tant que la formule n'est pas approuvée.
+PLANS = {
+  "monthly" => { name: "Salat Premium mensuel", period: "ONE_MONTH", price: 0.99, usa: 0.99, id: nil },
+  "weekly"  => { name: "Salat Premium hebdo", period: "ONE_WEEK", price: 0.49, usa: 0.49,
+                 id: "com.salat.premium.weekly" },
+  "yearly"  => { name: "Salat Premium annuel", period: "ONE_YEAR", price: 5.99, usa: 5.99,
+                 id: "com.salat.premium.yearly" }
+}.freeze
+PLAN = PLANS.fetch(ENV.fetch("PLAN", "monthly"))
+PRODUCT_NAME = PLAN[:name]
+PERIOD       = PLAN[:period]
 BASE_TERRITORY = "FRA"
 # 0,99 € à partir du 27/11/2026 (décision de Sharik du 25/11). Avant : 1,99 €
 # (14/11), puis 4,99 € (en vigueur le 23/11). Une BAISSE
 # s'applique aussi aux abonnés en cours : Apple ne garde jamais un prix plus
 # haut pour eux, preserveCurrentPrice n'y change rien.
-PRICE          = 0.99
+PRICE          = PLAN[:price]
 # Les pays où le palier est imposé au lieu d'être déduit de la France.
-FORCED = { "USA" => 0.99 }
+FORCED = { "USA" => PLAN[:usa] }
 # L'offre d'introduction : gratuite, une période de cette durée.
 TRIAL = "THREE_DAYS"
 
@@ -80,7 +92,7 @@ LOCALES = {
 REVIEW_NOTE = "Salat Premium is required to use the app (hard paywall, no ads). " \
               "It unlocks every feature: the prayer lessons, the Qur'an feed, the " \
               "memorisation exercises and the Home Screen widget. New subscribers " \
-              "get a 3-day free trial (introductory offer), then the monthly price. " \
+              "get a 3-day free trial (introductory offer), then the plan's price. " \
               "The paywall is the last screen of the onboarding and opens at every " \
               "launch until a subscription is active; it carries the price, Restore " \
               "Purchases, Terms of Use (Apple standard EULA) and Privacy Policy."
@@ -146,7 +158,7 @@ def product_id
   swift[/static let productID = "([^"]+)"/, 1] or abort("Store.productID introuvable")
 end
 
-PRODUCT_ID = product_id
+PRODUCT_ID = PLAN[:id] || product_id
 puts APPLY ? "Mode écriture." : "Lecture seule (ajouter --apply pour créer)."
 
 apps = call(:get, "apps?filter[bundleId]=#{app_bundle_id}")
@@ -179,7 +191,7 @@ end
 # 2. L'abonnement
 sub = group && all("subscriptionGroups/#{group['id']}/subscriptions?limit=200")
               .find { |s| s.dig("attributes", "productId") == PRODUCT_ID }
-if step("abonnement #{PRODUCT_ID} (mensuel)", sub.nil?)
+if step("abonnement #{PRODUCT_ID} (#{PERIOD})", sub.nil?)
   sub = call(:post, "subscriptions",
              { data: { type: "subscriptions",
                        attributes: { name: PRODUCT_NAME, productId: PRODUCT_ID,

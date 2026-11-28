@@ -13,6 +13,8 @@ final class OnboardingFlowUITests: XCTestCase {
 
     private func launchFreshInstall(premium: Bool) -> XCUIApplication {
         let app = XCUIApplication()
+        // The control arm of every paywall A/B test (`PaywallLab`).
+        app.launchArguments += ["-lab.cta", "a", "-lab.pre", "a", "-lab.exit", "a", "-lab.weekly", "a"]
         app.launchArguments += ["-resetOnboarding", "1",
                                 "-premium", premium ? "1" : "0",
                                 "-paywallPrice", "0,99 €", "-paywallTrial", "3"]

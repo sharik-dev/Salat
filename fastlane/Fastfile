@@ -63,7 +63,11 @@ def review_contact
            "Skip ends it at any time. The app then requires Salat Premium " \
            "(hard paywall, no ads anywhere): an auto-renewable monthly " \
            "subscription (com.salat.premium.monthly) with a 3-day free trial " \
-           "for eligible accounts. The paywall shows the price per month, the " \
+           "for eligible accounts. Paywall A/B tests: half of new users see a " \
+           "weekly plan (com.salat.premium.weekly) instead of the monthly one, " \
+           "and some see a yearly plan (com.salat.premium.yearly) after closing " \
+           "the App Store purchase sheet; same features in every plan. " \
+           "The paywall shows the price per period, the " \
            "trial, the renewal terms, Restore Purchases, Terms of Use and " \
            "Privacy Policy. Please use a Sandbox account to start the trial; " \
            "the whole app opens right after. " \

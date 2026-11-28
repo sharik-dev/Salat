@@ -17,8 +17,8 @@ settings:
     # déclarer la famille 2 obligerait à livrer un jeu de captures 2048 × 2732
     # d'écrans qui n'ont jamais été pensés pour cette taille.
     TARGETED_DEVICE_FAMILY: "1"
-    MARKETING_VERSION: "1.8"
-    CURRENT_PROJECT_VERSION: "11"
+    MARKETING_VERSION: "1.9"
+    CURRENT_PROJECT_VERSION: "12"
 
 targets:
   Salat:

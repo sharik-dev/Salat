@@ -1,6 +1,2 @@
-Scroll less, scroll the Quran.
-
-• A new welcome: tell us what you want most, and see where your screen time goes
-• Your plan, built around ten minutes a day instead of the feed
-• A clear trial timeline: we remind you the day before it ends
-• Softer, lower button sounds
+• A refreshed subscription screen, with a weekly or yearly plan
+• Small fixes and improvements

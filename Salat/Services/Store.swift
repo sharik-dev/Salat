@@ -20,6 +20,18 @@ final class Store {
     /// The subscription's product ID, as declared in App Store Connect by
     /// `scripts/asc_subscription.rb`. The two must match to the letter.
     static let productID = "com.salat.premium.monthly"
+    /// The paywall A/B tests (`PaywallLab`, 28/11/2026): the weekly plan of
+    /// the "weekly" test, the yearly one offered on the way out ("exit").
+    /// Created by `PLAN=weekly|yearly ruby scripts/asc_subscription.rb`.
+    static let weeklyID = "com.salat.premium.weekly"
+    static let yearlyID = "com.salat.premium.yearly"
+    static let allIDs = [productID, weeklyID, yearlyID]
+
+    enum Plan: String, Identifiable { case month, week, year
+        var id: String {
+            switch self { case .month: Store.productID; case .week: Store.weeklyID; case .year: Store.yearlyID }
+        }
+    }
 
     /// Stored and not read from the defaults on demand: `@Observable` only
     /// tracks stored properties. Every change goes to the shared suite, which
@@ -35,6 +47,14 @@ final class Store {
     /// Nil until the App Store answered. The paywall needs it for the price,
     /// and cannot sell without it.
     private(set) var product: Product?
+    private(set) var weekly: Product?
+    private(set) var yearly: Product?
+    /// Free days each plan offers this account (absent: no trial).
+    private(set) var trials: [String: Int] = [:]
+    /// The App Store sheet closed without buying: a counter the paywall
+    /// watches, and which plan it was (the "exit" test).
+    private(set) var cancelled = 0
+    private(set) var cancelledPlan: Plan?
     private(set) var loadFailed = false
     /// A purchase or a restore is under way: the buttons wait.
     private(set) var isWorking = false
@@ -113,7 +133,7 @@ final class Store {
         var active = false
         for await entitlement in Transaction.currentEntitlements {
             guard case .verified(let transaction) = entitlement,
-                  transaction.productID == Self.productID,
+                  Self.allIDs.contains(transaction.productID),
                   transaction.revocationDate == nil else { continue }
             active = true
         }
@@ -124,54 +144,99 @@ final class Store {
         guard product == nil else { return }
         loadFailed = false
         do {
-            product = try await Product.products(for: [Self.productID]).first
+            let loaded = try await Product.products(for: Self.allIDs)
+            product = loaded.first { $0.id == Self.productID }
+            weekly = loaded.first { $0.id == Self.weeklyID }
+            yearly = loaded.first { $0.id == Self.yearlyID }
+            PaywallLab.weeklyAvailable = weekly != nil || LaunchOptions.paywallPrice != nil
             // An empty answer is a failure too: the product is not on sale
             // where this phone is, or not approved yet.
             loadFailed = product == nil
             await loadTrial()
+            PaywallLab.yearlyAvailable = yearly != nil || LaunchOptions.paywallPrice != nil
+            PaywallLab.trialOffered = offeredTrialDays(.month) != nil
         } catch {
             loadFailed = true
         }
     }
 
-    /// The free trial, if the product has one and this account may take it.
+    /// The free trial of each plan, if it has one and this account may take it.
     private func loadTrial() async {
         #if DEBUG
-        if let days = LaunchOptions.paywallTrial { trialDays = days > 0 ? days : nil; return }
-        #endif
-        guard let subscription = product?.subscription,
-              let offer = subscription.introductoryOffer,
-              offer.paymentMode == .freeTrial,
-              await subscription.isEligibleForIntroOffer else {
-            trialDays = nil
+        if let days = LaunchOptions.paywallTrial {
+            trialDays = days > 0 ? days : nil
+            trials = days > 0 ? Dictionary(uniqueKeysWithValues: Self.allIDs.map { ($0, days) }) : [:]
             return
         }
+        #endif
+        var out: [String: Int] = [:]
+        for p in [product, weekly, yearly].compactMap({ $0 }) {
+            if let days = await Self.trial(of: p) { out[p.id] = days }
+        }
+        trials = out
+        trialDays = product.flatMap { out[$0.id] }
+    }
+
+    private static func trial(of product: Product) async -> Int? {
+        guard let subscription = product.subscription,
+              let offer = subscription.introductoryOffer,
+              offer.paymentMode == .freeTrial,
+              await subscription.isEligibleForIntroOffer else { return nil }
         let period = offer.period
         switch period.unit {
-        case .day: trialDays = period.value
-        case .week: trialDays = period.value * 7
-        case .month: trialDays = period.value * 30
-        case .year: trialDays = period.value * 365
-        @unknown default: trialDays = nil
+        case .day: return period.value
+        case .week: return period.value * 7
+        case .month: return period.value * 30
+        case .year: return period.value * 365
+        @unknown default: return nil
         }
+    }
+
+    func product(_ plan: Plan) -> Product? {
+        switch plan { case .month: product; case .week: weekly; case .year: yearly }
+    }
+
+    /// The price of a plan as the paywall prints it. On the command-line
+    /// simulator (`-paywallPrice`, DEBUG) the other plans get fixed stand-ins.
+    func displayPrice(_ plan: Plan) -> String? {
+        if let p = product(plan) { return p.displayPrice }
+        guard let monthly = LaunchOptions.paywallPrice else { return nil }
+        switch plan { case .month: return monthly; case .week: return "0,49 €"; case .year: return "5,99 €" }
+    }
+
+    func offeredTrialDays(_ plan: Plan) -> Int? {
+        if product(plan) == nil, let days = LaunchOptions.paywallTrial { return days > 0 ? days : nil }
+        return product(plan).flatMap { trials[$0.id] }
+    }
+
+    /// How much less the year costs than twelve months, in percent, from the
+    /// real prices of this storefront.
+    var yearlySaving: Int? {
+        let (m, y): (Decimal, Decimal)
+        if let pm = product, let py = yearly { (m, y) = (pm.price, py.price) }
+        else if LaunchOptions.paywallPrice != nil { (m, y) = (0.99, 5.99) }
+        else { return nil }
+        guard m * 12 > y else { return nil }
+        return Int(((1 - NSDecimalNumber(decimal: y / (m * 12)).doubleValue) * 100).rounded(.down))
     }
 
     /// The price as the paywall prints it. `-paywallPrice` (DEBUG) stands in
     /// for the App Store on a simulator launched from the command line, where
     /// no product ever loads and the screen could not be photographed.
-    var displayPrice: String? {
-        product?.displayPrice ?? LaunchOptions.paywallPrice
-    }
+    var displayPrice: String? { displayPrice(.month) }
 
     /// The trial as the paywall promises it: the product's, or `-paywallTrial`
     /// (DEBUG) for the same command-line simulator.
-    var offeredTrialDays: Int? {
-        if product == nil, let days = LaunchOptions.paywallTrial { return days > 0 ? days : nil }
-        return trialDays
-    }
+    var offeredTrialDays: Int? { offeredTrialDays(.month) }
 
-    func purchase() async {
-        guard let product, !isWorking else { return }
+    func purchase(_ plan: Plan = .month) async {
+        guard !isWorking else { return }
+        guard let product = product(plan) else {
+            #if DEBUG
+            noteCancel(plan)   // command-line simulator: act out a refusal
+            #endif
+            return
+        }
         isWorking = true
         notice = nil
         defer { isWorking = false }
@@ -185,13 +250,15 @@ final class Store {
                 await transaction.finish()
                 await refresh()
                 if isPremium {
+                    PaywallLab.track("pro_purchase", ["plan": plan.rawValue,
+                        "trial": offeredTrialDays(plan) == nil ? "no" : "yes"])
                     Haptic.press.play()
                     showsPaywall = false
                 }
             case .pending:
                 notice = .pending
             case .userCancelled:
-                break
+                noteCancel(plan)
             @unknown default:
                 break
             }
@@ -218,6 +285,12 @@ final class Store {
     }
 
     func clearNotice() { notice = nil }
+
+    func noteCancel(_ plan: Plan) {
+        cancelledPlan = plan
+        cancelled += 1
+        PaywallLab.track("purchase_cancel", ["plan": plan.rawValue])
+    }
 
     #if DEBUG
     private static let debugKey = "debug.premiumOverride"

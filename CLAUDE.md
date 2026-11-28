@@ -827,8 +827,8 @@ ouvre l'app, qui montre le paywall de toute façon. `WidgetToolView` n'a plus qu
 « Ajouter à l'écran d'accueil » : on n'y arrive qu'abonné.
 
 Rien dans `DrillLog`. La télémétrie ne compte que l'entonnoir (`paywall_view`, `purchase_tap`,
-voir l'onboarding), jamais un montant ni un reçu ; pour le reste, aucun évènement d'achat ne part vers
-app-metrics, App Store Connect compte les abonnés mieux que nous.
+voir l'onboarding, plus `purchase_cancel` / `pro_purchase` depuis les tests A/B ci-dessous),
+jamais un montant ni un reçu : App Store Connect compte les abonnés et les revenus mieux que nous.
 
 Liens profonds (DEBUG) : `-premium 1|0` force l'abonnement (un simulateur lancé par
 `simctl` n'a rien acheté), `-paywallPrice "0,99 €"` imprime un prix faute de produit,
@@ -842,6 +842,47 @@ bouton, Restaurer et les deux liens, **pas** de `sheet.close`, et l'app (`tab.le
 inaccessible ; sans essai, ni pastille ni promesse d'essai ; un abonné voit « Ajouter » sur
 la page du widget, la ligne active des réglages, et une feuille qui se referme. Aucun achat
 n'y est fait.
+
+### Tests A/B du paywall (`PaywallLab`, 28/11/2026)
+
+À la demande de Sharik (« teste tout »), après la veille paywall de Marvin, **quatre tests
+indépendants**, en 50/50. Chaque bras est tiré une fois par installation et gardé dans
+UserDefaults (`lab.<test>` = `a`|`b`). Le schéma est le même que dans MeTube.
+
+| Test | A (témoin) | B |
+|---|---|---|
+| `cta` | « 3 jours gratuits, puis … / mois » | « Continuer » (`common.continue`) |
+| `pre` | paywall direct | 2 écrans avant : « Essaie gratuitement », puis « On te prévient » et la permission des notifications (une seule fois, `lab.preSeen`, et seulement si un essai est offert) |
+| `exit` | rien | si on annule la feuille de l'App Store, une feuille propose **l'annuel** avec le −N % calculé sur les vrais prix (une seule fois, `lab.exitSeen`) |
+| `weekly` | mensuel 0,99 | **hebdo** 0,49 |
+
+**Produits** (`Store.Plan`) : `com.salat.premium.weekly` (0,49) et `com.salat.premium.yearly`
+(5,99).
+- Ils ont été créés par `PLAN=weekly|yearly ruby scripts/asc_subscription.rb --apply --screenshot <png>`.
+- Ils partent en revue **avec la prochaine version** de l'app.
+- Leur prix reste modifiable tant qu'ils ne sont pas approuvés.
+- Tant que l'hebdo n'est pas en vente, le bras B de `weekly` montre le mensuel. Le droit Premium vient de n'importe lequel des trois produits.
+
+**Télémétrie.** Chaque évènement part avec les bras (`x_cta`, `x_pre`, `x_exit`,
+`x_weekly`) :
+- `paywall_view`, `purchase_tap` {plan, from, trial}, `purchase_cancel` {plan},
+  `pro_purchase` {plan, trial}, `pre_step` {step}, `exit_view`, `exit_dismiss`.
+- Un bras qui ne peut pas s'afficher (pas d'essai, produit pas en vente) est noté `a`.
+- Pour lire le résultat sur sharik.fr/metrics : `pro_purchase` / `paywall_view` par propriété.
+
+**Mentions Apple (3.1.2)** : la feuille de sortie porte aussi le prix, la période, la
+phrase légale complète, Restaurer, Conditions et Confidentialité.
+
+**Clés i18n** (dans les quatorze langues) : `premium.{price,subscribe,subscribe.trial,legal,legal.trial}.{week,year}`
+et `paywall.pre.*`, `paywall.exit.*`.
+
+**DEBUG** :
+- `-lab.cta b` (etc.) force un bras.
+- `-debugExit YES` joue un refus d'achat une seconde après l'ouverture.
+- `-paywallTrial N` vaut pour les trois formules.
+- `-lab.preSeen NO -lab.exitSeen NO` rejoue les écrans « une seule fois ».
+
+**Tests UI** : `PremiumUITests` et `OnboardingFlowUITests` forcent les quatre bras A.
 
 ### La note : demandée seule, rarement, sur une victoire
 
