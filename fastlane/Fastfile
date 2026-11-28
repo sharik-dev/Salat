@@ -198,7 +198,7 @@ platform :ios do
       screenshots_path: "./fastlane/screenshots",
       languages: ["en-US", "fr-FR", "ar-SA"],
       submit_for_review: false,
-      automatic_release: false,
+      automatic_release: true,
       run_precheck_before_submit: false,
       force: true
     )
@@ -284,9 +284,8 @@ platform :ios do
         add_id_info_uses_idfa: false
       },
       submit_for_review: options[:submit] != false,
-      # Le jour de la sortie se décide après l'acceptation, pas trois jours
-      # avant à l'aveugle.
-      automatic_release: false,
+      # Sortie automatique dès l'acceptation (règle de Sharik, 28/11/2026).
+      automatic_release: true,
       # `precheck` relit les textes chez Apple avant de soumettre — marques
       # citées, mots interdits, URL mortes. Vingt secondes contre un
       # aller-retour de plusieurs jours avec la revue.
